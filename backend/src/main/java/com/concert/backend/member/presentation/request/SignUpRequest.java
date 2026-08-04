@@ -46,7 +46,11 @@ public record SignUpRequest(
 
         @DecimalMin(value = "-180.0", message = "경도는 -180.0 이상이어야 합니다.")
         @DecimalMax(value = "180.0", message = "경도는 180.0 이하이어야 합니다.")
-        BigDecimal longitude
+        BigDecimal longitude,
+
+        @NotBlank(message = "이메일 인증 토큰은 필수입니다.")
+        String emailVerificationToken
+
 ) {
 
     public SignUpCommand toCommand() {
@@ -60,7 +64,8 @@ public record SignUpRequest(
                 detailAddress,
                 zipCode,
                 latitude,
-                longitude
+                longitude,
+                emailVerificationToken
         );
     }
 }

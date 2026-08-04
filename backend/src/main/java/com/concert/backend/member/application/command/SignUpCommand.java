@@ -12,6 +12,8 @@ public record SignUpCommand(
         String detailAddress,
         String zipCode,
         BigDecimal latitude,
-        BigDecimal longitude
+        BigDecimal longitude,
+        String emailVerificationToken
 ) {
+
 }

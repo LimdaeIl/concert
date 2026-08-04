@@ -35,9 +35,45 @@ public class CommonException extends RuntimeException {
     }
 
     /**
+     * 원인 예외(Cause)를 포함하는 비즈니스 예외를 생성합니다.
+     * <p>
+     * 외부 시스템(SMTP, Redis, DB 등)에서 발생한 예외를 감싸면서
+     * 원본 Stack Trace를 보존하기 위해 사용합니다.
+     *
+     * @param errorCode 비즈니스 에러 코드 (null 불가)
+     * @param cause 원인 예외
+     */
+    public CommonException(
+            ErrorCode errorCode,
+            Throwable cause
+    ) {
+        super(requireErrorCode(errorCode).message(), cause);
+        this.errorCode = errorCode;
+    }
+
+    /**
+     * 원인 예외(Cause)와 가변 인수를 함께 사용하는 비즈니스 예외를 생성합니다.
+     *
+     * @param errorCode 비즈니스 에러 코드 (null 불가)
+     * @param cause 원인 예외
+     * @param arguments 에러 메시지 포맷팅에 치환될 인자 목록
+     */
+    public CommonException(
+            ErrorCode errorCode,
+            Throwable cause,
+            Object... arguments
+    ) {
+        super(requireErrorCode(errorCode).format(arguments), cause);
+        this.errorCode = errorCode;
+    }
+
+    /**
      * ErrorCode가 null인 상태로 예외 객체가 생성되는 것을 방지합니다.
      */
     private static ErrorCode requireErrorCode(ErrorCode errorCode) {
-        return Objects.requireNonNull(errorCode, "ErrorCode는 null일 수 없습니다.");
+        return Objects.requireNonNull(
+                errorCode,
+                "ErrorCode는 null일 수 없습니다."
+        );
     }
 }
