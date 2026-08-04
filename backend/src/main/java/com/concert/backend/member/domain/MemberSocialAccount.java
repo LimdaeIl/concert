@@ -15,6 +15,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -65,4 +66,33 @@ public class MemberSocialAccount extends BaseAuditEntity {
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
+    private MemberSocialAccount(Member member,
+            SocialProvider provider,
+            String providerUserId,
+            String providerEmail,
+            LocalDateTime connectedAt
+    ) {
+        this.member = Objects.requireNonNull(member);
+        this.provider = Objects.requireNonNull(provider);
+        this.providerUserId = Objects.requireNonNull(providerUserId);
+        this.providerEmail = providerEmail;
+        this.connectedAt = Objects.requireNonNull(connectedAt);
+    }
+
+    public static MemberSocialAccount create(
+            Member member,
+            SocialProvider provider,
+            String providerUserId,
+            String providerEmail,
+            LocalDateTime connectedAt
+    ) {
+        return new MemberSocialAccount(
+                member,
+                provider,
+                providerUserId,
+                providerEmail,
+                connectedAt
+        );
+
+    }
 }

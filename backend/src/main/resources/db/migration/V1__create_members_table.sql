@@ -11,11 +11,9 @@ CREATE TABLE IF NOT EXISTS v1_members
     jibun_address  VARCHAR(255)   NULL COMMENT '지번 주소',
     detail_address VARCHAR(255)   NULL COMMENT '상세 주소',
     zip_code       VARCHAR(10)    NULL COMMENT '우편번호',
-    latitude       DECIMAL(10, 7) NOT NULL COMMENT '위도',
-    longitude      DECIMAL(10, 7) NOT NULL COMMENT '경도',
-    created_by     BIGINT         NULL COMMENT '생성자 ID',
+    latitude       DECIMAL(10, 7) NULL COMMENT '위도',
+    longitude      DECIMAL(10, 7) NULL COMMENT '경도',
     created_at     DATETIME(6)    NOT NULL COMMENT '생성일시',
-    updated_by     BIGINT         NULL COMMENT '수정자 ID',
     updated_at     DATETIME(6)    NOT NULL COMMENT '수정일시',
 
     CONSTRAINT pk_v1_members PRIMARY KEY (id),
