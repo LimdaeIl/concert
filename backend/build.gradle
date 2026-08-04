@@ -45,6 +45,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-redis-test'
 
+    implementation 'com.solapi:sdk:1.1.0'
 }
 
 tasks.named('test') {
