@@ -39,7 +39,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/members/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/members/sign-up").permitAll()
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/v1/auth/email-verifications",
