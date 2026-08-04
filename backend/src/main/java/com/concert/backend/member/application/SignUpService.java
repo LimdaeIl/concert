@@ -1,5 +1,6 @@
 package com.concert.backend.member.application;
 
+import com.concert.backend.auth.application.EmailVerificationService;
 import com.concert.backend.common.domain.Address;
 import com.concert.backend.member.application.command.SignUpCommand;
 import com.concert.backend.member.application.result.SignUpResult;
@@ -18,13 +19,20 @@ public class SignUpService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailVerificationService emailVerificationService;
 
     @Transactional
     public SignUpResult signUp(SignUpCommand command) {
+        emailVerificationService.validateVerificationToken(
+                command.email(),
+                command.emailVerificationToken()
+        );
+
         validateDuplicateEmail(command.email());
         validateDuplicatePhone(command.phone());
 
-        String encodedPassword = passwordEncoder.encode(command.password());
+        String encodedPassword =
+                passwordEncoder.encode(command.password());
 
         Address address = Address.of(
                 command.roadAddress(),
@@ -45,19 +53,26 @@ public class SignUpService {
 
         Member savedMember = memberRepository.save(member);
 
+        emailVerificationService.consumeVerificationToken(
+                command.emailVerificationToken()
+        );
+
         return SignUpResult.from(savedMember);
     }
 
     private void validateDuplicateEmail(String email) {
         if (memberRepository.existsByEmail(email)) {
-            throw new MemberException(MemberErrorCode.DUPLICATE_EMAIL);
+            throw new MemberException(
+                    MemberErrorCode.DUPLICATE_EMAIL
+            );
         }
     }
 
     private void validateDuplicatePhone(String phone) {
         if (memberRepository.existsByPhone(phone)) {
-            throw new MemberException(MemberErrorCode.DUPLICATE_PHONE);
+            throw new MemberException(
+                    MemberErrorCode.DUPLICATE_PHONE
+            );
         }
     }
 }
-

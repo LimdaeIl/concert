@@ -8,6 +8,7 @@ import java.nio.file.AccessDeniedException;
 import java.util.Comparator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +34,10 @@ public class GlobalExceptionHandler {
      * 비즈니스 로직 중 발생한 사용자 정의 예외(CommonException) 처리
      */
     @ExceptionHandler(CommonException.class)
-    public ResponseEntity<ErrorResponse> handleCommonException(CommonException exception,
-            HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> handleCommonException(
+            CommonException exception,
+            HttpServletRequest request
+    ) {
         ErrorCode errorCode = exception.getErrorCode();
 
         log.warn(
@@ -43,11 +46,17 @@ public class GlobalExceptionHandler {
                 errorCode.status().value(),
                 request.getMethod(),
                 request.getRequestURI(),
-                exception.getMessage()
+                exception.getMessage(),
+                exception
         );
 
-        return problemResponse(errorCode,
-                ErrorResponse.of(errorCode, exception.getMessage(), request)
+        return problemResponse(
+                errorCode,
+                ErrorResponse.of(
+                        errorCode,
+                        exception.getMessage(),
+                        request
+                )
         );
     }
 
@@ -195,6 +204,33 @@ public class GlobalExceptionHandler {
 
         return problemResponse(errorCode, ErrorResponse.of(errorCode, request));
     }
+
+    /**
+     * DB 접근 실패 시 처리 (DB 연결 실패, 쿼리 실행 실패 등)
+     */
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccessException(
+            DataAccessException exception,
+            HttpServletRequest request
+    ) {
+        log.error(
+                "데이터 저장소 접근 실패. method={}, path={}, exceptionType={}, message={}",
+                request.getMethod(),
+                request.getRequestURI(),
+                exception.getClass().getSimpleName(),
+                exception.getMessage(),
+                exception
+        );
+
+        ErrorCode errorCode = CommonErrorCode.DATA_STORE_UNAVAILABLE;
+
+        return problemResponse(
+                errorCode,
+                ErrorResponse.of(errorCode, request)
+        );
+    }
+
+
 
 
     // =========================================================================

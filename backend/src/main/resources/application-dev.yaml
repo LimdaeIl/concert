@@ -32,3 +32,22 @@ spring:
     encoding: UTF-8
     validate-on-migrate: true
     clean-disabled: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
+      repositories:
+        enabled: false
+
+  mail:
+    host: smtp.naver.com
+    port: 465
+    username: ${NAVER_MAIL_USERNAME}
+    password: ${NAVER_MAIL_PASSWORD}
+
+app:
+  mail:
+    sender: ${NAVER_MAIL_ADDRESS}
