@@ -119,4 +119,8 @@ public class Member extends BaseTimeEntity {
 
         socialAccounts.add(socialAccount);
     }
+
+    public boolean isSignInAllowed() {
+        return status == MemberStatus.ACTIVE;
+    }
 }
