@@ -58,6 +58,12 @@ app:
       token-expiration-seconds: ${PHONE_TOKEN_EXPIRATION_SECONDS}
       max-failed-attempts: ${PHONE_MAX_FAILED_ATTEMPTS}
 
+  jwt:
+    base64Secret: ${JWT_SECRET}
+    issuer: ${JWT_ISSUER}
+    accessTokenExpiration: ${JWT_ACCESS_TOKEN_EXPIRE}
+    refreshTokenExpiration: ${JWT_REFRESH_TOKEN_EXPIRE}
+
 solapi:
   api-key: ${SOLAPI_API_KEY}
   api-secret: ${SOLAPI_API_SECRET}
