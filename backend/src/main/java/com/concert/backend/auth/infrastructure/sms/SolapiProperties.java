@@ -33,5 +33,9 @@ public record SolapiProperties(
         }
 
         sender = sender.replaceAll("[^0-9]", "");
+
+        if (sender.isBlank()) {
+            throw new IllegalArgumentException("SOLAPI 발신번호는 숫자만 포함해야 합니다.");
+        }
     }
 }
