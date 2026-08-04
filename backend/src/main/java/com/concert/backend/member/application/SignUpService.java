@@ -1,14 +1,17 @@
 package com.concert.backend.member.application;
 
 import com.concert.backend.auth.application.EmailVerificationService;
+import com.concert.backend.auth.application.PhoneVerificationService;
 import com.concert.backend.common.domain.Address;
 import com.concert.backend.member.application.command.SignUpCommand;
+import com.concert.backend.member.application.event.MemberSignedUpEvent;
 import com.concert.backend.member.application.result.SignUpResult;
 import com.concert.backend.member.domain.Member;
 import com.concert.backend.member.domain.MemberRepository;
 import com.concert.backend.member.exception.MemberErrorCode;
 import com.concert.backend.member.exception.MemberException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,19 +23,18 @@ public class SignUpService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailVerificationService emailVerificationService;
+    private final PhoneVerificationService phoneVerificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public SignUpResult signUp(SignUpCommand command) {
-        emailVerificationService.validateVerificationToken(
-                command.email(),
-                command.emailVerificationToken()
-        );
+        emailVerificationService.validateVerificationToken(command.email(), command.emailVerificationToken());
+        phoneVerificationService.validateVerificationToken(command.phone(), command.phoneVerificationToken());
 
         validateDuplicateEmail(command.email());
         validateDuplicatePhone(command.phone());
 
-        String encodedPassword =
-                passwordEncoder.encode(command.password());
+        String encodedPassword = passwordEncoder.encode(command.password());
 
         Address address = Address.of(
                 command.roadAddress(),
@@ -53,8 +55,11 @@ public class SignUpService {
 
         Member savedMember = memberRepository.save(member);
 
-        emailVerificationService.consumeVerificationToken(
-                command.emailVerificationToken()
+        eventPublisher.publishEvent(
+                new MemberSignedUpEvent(
+                        command.emailVerificationToken(),
+                        command.phoneVerificationToken()
+                )
         );
 
         return SignUpResult.from(savedMember);
@@ -62,17 +67,13 @@ public class SignUpService {
 
     private void validateDuplicateEmail(String email) {
         if (memberRepository.existsByEmail(email)) {
-            throw new MemberException(
-                    MemberErrorCode.DUPLICATE_EMAIL
-            );
+            throw new MemberException(MemberErrorCode.DUPLICATE_EMAIL);
         }
     }
 
     private void validateDuplicatePhone(String phone) {
         if (memberRepository.existsByPhone(phone)) {
-            throw new MemberException(
-                    MemberErrorCode.DUPLICATE_PHONE
-            );
+            throw new MemberException(MemberErrorCode.DUPLICATE_PHONE);
         }
     }
 }

@@ -13,7 +13,8 @@ public record SignUpCommand(
         String zipCode,
         BigDecimal latitude,
         BigDecimal longitude,
-        String emailVerificationToken
+        String emailVerificationToken,
+        String phoneVerificationToken
 ) {
 
 }

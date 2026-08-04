@@ -49,7 +49,10 @@ public record SignUpRequest(
         BigDecimal longitude,
 
         @NotBlank(message = "이메일 인증 토큰은 필수입니다.")
-        String emailVerificationToken
+        String emailVerificationToken,
+
+        @NotBlank(message = "휴대전화 인증 토큰은 필수입니다.")
+        String phoneVerificationToken
 
 ) {
 
@@ -65,7 +68,8 @@ public record SignUpRequest(
                 zipCode,
                 latitude,
                 longitude,
-                emailVerificationToken
+                emailVerificationToken,
+                phoneVerificationToken
         );
     }
 }

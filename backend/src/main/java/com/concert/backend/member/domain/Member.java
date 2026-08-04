@@ -1,7 +1,6 @@
 package com.concert.backend.member.domain;
 
 import com.concert.backend.common.domain.Address;
-import com.concert.backend.common.domain.BaseAuditEntity;
 import com.concert.backend.common.domain.BaseTimeEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -26,10 +25,16 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(
         name = "v1_members",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_v1_members_email",
-                columnNames = "email"
-        )
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_v1_members_email",
+                        columnNames = "email"
+                ),
+                @UniqueConstraint(
+                        name = "uk_v1_members_phone",
+                        columnNames = "phone"
+                )
+        }
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

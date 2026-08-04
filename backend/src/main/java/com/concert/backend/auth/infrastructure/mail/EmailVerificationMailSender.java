@@ -35,16 +35,12 @@ public class EmailVerificationMailSender {
             context.setVariable("expireMinutes", 5);
 
             String html = templateEngine.process("mail/email-verification", context);
-
             helper.setText(html, true);
 
             mailSender.send(mimeMessage);
 
         } catch (MessagingException | MailException exception) {
-            throw new AuthException(
-                    AuthErrorCode.EMAIL_SEND_FAILED,
-                    exception
-            );
+            throw new AuthException(AuthErrorCode.EMAIL_SEND_FAILED, exception);
         }
     }
 }

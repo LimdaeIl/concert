@@ -60,11 +60,7 @@ public class EmailVerificationService {
         emailVerificationRepository.deleteCode(email);
         emailVerificationRepository.deleteFailedAttempts(email);
 
-        return VerifyEmailResult.of(
-                email,
-                verificationToken,
-                VERIFICATION_TOKEN_EXPIRES_IN_SECONDS
-        );
+        return VerifyEmailResult.of(email, verificationToken, VERIFICATION_TOKEN_EXPIRES_IN_SECONDS);
     }
 
     public void validateVerificationToken(String rawEmail, String verificationToken) {
