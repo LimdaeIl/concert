@@ -5,12 +5,7 @@ public record SendPhoneVerificationResponse(
         long expiresInSeconds
 ) {
 
-    private static final long CODE_EXPIRES_IN_SECONDS = 180L;
-
-    public static SendPhoneVerificationResponse of(String phone) {
-        return new SendPhoneVerificationResponse(
-                phone,
-                CODE_EXPIRES_IN_SECONDS
-        );
+    public static SendPhoneVerificationResponse of(String phone,  long expiresInSeconds) {
+        return new SendPhoneVerificationResponse(phone, expiresInSeconds);
     }
 }

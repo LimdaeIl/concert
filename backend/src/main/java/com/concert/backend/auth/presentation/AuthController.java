@@ -2,6 +2,7 @@ package com.concert.backend.auth.presentation;
 
 import com.concert.backend.auth.application.EmailVerificationService;
 import com.concert.backend.auth.application.PhoneVerificationService;
+import com.concert.backend.auth.application.result.SendPhoneVerificationResult;
 import com.concert.backend.auth.application.result.VerifyEmailResult;
 import com.concert.backend.auth.application.result.VerifyPhoneResult;
 import com.concert.backend.auth.presentation.request.SendEmailVerificationRequest;
@@ -42,7 +43,8 @@ public class AuthController {
     public ResponseEntity<VerifyEmailResponse> verifyEmail(
             @Valid @RequestBody VerifyEmailRequest request
     ) {
-        VerifyEmailResult result = emailVerificationService.verify(request.email(), request.verificationCode());
+        VerifyEmailResult result = emailVerificationService.verify(request.email(),
+                request.verificationCode());
 
         return ResponseEntity.ok(VerifyEmailResponse.from(result));
     }
@@ -50,16 +52,19 @@ public class AuthController {
     @PostMapping("/phone-verifications")
     public ResponseEntity<SendPhoneVerificationResponse>
     sendPhoneVerification(@Valid @RequestBody SendPhoneVerificationRequest request) {
-        phoneVerificationService.sendVerificationCode(request.phone());
+        SendPhoneVerificationResult result = phoneVerificationService.sendVerificationCode(
+                request.phone());
 
-        return ResponseEntity.ok(SendPhoneVerificationResponse.of(request.phone()));
+        return ResponseEntity.ok(
+                SendPhoneVerificationResponse.of(result.phone(), result.expiresInSeconds()));
     }
 
     @PostMapping("/phone-verifications/verify")
     public ResponseEntity<VerifyPhoneResponse> verifyPhone(
             @Valid @RequestBody VerifyPhoneRequest request
     ) {
-        VerifyPhoneResult result = phoneVerificationService.verify(request.phone(), request.verificationCode());
+        VerifyPhoneResult result = phoneVerificationService.verify(request.phone(),
+                request.verificationCode());
 
         return ResponseEntity.ok(VerifyPhoneResponse.from(result));
     }

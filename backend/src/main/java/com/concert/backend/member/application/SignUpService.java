@@ -28,11 +28,11 @@ public class SignUpService {
 
     @Transactional
     public SignUpResult signUp(SignUpCommand command) {
-        validateDuplicateEmail(command.email());
-        validateDuplicatePhone(command.phone());
-
         emailVerificationService.validateVerificationToken(command.email(), command.emailVerificationToken());
         phoneVerificationService.validateVerificationToken(command.phone(), command.phoneVerificationToken());
+
+        validateDuplicateEmail(command.email());
+        validateDuplicatePhone(command.phone());
 
         String encodedPassword = passwordEncoder.encode(command.password());
 

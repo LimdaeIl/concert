@@ -1,5 +1,6 @@
 package com.concert.backend.auth.application;
 
+import com.concert.backend.auth.application.result.SendPhoneVerificationResult;
 import com.concert.backend.auth.application.result.VerifyPhoneResult;
 import com.concert.backend.auth.domain.PhoneNumberNormalizer;
 import com.concert.backend.auth.domain.PhoneVerificationCodeGenerator;
@@ -27,9 +28,11 @@ public class PhoneVerificationService {
     private final PhoneNumberNormalizer phoneNumberNormalizer;
     private final PhoneVerificationProperties properties;
 
-    public void sendVerificationCode(String rawPhone) {
+    public SendPhoneVerificationResult sendVerificationCode(String rawPhone) {
         String phone = phoneNumberNormalizer.normalize(rawPhone);
+
         validatePhoneNotRegistered(phone);
+
         String verificationCode = codeGenerator.generate();
 
         /*
@@ -45,6 +48,8 @@ public class PhoneVerificationService {
             deleteVerificationRequestQuietly(phone);
             throw exception;
         }
+
+        return SendPhoneVerificationResult.of(phone, properties.codeExpirationSeconds());
     }
 
     public VerifyPhoneResult verify(String rawPhone, String verificationCode) {
