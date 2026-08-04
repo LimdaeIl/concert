@@ -5,6 +5,8 @@ import com.concert.backend.member.application.command.SignUpCommand;
 import com.concert.backend.member.application.result.SignUpResult;
 import com.concert.backend.member.domain.Member;
 import com.concert.backend.member.domain.MemberRepository;
+import com.concert.backend.member.exception.MemberErrorCode;
+import com.concert.backend.member.exception.MemberException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,13 +50,13 @@ public class SignUpService {
 
     private void validateDuplicateEmail(String email) {
         if (memberRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw new MemberException(MemberErrorCode.DUPLICATE_EMAIL);
         }
     }
 
     private void validateDuplicatePhone(String phone) {
         if (memberRepository.existsByPhone(phone)) {
-            throw new IllegalArgumentException("이미 사용 중인 휴대전화 번호입니다.");
+            throw new MemberException(MemberErrorCode.DUPLICATE_PHONE);
         }
     }
 }
