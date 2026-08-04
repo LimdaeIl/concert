@@ -51,3 +51,14 @@ spring:
 app:
   mail:
     sender: ${NAVER_MAIL_ADDRESS}
+
+  auth:
+    phone-verification:
+      code-expiration-seconds: ${PHONE_EXPIRATION_SECONDS}
+      token-expiration-seconds: ${PHONE_TOKEN_EXPIRATION_SECONDS}
+      max-failed-attempts: ${PHONE_MAX_FAILED_ATTEMPTS}
+
+solapi:
+  api-key: ${SOLAPI_API_KEY}
+  api-secret: ${SOLAPI_API_SECRET}
+  sender: ${SOLAPI_SENDER}

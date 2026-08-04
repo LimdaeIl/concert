@@ -9,46 +9,24 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class RedisEmailVerificationRepository
-        implements EmailVerificationRepository {
+public class RedisEmailVerificationRepository implements EmailVerificationRepository {
 
-    private static final String CODE_KEY_PREFIX =
-            "auth:email-verification:code:";
-
-    private static final String ATTEMPTS_KEY_PREFIX =
-            "auth:email-verification:attempts:";
-
-    private static final String TOKEN_KEY_PREFIX =
-            "auth:email-verification:token:";
-
-    private static final Duration CODE_TTL =
-            Duration.ofMinutes(5);
-
-    private static final Duration ATTEMPTS_TTL =
-            Duration.ofMinutes(5);
-
-    private static final Duration TOKEN_TTL =
-            Duration.ofMinutes(30);
-
+    private static final String CODE_KEY_PREFIX = "auth:email-verification:code:";
+    private static final String ATTEMPTS_KEY_PREFIX = "auth:email-verification:attempts:";
+    private static final String TOKEN_KEY_PREFIX = "auth:email-verification:token:";
+    private static final Duration CODE_TTL = Duration.ofMinutes(5);
+    private static final Duration ATTEMPTS_TTL = Duration.ofMinutes(5);
+    private static final Duration TOKEN_TTL = Duration.ofMinutes(30);
     private final StringRedisTemplate redisTemplate;
 
     @Override
-    public void saveCode(
-            String email,
-            String verificationCode
-    ) {
-        redisTemplate.opsForValue().set(
-                createCodeKey(email),
-                verificationCode,
-                CODE_TTL
-        );
+    public void saveCode(String email, String verificationCode) {
+        redisTemplate.opsForValue().set(createCodeKey(email), verificationCode, CODE_TTL);
     }
 
     @Override
     public Optional<String> findCode(String email) {
-        String verificationCode = redisTemplate.opsForValue()
-                .get(createCodeKey(email));
-
+        String verificationCode = redisTemplate.opsForValue().get(createCodeKey(email));
         return Optional.ofNullable(verificationCode);
     }
 
@@ -60,9 +38,7 @@ public class RedisEmailVerificationRepository
     @Override
     public long incrementFailedAttempts(String email) {
         String key = createAttemptsKey(email);
-
-        Long attempts = redisTemplate.opsForValue()
-                .increment(key);
+        Long attempts = redisTemplate.opsForValue().increment(key);
 
         if (attempts != null && attempts == 1L) {
             redisTemplate.expire(key, ATTEMPTS_TTL);
@@ -77,34 +53,20 @@ public class RedisEmailVerificationRepository
     }
 
     @Override
-    public void saveVerificationToken(
-            String verificationToken,
-            String email
-    ) {
-        redisTemplate.opsForValue().set(
-                createTokenKey(verificationToken),
-                email,
-                TOKEN_TTL
-        );
+    public void saveVerificationToken(String verificationToken, String email) {
+        redisTemplate.opsForValue().set(createTokenKey(verificationToken), email, TOKEN_TTL);
     }
 
     @Override
-    public Optional<String> findEmailByVerificationToken(
-            String verificationToken
-    ) {
-        String email = redisTemplate.opsForValue()
-                .get(createTokenKey(verificationToken));
+    public Optional<String> findEmailByVerificationToken(String verificationToken) {
+        String email = redisTemplate.opsForValue().get(createTokenKey(verificationToken));
 
         return Optional.ofNullable(email);
     }
 
     @Override
-    public void deleteVerificationToken(
-            String verificationToken
-    ) {
-        redisTemplate.delete(
-                createTokenKey(verificationToken)
-        );
+    public void deleteVerificationToken(String verificationToken) {
+        redisTemplate.delete(createTokenKey(verificationToken));
     }
 
     private String createCodeKey(String email) {

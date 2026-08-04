@@ -19,5 +19,4 @@ public interface EmailVerificationRepository {
     long incrementFailedAttempts(String email);
 
     void deleteFailedAttempts(String email);
-
 }

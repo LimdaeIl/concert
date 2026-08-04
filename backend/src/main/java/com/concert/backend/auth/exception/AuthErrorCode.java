@@ -37,7 +37,15 @@ public enum AuthErrorCode implements ErrorCode {
     EMAIL_VERIFICATION_STORE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "이메일 인증 저장소에 접근할 수 없습니다."),
     EMAIL_VERIFICATION_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "이메일 인증 토큰이 유효하지 않거나 만료되었습니다."),
     EMAIL_VERIFICATION_EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "인증된 이메일과 회원가입 이메일이 일치하지 않습니다."),
-    EMAIL_VERIFICATION_ATTEMPTS_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "이메일 인증번호 입력 가능 횟수를 초과했습니다. 인증번호를 다시 요청해주세요.");
+    EMAIL_VERIFICATION_ATTEMPTS_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "이메일 인증번호 입력 가능 횟수를 초과했습니다. 인증번호를 다시 요청해주세요."),
+    INVALID_PHONE_NUMBER(HttpStatus.BAD_REQUEST, "올바른 휴대전화번호 형식이 아닙니다."),
+    PHONE_VERIFICATION_CODE_MISMATCH(HttpStatus.BAD_REQUEST, "휴대전화 인증번호가 일치하지 않습니다."),
+    PHONE_VERIFICATION_CODE_EXPIRED(HttpStatus.GONE, "휴대전화 인증번호가 만료되었거나 인증 요청이 존재하지 않습니다."),
+    PHONE_VERIFICATION_ATTEMPTS_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "휴대전화 인증번호 입력 가능 횟수를 초과했습니다. 인증번호를 다시 요청해주세요."),
+    PHONE_VERIFICATION_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "휴대전화 인증 토큰이 유효하지 않거나 만료되었습니다."),
+    PHONE_VERIFICATION_PHONE_MISMATCH(HttpStatus.BAD_REQUEST, "인증된 휴대전화번호와 회원가입 휴대전화번호가 일치하지 않습니다."),
+    PHONE_VERIFICATION_STORE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "휴대전화 인증 저장소에 접근할 수 없습니다."),
+    PHONE_SEND_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "휴대전화 인증번호 발송에 실패했습니다.");
 
     private final HttpStatus status;
     private final String message;
