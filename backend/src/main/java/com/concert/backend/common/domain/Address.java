@@ -26,10 +26,10 @@ public class Address {
     @Column(name = "zip_code", length = 10)
     private String zipCode;
 
-    @Column(name = "latitude", nullable = false, precision = 10, scale = 7)
+    @Column(name = "latitude", precision = 10, scale = 7)
     private BigDecimal latitude;
 
-    @Column(name = "longitude", nullable = false, precision = 10, scale = 7)
+    @Column(name = "longitude",precision = 10, scale = 7)
     private BigDecimal longitude;
 
     private Address(
@@ -44,8 +44,8 @@ public class Address {
         this.jibunAddress = jibunAddress;
         this.detailAddress = detailAddress;
         this.zipCode = zipCode;
-        this.latitude = Objects.requireNonNull(latitude);
-        this.longitude = Objects.requireNonNull(longitude);
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public static Address of(
