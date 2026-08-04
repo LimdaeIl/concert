@@ -36,7 +36,8 @@ public enum AuthErrorCode implements ErrorCode {
     EMAIL_SEND_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "이메일 인증번호 발송에 실패했습니다."),
     EMAIL_VERIFICATION_STORE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "이메일 인증 저장소에 접근할 수 없습니다."),
     EMAIL_VERIFICATION_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "이메일 인증 토큰이 유효하지 않거나 만료되었습니다."),
-    EMAIL_VERIFICATION_EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "인증된 이메일과 회원가입 이메일이 일치하지 않습니다.");
+    EMAIL_VERIFICATION_EMAIL_MISMATCH(HttpStatus.BAD_REQUEST, "인증된 이메일과 회원가입 이메일이 일치하지 않습니다."),
+    EMAIL_VERIFICATION_ATTEMPTS_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "이메일 인증번호 입력 가능 횟수를 초과했습니다. 인증번호를 다시 요청해주세요.");
 
     private final HttpStatus status;
     private final String message;

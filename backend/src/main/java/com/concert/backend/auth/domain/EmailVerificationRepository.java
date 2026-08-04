@@ -15,4 +15,9 @@ public interface EmailVerificationRepository {
     Optional<String> findEmailByVerificationToken(String verificationToken);
 
     void deleteVerificationToken(String verificationToken);
+
+    long incrementFailedAttempts(String email);
+
+    void deleteFailedAttempts(String email);
+
 }
