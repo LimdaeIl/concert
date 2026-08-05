@@ -123,7 +123,7 @@ class ReissueTokenServiceTest {
             Assertions.assertAll(
                     () -> Assertions.assertEquals(
                             MEMBER_ID,
-                            result.memberId()
+                            result.id()
                     ),
                     () -> Assertions.assertEquals(
                             NEW_ACCESS_TOKEN,
@@ -135,7 +135,7 @@ class ReissueTokenServiceTest {
                     ),
                     () -> Assertions.assertEquals(
                             REFRESH_TOKEN_TTL.toSeconds(),
-                            result.refreshTokenExpiresInSeconds()
+                            result.remainingSecondByRefreshToken()
                     )
             );
 
