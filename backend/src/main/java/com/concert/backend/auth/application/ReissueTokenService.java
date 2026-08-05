@@ -1,7 +1,8 @@
-package com.concert.backend.auth.domain;
+package com.concert.backend.auth.application;
 
 
 import com.concert.backend.auth.application.result.ReissueTokenResult;
+import com.concert.backend.auth.domain.RefreshTokenRepository;
 import com.concert.backend.auth.exception.AuthErrorCode;
 import com.concert.backend.auth.exception.AuthException;
 import com.concert.backend.auth.infrastructure.jwt.JWTHashUtil;

@@ -9,7 +9,7 @@ import com.concert.backend.auth.application.result.SendPhoneVerificationResult;
 import com.concert.backend.auth.application.result.SignInResult;
 import com.concert.backend.auth.application.result.VerifyEmailResult;
 import com.concert.backend.auth.application.result.VerifyPhoneResult;
-import com.concert.backend.auth.domain.ReissueTokenService;
+import com.concert.backend.auth.application.ReissueTokenService;
 import com.concert.backend.auth.infrastructure.jwt.RefreshTokenCookieProvider;
 import com.concert.backend.auth.presentation.request.SendEmailVerificationRequest;
 import com.concert.backend.auth.presentation.request.SendPhoneVerificationRequest;
