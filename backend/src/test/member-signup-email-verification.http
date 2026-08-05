@@ -1,0 +1,191 @@
+### Concert 회원가입 이메일 인증 시나리오
+### JetBrains HTTP Client 기준
+###
+### 실행 순서
+### 1) sendEmailVerification 실행
+### 2) 이메일로 받은 6자리 인증번호를 verificationCode 변수에 입력
+### 3) verifyEmail 실행
+### 4) signUp 실행
+###
+### 동일 이메일로 재실행하려면 email과 phone을 변경하세요.
+
+@baseUrl = http://localhost:8080
+@contentType = application/json
+
+@email = optional94@naver.com
+@verificationCode = 321384
+@password = Concert1234!
+@name = 임대일
+@phone = 01012345678
+
+@roadAddress = 경기도 안산시 단원구 예술대학로 17
+@jibunAddress = 경기도 안산시 단원구 고잔동 534-3
+@detailAddress = 101동 1001호
+@zipCode = 15360
+@latitude = 37.318257
+@longitude = 126.837733
+
+
+### 1. 이메일 인증번호 전송
+# @name sendEmailVerification
+POST {{baseUrl}}/api/v1/auth/email-verifications
+Content-Type: {{contentType}}
+
+{
+  "email": "{{email}}"
+}
+
+> {%
+    client.test("이메일 인증번호 전송 응답은 200이다", function () {
+        client.assert(response.status === 200, "status=" + response.status);
+    });
+
+    const body = response.body;
+    const data = body && body.data ? body.data : body;
+%}
+
+
+### 2. 이메일 인증번호 검증 및 일회용 토큰 발급
+### 위 verificationCode를 실제 이메일로 받은 값으로 변경한 후 실행하세요.
+# @name verifyEmail
+POST {{baseUrl}}/api/v1/auth/email-verifications/verify
+Content-Type: {{contentType}}
+
+{
+  "email": "{{email}}",
+  "verificationCode": "{{verificationCode}}"
+}
+
+> {%
+    client.test("이메일 인증 응답은 200이다", function () {
+        client.assert(response.status === 200, "status=" + response.status);
+    });
+
+    const body = response.body;
+    const data = body && body.data ? body.data : body;
+
+    client.test("인증 토큰이 발급된다", function () {
+        client.assert(data != null, "응답 본문이 없습니다.");
+        client.assert(
+            typeof data.verificationToken === "string"
+            && data.verificationToken.length > 0,
+            "verificationToken이 없습니다."
+        );
+    });
+
+    client.test("인증 토큰 만료 시간이 양수다", function () {
+        if (data.expiresInSeconds !== undefined) {
+            client.assert(
+                Number(data.expiresInSeconds) > 0,
+                "expiresInSeconds가 올바르지 않습니다."
+            );
+        }
+    });
+
+    client.global.set("emailVerificationToken",data.verificationToken
+    );
+%}
+
+
+### 3. 회원가입
+# @name signUp
+POST {{baseUrl}}/api/v1/members/sign-up
+Content-Type: {{contentType}}
+
+{
+  "email": "{{email}}",
+  "emailVerificationToken": "{{emailVerificationToken}}",
+  "password": "{{password}}",
+  "name": "{{name}}",
+  "phone": "{{phone}}",
+  "roadAddress": "{{roadAddress}}",
+  "jibunAddress": "{{jibunAddress}}",
+  "detailAddress": "{{detailAddress}}",
+  "zipCode": "{{zipCode}}",
+  "latitude": {{latitude}},
+  "longitude": {{longitude}}
+}
+
+> {%
+    client.test("회원가입 응답은 성공 상태다", function () {
+        client.assert(
+            response.status === 200 || response.status === 201,
+            "status=" + response.status
+        );
+    });
+
+    const body = response.body;
+    const data = body && body.data ? body.data : body;
+
+    client.test("회원가입 결과가 존재한다", function () {
+        client.assert(data != null, "회원가입 응답 데이터가 없습니다.");
+    });
+
+    if (data) {
+        const memberId = data.memberId || data.id;
+        if (memberId !== undefined && memberId !== null) {
+            client.global.set("memberId", memberId);
+        }
+    }
+%}
+
+
+### 4. 선택 테스트 — 사용한 인증 토큰 재사용 차단
+### 회원가입 성공 후 같은 토큰으로 다시 요청합니다.
+### 이메일 중복 검사가 먼저 실행되면 409, 토큰 소비 검사가 먼저 실행되면 401 등이 반환될 수 있습니다.
+# @name reuseConsumedVerificationToken
+POST {{baseUrl}}/api/v1/members/sign-up
+Content-Type: {{contentType}}
+
+{
+  "email": "{{email}}",
+  "emailVerificationToken": "{{emailVerificationToken}}",
+  "password": "{{password}}",
+  "name": "{{name}}",
+  "phone": "01087654321",
+  "roadAddress": "{{roadAddress}}",
+  "jibunAddress": "{{jibunAddress}}",
+  "detailAddress": "{{detailAddress}}",
+  "zipCode": "{{zipCode}}",
+  "latitude": {{latitude}},
+  "longitude": {{longitude}}
+}
+
+> {%
+    client.test("소비된 인증 토큰 재사용은 실패한다", function () {
+        client.assert(
+            response.status >= 400,
+            "소비된 인증 토큰으로 요청이 성공했습니다. status=" + response.status
+        );
+    });
+%}
+
+
+### 5. 선택 테스트 — 이메일과 인증 토큰 불일치
+### 다른 이메일을 사용하므로 실패해야 합니다.
+# @name mismatchedEmailAndVerificationToken
+POST {{baseUrl}}/api/v1/members/sign-up
+Content-Type: {{contentType}}
+
+{
+  "email": "another-user@example.com",
+  "emailVerificationToken": "{{emailVerificationToken}}",
+  "password": "{{password}}",
+  "name": "{{name}}",
+  "phone": "01099998888",
+  "roadAddress": "{{roadAddress}}",
+  "jibunAddress": "{{jibunAddress}}",
+  "detailAddress": "{{detailAddress}}",
+  "zipCode": "{{zipCode}}",
+  "latitude": {{latitude}},
+  "longitude": {{longitude}}
+}
+
+> {%
+    client.test("인증 이메일과 회원가입 이메일 불일치는 실패한다", function () {
+        client.assert(
+            response.status >= 400,
+            "이메일 불일치 요청이 성공했습니다. status=" + response.status
+        );
+    });
+%}
