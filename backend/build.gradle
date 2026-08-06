@@ -51,6 +51,10 @@ dependencies {
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
 
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
+
+
 }
 
 tasks.named('test') {
