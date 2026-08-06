@@ -226,5 +226,27 @@ public class Member extends BaseTimeEntity {
         this.password = Objects.requireNonNull(encodedPassword);
     }
 
+    public void changeEmail(String newEmail) {
+        if (!isSignInAllowed()) {
+            throw new MemberException(
+                    MemberErrorCode.MEMBER_NOT_ACTIVE
+            );
+        }
+
+        if (newEmail == null || newEmail.isBlank()) {
+            throw new MemberException(
+                    MemberErrorCode.EMAIL_REQUIRED
+            );
+        }
+
+        if (email.equalsIgnoreCase(newEmail)) {
+            throw new MemberException(
+                    MemberErrorCode.SAME_AS_CURRENT_EMAIL
+            );
+        }
+
+        this.email = newEmail;
+    }
+
 }
 
