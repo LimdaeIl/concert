@@ -13,18 +13,12 @@ public class OAuth2UserInfoFactory {
     private final KakaoOAuth2UserInfoExtractor kakaoExtractor;
     private final GithubOAuth2UserInfoExtractor githubExtractor;
 
-    public OAuth2UserInfo create(
-            String registrationId,
-            Map<String, Object> attributes
-    ) {
+    public OAuth2UserInfo create(String registrationId, Map<String, Object> attributes) {
         if (registrationId == null || registrationId.isBlank()) {
-            throw new IllegalArgumentException(
-                    "OAuth2 registrationId는 필수입니다."
-            );
+            throw new IllegalArgumentException("OAuth2 registrationId는 필수입니다.");
         }
 
-        String normalizedRegistrationId =
-                registrationId.toLowerCase(Locale.ROOT);
+        String normalizedRegistrationId = registrationId.toLowerCase(Locale.ROOT);
 
         return switch (normalizedRegistrationId) {
             case "google" -> googleExtractor.extract(attributes);

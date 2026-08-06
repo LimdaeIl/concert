@@ -22,29 +22,19 @@ public class SignInService {
     @Transactional
     public SignInResult signIn(SignInCommand command) {
         Member member = memberRepository.findByEmail(command.email())
-                .orElseThrow(
-                        () -> new AuthException(
-                                AuthErrorCode.INVALID_SIGN_IN
-                        )
-                );
+                .orElseThrow(() -> new AuthException(AuthErrorCode.INVALID_SIGN_IN));
 
         validateSignIn(member, command.password());
 
         return tokenIssueService.issue(member);
     }
 
-    private void validateSignIn(
-            Member member,
-            String rawPassword
-    ) {
+    private void validateSignIn(Member member, String rawPassword) {
         if (!member.isSignInAllowed()) {
             throw new AuthException(AuthErrorCode.INVALID_SIGN_IN);
         }
 
-        if (!passwordEncoder.matches(
-                rawPassword,
-                member.getPassword()
-        )) {
+        if (!passwordEncoder.matches(rawPassword, member.getPassword())) {
             throw new AuthException(AuthErrorCode.INVALID_SIGN_IN);
         }
     }

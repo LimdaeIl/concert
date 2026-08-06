@@ -30,9 +30,7 @@ public class CookieOAuth2AuthorizationRequestRepository implements
     ) {
         Cookie cookie = WebUtils.getCookie(request, properties.name());
 
-        if (cookie == null
-                || cookie.getValue() == null
-                || cookie.getValue().isBlank()) {
+        if (cookie == null || cookie.getValue() == null || cookie.getValue().isBlank()) {
             return null;
         }
 
@@ -49,10 +47,7 @@ public class CookieOAuth2AuthorizationRequestRepository implements
         } catch (OAuth2CookieException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new OAuth2CookieException(
-                    "OAuth2 인증 요청 쿠키 역직렬화에 실패했습니다.",
-                    exception
-            );
+            throw new OAuth2CookieException("OAuth2 인증 요청 쿠키 역직렬화에 실패했습니다.", exception);
         }
     }
 
@@ -69,9 +64,7 @@ public class CookieOAuth2AuthorizationRequestRepository implements
 
         try {
             OAuth2AuthorizationRequestPayload payload =
-                    OAuth2AuthorizationRequestPayload.from(
-                            authorizationRequest
-                    );
+                    OAuth2AuthorizationRequestPayload.from(authorizationRequest);
 
             byte[] serialized = jsonMapper.writeValueAsBytes(payload);
             String encryptedValue = cookieCipher.encrypt(serialized);
@@ -89,10 +82,7 @@ public class CookieOAuth2AuthorizationRequestRepository implements
         } catch (OAuth2CookieException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new OAuth2CookieException(
-                    "OAuth2 인증 요청 쿠키 직렬화에 실패했습니다.",
-                    exception
-            );
+            throw new OAuth2CookieException("OAuth2 인증 요청 쿠키 직렬화에 실패했습니다.", exception);
         }
     }
 
@@ -101,17 +91,14 @@ public class CookieOAuth2AuthorizationRequestRepository implements
             HttpServletRequest request,
             HttpServletResponse response
     ) {
-        OAuth2AuthorizationRequest authorizationRequest =
-                loadAuthorizationRequest(request);
+        OAuth2AuthorizationRequest authorizationRequest = loadAuthorizationRequest(request);
 
         deleteAuthorizationRequestCookie(response);
 
         return authorizationRequest;
     }
 
-    public void deleteAuthorizationRequestCookie(
-            HttpServletResponse response
-    ) {
+    public void deleteAuthorizationRequestCookie(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie
                 .from(properties.name(), "")
                 .httpOnly(true)

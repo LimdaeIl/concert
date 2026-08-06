@@ -5,11 +5,7 @@ import java.util.Optional;
 
 public interface RefreshTokenRepository {
 
-    void save(
-            Long memberId,
-            String hashedRefreshToken,
-            Duration ttl
-    );
+    void save(Long memberId, String hashedRefreshToken, Duration ttl);
 
     Optional<String> findByMemberId(Long memberId);
 

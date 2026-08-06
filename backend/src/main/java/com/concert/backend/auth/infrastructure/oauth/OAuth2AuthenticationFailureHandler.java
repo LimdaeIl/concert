@@ -16,8 +16,7 @@ public class OAuth2AuthenticationFailureHandler
 
     private final OAuth2FlowProperties flowProperties;
 
-    private final CookieOAuth2AuthorizationRequestRepository
-            authorizationRequestRepository;
+    private final CookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
 
     @Override
     public void onAuthenticationFailure(
@@ -25,8 +24,7 @@ public class OAuth2AuthenticationFailureHandler
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException {
-        authorizationRequestRepository
-                .deleteAuthorizationRequestCookie(response);
+        authorizationRequestRepository.deleteAuthorizationRequestCookie(response);
 
         String redirectUri = UriComponentsBuilder
                 .fromUri(flowProperties.failureRedirectUri())

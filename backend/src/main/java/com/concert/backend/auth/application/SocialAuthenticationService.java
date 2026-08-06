@@ -28,10 +28,11 @@ public class SocialAuthenticationService {
             OAuth2UserInfo userInfo
     ) {
 
-        Optional<MemberSocialAccount> socialAccountOptional = socialAccountRepository.findByProviderAndProviderUserId(
-                userInfo.provider(),
-                userInfo.providerUserId()
-        );
+        Optional<MemberSocialAccount> socialAccountOptional =
+                socialAccountRepository.findByProviderAndProviderUserId(
+                        userInfo.provider(),
+                        userInfo.providerUserId()
+                );
 
         if (socialAccountOptional.isEmpty()) {
             return new NewSocialMemberResult(userInfo);
@@ -40,21 +41,14 @@ public class SocialAuthenticationService {
         return existingMember(socialAccountOptional.get());
     }
 
-    private ExistingSocialMemberResult existingMember(
-            MemberSocialAccount socialAccount
-    ) {
+    private ExistingSocialMemberResult existingMember(MemberSocialAccount socialAccount) {
         Member member = socialAccount.getMember();
 
         if (!member.isSignInAllowed()) {
             throw new AuthException(AuthErrorCode.OAUTH2_LOGIN_FAILED);
         }
+        socialAccount.updateLastLoginAt(LocalDateTime.now(clock));
 
-        socialAccount.updateLastLoginAt(
-                LocalDateTime.now(clock)
-        );
-
-        return new ExistingSocialMemberResult(
-                member.getId()
-        );
+        return new ExistingSocialMemberResult(member.getId());
     }
 }

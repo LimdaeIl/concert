@@ -12,9 +12,7 @@ public class SocialMemberSignedUpEventListener {
 
     private final PhoneVerificationService phoneVerificationService;
 
-    @TransactionalEventListener(
-            phase = TransactionPhase.AFTER_COMMIT
-    )
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handle(
             SocialMemberSignedUpEvent event
     ) {
@@ -23,3 +21,4 @@ public class SocialMemberSignedUpEventListener {
         );
     }
 }
+
