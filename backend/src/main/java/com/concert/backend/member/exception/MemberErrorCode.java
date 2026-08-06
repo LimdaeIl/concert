@@ -23,7 +23,9 @@ public enum MemberErrorCode implements ErrorCode {
     MEMBER_NOT_ACTIVE(HttpStatus.BAD_REQUEST, "회원이 활성화 상태가 아닙니다."),
     ALREADY_WITHDRAWN_MEMBER(HttpStatus.BAD_REQUEST, "이미 탈퇴된 회원입니다."),
     NO_PROFILE_CHANGES(HttpStatus.BAD_REQUEST, "프로필 변경 사항이 없습니다."),
-    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호가 올바르지 않습니다.");
+    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호가 올바르지 않습니다."),
+    PASSWORD_CHANGE_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "비밀번호 로그인을 사용하는 회원만 비밀번호를 변경할 수 있습니다."),
+    SAME_AS_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "새 비밀번호는 현재 비밀번호와 달라야 합니다.");
 
     private final HttpStatus status;
     private final String message;

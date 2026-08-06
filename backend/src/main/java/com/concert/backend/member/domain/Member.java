@@ -209,5 +209,22 @@ public class Member extends BaseTimeEntity {
         this.name = name;
         this.address = Objects.requireNonNull(address);
     }
+
+    public boolean hasPassword() {
+        return password != null && !password.isBlank();
+    }
+
+    public void changePassword(String encodedPassword) {
+        if (!isSignInAllowed()) {
+            throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE);
+        }
+
+        if (!hasPassword()) {
+            throw new MemberException(MemberErrorCode.PASSWORD_CHANGE_NOT_AVAILABLE);
+        }
+
+        this.password = Objects.requireNonNull(encodedPassword);
+    }
+
 }
 
