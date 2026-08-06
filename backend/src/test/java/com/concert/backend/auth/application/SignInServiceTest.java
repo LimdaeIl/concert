@@ -2,15 +2,10 @@ package com.concert.backend.auth.application;
 
 import com.concert.backend.auth.application.command.SignInCommand;
 import com.concert.backend.auth.application.result.SignInResult;
-import com.concert.backend.auth.domain.RefreshTokenRepository;
 import com.concert.backend.auth.exception.AuthErrorCode;
 import com.concert.backend.auth.exception.AuthException;
-import com.concert.backend.auth.infrastructure.jwt.JWTHashUtil;
-import com.concert.backend.auth.infrastructure.jwt.JwtTokenProvider;
 import com.concert.backend.member.domain.Member;
 import com.concert.backend.member.domain.MemberRepository;
-import com.concert.backend.member.domain.MemberRole;
-import java.time.Duration;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,9 +30,6 @@ class SignInServiceTest {
 
     private static final String ACCESS_TOKEN = "access-token";
     private static final String REFRESH_TOKEN = "refresh-token";
-    private static final String HASHED_REFRESH_TOKEN = "hashed-refresh-token";
-
-    private static final long REFRESH_TOKEN_REMAINING_MILLIS = 1_800_000L;
     private static final long REFRESH_TOKEN_REMAINING_SECONDS = 1_800L;
 
     @Mock
@@ -47,13 +39,7 @@ class SignInServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Mock
-    private RefreshTokenRepository tokenRepository;
-
-    @Mock
-    private JWTHashUtil jwtHashUtil;
+    private TokenIssueService tokenIssueService;
 
     @Mock
     private Member member;
@@ -65,9 +51,7 @@ class SignInServiceTest {
         signInService = new SignInService(
                 memberRepository,
                 passwordEncoder,
-                jwtTokenProvider,
-                tokenRepository,
-                jwtHashUtil
+                tokenIssueService
         );
     }
 
@@ -78,15 +62,25 @@ class SignInServiceTest {
         );
     }
 
+    private SignInResult createSignInResult() {
+        return SignInResult.of(
+                MEMBER_ID,
+                ACCESS_TOKEN,
+                REFRESH_TOKEN,
+                REFRESH_TOKEN_REMAINING_SECONDS
+        );
+    }
+
     @Nested
     @DisplayName("로그인 성공")
     class SignInSuccess {
 
         @Test
-        @DisplayName("유효한 이메일과 비밀번호이면 토큰을 발급하고 Refresh Token을 저장한다.")
+        @DisplayName("유효한 이메일과 비밀번호이면 토큰 발급 서비스에 회원을 전달한다.")
         void signIn_success() {
             // given
             SignInCommand command = createCommand();
+            SignInResult expectedResult = createSignInResult();
 
             Mockito.when(memberRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.of(member));
@@ -97,12 +91,6 @@ class SignInServiceTest {
             Mockito.when(member.getPassword())
                     .thenReturn(ENCODED_PASSWORD);
 
-            Mockito.when(member.getId())
-                    .thenReturn(MEMBER_ID);
-
-            Mockito.when(member.getRole())
-                    .thenReturn(MemberRole.MEMBER);
-
             Mockito.when(
                     passwordEncoder.matches(
                             RAW_PASSWORD,
@@ -110,142 +98,38 @@ class SignInServiceTest {
                     )
             ).thenReturn(true);
 
-            Mockito.when(
-                    jwtTokenProvider.createAccessToken(
-                            MEMBER_ID,
-                            MemberRole.MEMBER.name()
-                    )
-            ).thenReturn(ACCESS_TOKEN);
-
-            Mockito.when(
-                    jwtTokenProvider.createRefreshToken(MEMBER_ID)
-            ).thenReturn(REFRESH_TOKEN);
-
-            Mockito.when(
-                    jwtTokenProvider.getRefreshTokenRemainingMillis(
-                            REFRESH_TOKEN
-                    )
-            ).thenReturn(REFRESH_TOKEN_REMAINING_MILLIS);
-
-            Mockito.when(jwtHashUtil.sha256(REFRESH_TOKEN))
-                    .thenReturn(HASHED_REFRESH_TOKEN);
-
-            Mockito.when(
-                    jwtTokenProvider.getRefreshTokenRemainingSeconds(
-                            REFRESH_TOKEN
-                    )
-            ).thenReturn(REFRESH_TOKEN_REMAINING_SECONDS);
+            Mockito.when(tokenIssueService.issue(member))
+                    .thenReturn(expectedResult);
 
             // when
             SignInResult result = signInService.signIn(command);
 
             // then
-            Assertions.assertNotNull(result);
+            Assertions.assertSame(expectedResult, result);
 
-            Mockito.verify(memberRepository)
+            InOrder inOrder = Mockito.inOrder(
+                    memberRepository,
+                    member,
+                    passwordEncoder,
+                    tokenIssueService
+            );
+
+            inOrder.verify(memberRepository)
                     .findByEmail(EMAIL);
 
-            Mockito.verify(passwordEncoder)
-                    .matches(RAW_PASSWORD, ENCODED_PASSWORD);
+            inOrder.verify(member)
+                    .isSignInAllowed();
 
-            Mockito.verify(jwtTokenProvider)
-                    .createAccessToken(
-                            MEMBER_ID,
-                            MemberRole.MEMBER.name()
-                    );
+            inOrder.verify(member).getPassword();
 
-            Mockito.verify(jwtTokenProvider)
-                    .createRefreshToken(MEMBER_ID);
-
-            Mockito.verify(jwtHashUtil)
-                    .sha256(REFRESH_TOKEN);
-
-            Mockito.verify(tokenRepository)
-                    .save(
-                            MEMBER_ID,
-                            HASHED_REFRESH_TOKEN,
-                            Duration.ofMillis(
-                                    REFRESH_TOKEN_REMAINING_MILLIS
-                            )
-                    );
-        }
-
-        @Test
-        @DisplayName("Refresh Token은 원문이 아니라 해시값으로 저장한다.")
-        void signIn_savesHashedRefreshToken() {
-            // given
-            SignInCommand command = createCommand();
-
-            Mockito.when(memberRepository.findByEmail(EMAIL))
-                    .thenReturn(Optional.of(member));
-
-            Mockito.when(member.isSignInAllowed())
-                    .thenReturn(true);
-
-            Mockito.when(member.getPassword())
-                    .thenReturn(ENCODED_PASSWORD);
-
-            Mockito.when(member.getId())
-                    .thenReturn(MEMBER_ID);
-
-            Mockito.when(member.getRole())
-                    .thenReturn(MemberRole.MEMBER);
-
-            Mockito.when(
-                    passwordEncoder.matches(
+            inOrder.verify(passwordEncoder)
+                    .matches(
                             RAW_PASSWORD,
                             ENCODED_PASSWORD
-                    )
-            ).thenReturn(true);
-
-            Mockito.when(
-                    jwtTokenProvider.createAccessToken(
-                            MEMBER_ID,
-                            MemberRole.MEMBER.name()
-                    )
-            ).thenReturn(ACCESS_TOKEN);
-
-            Mockito.when(
-                    jwtTokenProvider.createRefreshToken(MEMBER_ID)
-            ).thenReturn(REFRESH_TOKEN);
-
-            Mockito.when(
-                    jwtTokenProvider.getRefreshTokenRemainingMillis(
-                            REFRESH_TOKEN
-                    )
-            ).thenReturn(REFRESH_TOKEN_REMAINING_MILLIS);
-
-            Mockito.when(jwtHashUtil.sha256(REFRESH_TOKEN))
-                    .thenReturn(HASHED_REFRESH_TOKEN);
-
-            Mockito.when(
-                    jwtTokenProvider.getRefreshTokenRemainingSeconds(
-                            REFRESH_TOKEN
-                    )
-            ).thenReturn(REFRESH_TOKEN_REMAINING_SECONDS);
-
-            // when
-            signInService.signIn(command);
-
-            // then
-            Mockito.verify(jwtHashUtil)
-                    .sha256(REFRESH_TOKEN);
-
-            Mockito.verify(tokenRepository)
-                    .save(
-                            MEMBER_ID,
-                            HASHED_REFRESH_TOKEN,
-                            Duration.ofMillis(
-                                    REFRESH_TOKEN_REMAINING_MILLIS
-                            )
                     );
 
-            Mockito.verify(tokenRepository, Mockito.never())
-                    .save(
-                            Mockito.eq(MEMBER_ID),
-                            Mockito.eq(REFRESH_TOKEN),
-                            Mockito.any(Duration.class)
-                    );
+            inOrder.verify(tokenIssueService)
+                    .issue(member);
         }
     }
 
@@ -274,14 +158,16 @@ class SignInServiceTest {
                     exception.getErrorCode()
             );
 
+            Mockito.verify(memberRepository)
+                    .findByEmail(EMAIL);
+
+            Mockito.verifyNoInteractions(member);
             Mockito.verifyNoInteractions(passwordEncoder);
-            Mockito.verifyNoInteractions(jwtTokenProvider);
-            Mockito.verifyNoInteractions(jwtHashUtil);
-            Mockito.verifyNoInteractions(tokenRepository);
+            Mockito.verifyNoInteractions(tokenIssueService);
         }
 
         @Test
-        @DisplayName("로그인이 허용되지 않은 회원이면 비밀번호 검증 없이 로그인에 실패한다.")
+        @DisplayName("로그인이 허용되지 않은 회원이면 비밀번호 검증 없이 실패한다.")
         void signIn_notAllowedMember() {
             // given
             SignInCommand command = createCommand();
@@ -307,10 +193,11 @@ class SignInServiceTest {
             Mockito.verify(member)
                     .isSignInAllowed();
 
+            Mockito.verify(member, Mockito.never())
+                    .getPassword();
+
             Mockito.verifyNoInteractions(passwordEncoder);
-            Mockito.verifyNoInteractions(jwtTokenProvider);
-            Mockito.verifyNoInteractions(jwtHashUtil);
-            Mockito.verifyNoInteractions(tokenRepository);
+            Mockito.verifyNoInteractions(tokenIssueService);
         }
 
         @Test
@@ -348,11 +235,12 @@ class SignInServiceTest {
             );
 
             Mockito.verify(passwordEncoder)
-                    .matches(RAW_PASSWORD, ENCODED_PASSWORD);
+                    .matches(
+                            RAW_PASSWORD,
+                            ENCODED_PASSWORD
+                    );
 
-            Mockito.verifyNoInteractions(jwtTokenProvider);
-            Mockito.verifyNoInteractions(jwtHashUtil);
-            Mockito.verifyNoInteractions(tokenRepository);
+            Mockito.verifyNoInteractions(tokenIssueService);
         }
     }
 }
