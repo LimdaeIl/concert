@@ -189,5 +189,25 @@ public class Member extends BaseTimeEntity {
 
         return "9" + String.format("%010d", memberId);
     }
+
+    public void updateProfile(String name, Address address) {
+        if (status != MemberStatus.ACTIVE) {
+            throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE);
+        }
+
+        if (name == null || name.isBlank()) {
+            throw new MemberException(MemberErrorCode.NAME_REQUIRED);
+        }
+
+        boolean nameChanged = !this.name.equals(name);
+        boolean addressChanged = !Objects.equals(this.address, address);
+
+        if (!nameChanged && !addressChanged) {
+            throw new MemberException(MemberErrorCode.NO_PROFILE_CHANGES);
+        }
+
+        this.name = name;
+        this.address = Objects.requireNonNull(address);
+    }
 }
 

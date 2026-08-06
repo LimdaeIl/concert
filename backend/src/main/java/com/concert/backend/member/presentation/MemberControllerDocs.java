@@ -5,10 +5,11 @@ import com.concert.backend.auth.presentation.response.SignInResponse;
 import com.concert.backend.common.response.ErrorResponse;
 import com.concert.backend.member.presentation.request.SignUpRequest;
 import com.concert.backend.member.presentation.request.SocialSignUpRequest;
+import com.concert.backend.member.presentation.request.UpdateMeRequest;
+import com.concert.backend.member.presentation.response.GetMeResponse;
 import com.concert.backend.member.presentation.response.SignUpResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -116,5 +117,79 @@ public interface MemberControllerDocs {
 
             @Parameter(hidden = true)
             HttpServletResponse response
+    );
+
+    @Operation(
+            summary = "내 정보 조회",
+            description = "현재 로그인한 회원의 기본 정보와 연결된 소셜 제공자를 조회합니다.",
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "내 정보 조회 성공",
+            content = @Content(
+                    schema = @Schema(
+                            implementation = GetMeResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "인증 정보가 없거나 유효하지 않음",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    ResponseEntity<GetMeResponse> getMe(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal LoginMember loginMember
+    );
+
+    @Operation(
+            summary = "내 프로필 수정",
+            description = "현재 로그인한 회원의 이름과 주소를 수정합니다.",
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "프로필 수정 성공",
+            content = @Content(
+                    schema = @Schema(
+                            implementation = GetMeResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "입력값 오류",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "인증 정보가 없거나 유효하지 않음",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    ResponseEntity<GetMeResponse> updateMe(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal LoginMember loginMember,
+
+            @Valid @RequestBody UpdateMeRequest request
     );
 }
