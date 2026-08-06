@@ -6,6 +6,7 @@ import com.concert.backend.common.response.ErrorResponse;
 import com.concert.backend.member.presentation.request.SignUpRequest;
 import com.concert.backend.member.presentation.request.SocialSignUpRequest;
 import com.concert.backend.member.presentation.request.UpdateMeRequest;
+import com.concert.backend.member.presentation.request.UpdatePasswordRequest;
 import com.concert.backend.member.presentation.response.GetMeResponse;
 import com.concert.backend.member.presentation.response.SignUpResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -192,4 +193,53 @@ public interface MemberControllerDocs {
 
             @Valid @RequestBody UpdateMeRequest request
     );
+
+    @Operation(
+            summary = "비밀번호 변경",
+            description = """
+                현재 비밀번호를 검증한 뒤 새 비밀번호로 변경합니다.
+                변경 성공 시 기존 Refresh Token이 폐기되므로 다시 로그인해야 합니다.
+                소셜 로그인 전용 회원은 사용할 수 없습니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "비밀번호 변경 성공"
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = """
+                현재 비밀번호 불일치, 동일한 새 비밀번호,
+                소셜 전용 회원 또는 비밀번호 정책 위반
+                """,
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "인증 정보가 없거나 Access Token이 유효하지 않음",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    ResponseEntity<Void> updatePassword(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal LoginMember loginMember,
+
+            @Valid @RequestBody UpdatePasswordRequest request,
+
+            @Parameter(hidden = true)
+            HttpServletResponse response
+    );
+
 }
