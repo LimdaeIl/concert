@@ -93,6 +93,9 @@ public class MemberSocialAccount extends BaseAuditEntity {
                 providerEmail,
                 connectedAt
         );
+    }
 
+    public void updateLastLoginAt(LocalDateTime lastLoginAt) {
+        this.lastLoginAt = Objects.requireNonNull(lastLoginAt);
     }
 }
