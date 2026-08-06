@@ -1,6 +1,7 @@
 package com.concert.backend.auth.presentation;
 
 import com.concert.backend.auth.application.EmailVerificationService;
+import com.concert.backend.auth.application.OAuth2ExchangeService;
 import com.concert.backend.auth.application.PhoneVerificationService;
 import com.concert.backend.auth.application.SignInService;
 import com.concert.backend.auth.application.SignOutService;
@@ -11,6 +12,7 @@ import com.concert.backend.auth.application.result.VerifyEmailResult;
 import com.concert.backend.auth.application.result.VerifyPhoneResult;
 import com.concert.backend.auth.application.ReissueTokenService;
 import com.concert.backend.auth.infrastructure.jwt.RefreshTokenCookieProvider;
+import com.concert.backend.auth.presentation.request.OAuth2ExchangeRequest;
 import com.concert.backend.auth.presentation.request.SendEmailVerificationRequest;
 import com.concert.backend.auth.presentation.request.SendPhoneVerificationRequest;
 import com.concert.backend.auth.presentation.request.SignInRequest;
@@ -43,6 +45,7 @@ public class AuthController {
     private final RefreshTokenCookieProvider refreshTokenCookieProvider;
     private final ReissueTokenService reissueTokenService;
     private final SignOutService signOutService;
+    private final OAuth2ExchangeService oauth2ExchangeService;
 
     @PostMapping("/email-verifications")
     public ResponseEntity<SendEmailVerificationResponse>
@@ -124,5 +127,27 @@ public class AuthController {
         refreshTokenCookieProvider.removeRefreshTokenCookie(response);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/oauth/exchange")
+    public ResponseEntity<SignInResponse> exchangeOAuth2LoginCode(
+            @Valid @RequestBody OAuth2ExchangeRequest request,
+            HttpServletResponse servletResponse
+    ) {
+        SignInResult result =
+                oauth2ExchangeService.exchange(request.code());
+
+        refreshTokenCookieProvider.addRefreshTokenCookie(
+                servletResponse,
+                result.refreshToken(),
+                result.refreshTokenRemainingSecond()
+        );
+
+        return ResponseEntity.ok(
+                SignInResponse.of(
+                        result.id(),
+                        result.accessToken()
+                )
+        );
     }
 }
