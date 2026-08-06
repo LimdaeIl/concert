@@ -53,7 +53,10 @@ public enum AuthErrorCode implements ErrorCode {
     OAUTH2_TICKET_REQUIRED(HttpStatus.BAD_REQUEST, "소셜 인증 티켓은 필수입니다."),
     OAUTH2_TICKET_INVALID(HttpStatus.UNAUTHORIZED, "소셜 인증 티켓이 유효하지 않거나 만료되었습니다."),
     INVALID_OAUTH2_TICKET_TYPE(HttpStatus.BAD_REQUEST, "소셜 회원가입에 사용할 수 없는 티켓입니다."),
-    OAUTH2_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "소셜 회원가입을 위한 이메일 정보가 없습니다.");
+    OAUTH2_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "소셜 회원가입을 위한 이메일 정보가 없습니다."),
+    OAUTH2_LOGIN_CODE_REQUIRED(HttpStatus.BAD_REQUEST, "소셜 로그인 교환 코드는 필수입니다."),
+    OAUTH2_LOGIN_CODE_INVALID(HttpStatus.UNAUTHORIZED, "소셜 로그인 교환 코드가 유효하지 않거나 만료되었습니다."),
+    INVALID_OAUTH2_LOGIN_TICKET_TYPE(HttpStatus.BAD_REQUEST, "소셜 로그인에 사용할 수 없는 티켓입니다.");
 
     private final HttpStatus status;
     private final String message;

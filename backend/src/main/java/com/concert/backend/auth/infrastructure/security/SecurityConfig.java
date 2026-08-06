@@ -70,6 +70,14 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 HttpMethod.POST,
+                                "/api/v1/auth/sign-in",
+                                "/api/v1/auth/reissue",
+                                "/api/v1/auth/sign-out",
+                                "/api/v1/auth/oauth/exchange"
+                        ).permitAll()
+
+                        .requestMatchers(
+                                HttpMethod.POST,
                                 "/api/v1/members/sign-up",
                                 "/api/v1/members/social-sign-up"
                         ).permitAll()
@@ -84,14 +92,6 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/api/v1/auth/phone-verifications",
                                 "/api/v1/auth/phone-verifications/verify"
-                        ).permitAll()
-
-                        .requestMatchers(
-                                HttpMethod.POST,
-                                "/api/v1/auth/sign-in",
-                                "/api/v1/auth/sign-up",
-                                "/api/v1/auth/reissue",
-                                "/api/v1/auth/sign-out"
                         ).permitAll()
 
                         .requestMatchers(
