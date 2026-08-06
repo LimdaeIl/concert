@@ -86,6 +86,9 @@ class ReissueTokenServiceTest {
             Mockito.when(memberRepository.findById(MEMBER_ID))
                     .thenReturn(Optional.of(member));
 
+            Mockito.when(member.isSignInAllowed())
+                    .thenReturn(true);
+
             Mockito.when(member.getId())
                     .thenReturn(MEMBER_ID);
 
@@ -115,11 +118,11 @@ class ReissueTokenServiceTest {
 
             // when
             ReissueTokenResult result =
-                    reissueTokenService.reissue(OLD_REFRESH_TOKEN);
+                    reissueTokenService.reissue(
+                            OLD_REFRESH_TOKEN
+                    );
 
             // then
-            Assertions.assertNotNull(result);
-
             Assertions.assertAll(
                     () -> Assertions.assertEquals(
                             MEMBER_ID,
@@ -139,14 +142,16 @@ class ReissueTokenServiceTest {
                     )
             );
 
-            Mockito.verify(jwtTokenProvider)
-                    .createAccessToken(
-                            MEMBER_ID,
-                            MemberRole.MEMBER.name()
-                    );
+            Mockito.verify(member)
+                    .isSignInAllowed();
 
-            Mockito.verify(jwtTokenProvider)
-                    .createRefreshToken(MEMBER_ID);
+            Mockito.verify(tokenRepository)
+                    .rotateIfMatches(
+                            MEMBER_ID,
+                            HASHED_OLD_REFRESH_TOKEN,
+                            HASHED_NEW_REFRESH_TOKEN,
+                            REFRESH_TOKEN_TTL
+                    );
         }
 
         @Test
@@ -161,6 +166,9 @@ class ReissueTokenServiceTest {
 
             Mockito.when(memberRepository.findById(MEMBER_ID))
                     .thenReturn(Optional.of(member));
+
+            Mockito.when(member.isSignInAllowed())
+                    .thenReturn(true);
 
             Mockito.when(member.getId())
                     .thenReturn(MEMBER_ID);
@@ -331,5 +339,64 @@ class ReissueTokenServiceTest {
             Mockito.verifyNoInteractions(jwtHashUtil);
             Mockito.verifyNoInteractions(tokenRepository);
         }
+
+        @Test
+        @DisplayName("로그인이 허용되지 않은 회원이면 Refresh Token을 재발급하지 않는다.")
+        void reissue_notAllowedMember() {
+            // given
+            Mockito.when(
+                    jwtTokenProvider.getMemberIdFromRefreshToken(
+                            OLD_REFRESH_TOKEN
+                    )
+            ).thenReturn(MEMBER_ID);
+
+            Mockito.when(memberRepository.findById(MEMBER_ID))
+                    .thenReturn(Optional.of(member));
+
+            Mockito.when(member.isSignInAllowed())
+                    .thenReturn(false);
+
+            // when
+            AuthException exception = Assertions.assertThrows(
+                    AuthException.class,
+                    () -> reissueTokenService.reissue(
+                            OLD_REFRESH_TOKEN
+                    )
+            );
+
+            // then
+            Assertions.assertEquals(
+                    AuthErrorCode.INVALID_REFRESH_TOKEN,
+                    exception.getErrorCode()
+            );
+
+            Mockito.verify(member)
+                    .isSignInAllowed();
+
+            Mockito.verify(member, Mockito.never())
+                    .getId();
+
+            Mockito.verify(member, Mockito.never())
+                    .getRole();
+
+            Mockito.verify(
+                    jwtTokenProvider,
+                    Mockito.never()
+            ).createAccessToken(
+                    Mockito.anyLong(),
+                    Mockito.anyString()
+            );
+
+            Mockito.verify(
+                    jwtTokenProvider,
+                    Mockito.never()
+            ).createRefreshToken(
+                    Mockito.anyLong()
+            );
+
+            Mockito.verifyNoInteractions(jwtHashUtil);
+            Mockito.verifyNoInteractions(tokenRepository);
+        }
+
     }
 }

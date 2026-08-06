@@ -3,6 +3,7 @@ package com.concert.backend.member.presentation;
 import com.concert.backend.auth.infrastructure.security.LoginMember;
 import com.concert.backend.auth.presentation.response.SignInResponse;
 import com.concert.backend.common.response.ErrorResponse;
+import com.concert.backend.member.application.result.UpdatePhoneRequest;
 import com.concert.backend.member.presentation.request.SignUpRequest;
 import com.concert.backend.member.presentation.request.SocialSignUpRequest;
 import com.concert.backend.member.presentation.request.UpdateEmailRequest;
@@ -286,6 +287,55 @@ public interface MemberControllerDocs {
             @AuthenticationPrincipal LoginMember loginMember,
 
             @Valid @RequestBody UpdateEmailRequest request,
+
+            @Parameter(hidden = true)
+            HttpServletResponse response
+    );
+
+    @Operation(
+            summary = "휴대전화번호 변경",
+            description = """
+                휴대전화 인증이 완료된 새 번호로 회원의 휴대전화번호를 변경합니다.
+                변경 성공 시 기존 Refresh Token을 폐기하므로 다시 로그인해야 합니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "휴대전화번호 변경 성공"
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = """
+                입력값 오류, 휴대전화 인증 토큰 오류,
+                이미 사용 중인 번호 또는 현재 번호와 동일한 경우
+                """,
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "인증 정보가 없거나 Access Token이 유효하지 않음",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    ResponseEntity<Void> updatePhone(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal LoginMember loginMember,
+
+            @Valid
+            @RequestBody
+            UpdatePhoneRequest request,
 
             @Parameter(hidden = true)
             HttpServletResponse response

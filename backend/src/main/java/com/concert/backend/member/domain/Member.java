@@ -248,5 +248,21 @@ public class Member extends BaseTimeEntity {
         this.email = newEmail;
     }
 
+    public void changePhone(String phone) {
+        if (!isSignInAllowed()) {
+            throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE);
+        }
+
+        if (phone == null || phone.isBlank()) {
+            throw new MemberException(MemberErrorCode.PHONE_REQUIRED);
+        }
+
+        if (this.phone.equals(phone)) {
+            throw new MemberException(MemberErrorCode.SAME_AS_CURRENT_PHONE);
+        }
+
+        this.phone = phone;
+    }
+
 }
 

@@ -22,7 +22,7 @@ public class UpdatePasswordService {
     @Transactional
     public void updatePassword(Long memberId, UpdatePasswordCommand command) {
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND)l);
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
         validatePasswordChangeAvailable(member);
         validateCurrentPassword(member, command.currentPassword());
