@@ -10,9 +10,11 @@ import com.concert.backend.member.application.SocialSignUpService;
 import com.concert.backend.member.application.UpdateEmailService;
 import com.concert.backend.member.application.UpdateMeService;
 import com.concert.backend.member.application.UpdatePasswordService;
+import com.concert.backend.member.application.UpdatePhoneService;
 import com.concert.backend.member.application.result.GetMeResult;
 import com.concert.backend.member.application.result.SignUpResult;
 import com.concert.backend.member.application.result.SocialSignUpResult;
+import com.concert.backend.member.application.result.UpdatePhoneRequest;
 import com.concert.backend.member.presentation.request.SignUpRequest;
 import com.concert.backend.member.presentation.request.SocialSignUpRequest;
 import com.concert.backend.member.presentation.request.UpdateEmailRequest;
@@ -48,6 +50,7 @@ public class MemberController implements MemberControllerDocs {
     private final UpdateMeService updateMeService;
     private final UpdatePasswordService updatePasswordService;
     private final UpdateEmailService updateEmailService;
+    private final UpdatePhoneService updatePhoneService;
 
     @PostMapping("/sign-up")
     public ResponseEntity<SignUpResponse> signUp(
@@ -117,7 +120,6 @@ public class MemberController implements MemberControllerDocs {
         return ResponseEntity.ok(GetMeResponse.from(result));
     }
 
-    @Override
     @PatchMapping("/me/password")
     public ResponseEntity<Void> updatePassword(
             @AuthenticationPrincipal LoginMember loginMember,
@@ -134,7 +136,6 @@ public class MemberController implements MemberControllerDocs {
         return ResponseEntity.noContent().build();
     }
 
-    @Override
     @PatchMapping("/me/email")
     public ResponseEntity<Void> updateEmail(
             @AuthenticationPrincipal LoginMember loginMember,
@@ -147,6 +148,22 @@ public class MemberController implements MemberControllerDocs {
         );
 
         refreshTokenCookieProvider.removeRefreshTokenCookie(response);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/me/phone")
+    public ResponseEntity<Void> updatePhone(
+            @AuthenticationPrincipal LoginMember loginMember,
+            @Valid @RequestBody UpdatePhoneRequest request,
+            HttpServletResponse response
+    ) {
+
+        updatePhoneService.updatePhone(loginMember.memberId(), request.toCommand());
+
+        refreshTokenCookieProvider.removeRefreshTokenCookie(
+                response
+        );
 
         return ResponseEntity.noContent().build();
     }
