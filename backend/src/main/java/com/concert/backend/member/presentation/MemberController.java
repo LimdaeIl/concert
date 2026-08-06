@@ -1,9 +1,15 @@
 package com.concert.backend.member.presentation;
 
+import com.concert.backend.auth.infrastructure.jwt.RefreshTokenCookieProvider;
+import com.concert.backend.auth.presentation.response.SignInResponse;
 import com.concert.backend.member.application.SignUpService;
+import com.concert.backend.member.application.SocialSignUpService;
 import com.concert.backend.member.application.result.SignUpResult;
+import com.concert.backend.member.application.result.SocialSignUpResult;
 import com.concert.backend.member.presentation.request.SignUpRequest;
+import com.concert.backend.member.presentation.request.SocialSignUpRequest;
 import com.concert.backend.member.presentation.response.SignUpResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
     private final SignUpService signUpService;
+    private final SocialSignUpService socialSignUpService;
+    private final RefreshTokenCookieProvider refreshTokenCookieProvider;
 
     @PostMapping("/sign-up")
     public ResponseEntity<SignUpResponse> signUp(
@@ -31,5 +39,29 @@ public class MemberController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @PostMapping("/social-sign-up")
+    public ResponseEntity<SignInResponse> socialSignUp(
+            @RequestBody @Valid SocialSignUpRequest request,
+            HttpServletResponse servletResponse
+    ) {
+        SocialSignUpResult result =
+                socialSignUpService.signUp(request.toCommand());
+
+        refreshTokenCookieProvider.addRefreshTokenCookie(
+                servletResponse,
+                result.refreshToken(),
+                result.refreshTokenRemainingSecond()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        SignInResponse.of(
+                                result.memberId(),
+                                result.accessToken()
+                        )
+                );
     }
 }

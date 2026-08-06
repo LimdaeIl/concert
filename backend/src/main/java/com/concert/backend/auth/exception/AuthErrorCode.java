@@ -45,7 +45,15 @@ public enum AuthErrorCode implements ErrorCode {
     PHONE_VERIFICATION_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "휴대전화 인증 토큰이 유효하지 않거나 만료되었습니다."),
     PHONE_VERIFICATION_PHONE_MISMATCH(HttpStatus.BAD_REQUEST, "인증된 휴대전화번호와 회원가입 휴대전화번호가 일치하지 않습니다."),
     PHONE_VERIFICATION_STORE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "휴대전화 인증 저장소에 접근할 수 없습니다."),
-    PHONE_SEND_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "휴대전화 인증번호 발송에 실패했습니다.");
+    PHONE_SEND_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "휴대전화 인증번호 발송에 실패했습니다."),
+    OAUTH2_PROVIDER_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "지원하지 않는 소셜 로그인 제공자입니다."),
+    INVALID_OAUTH2_USER_INFO(HttpStatus.UNAUTHORIZED, "소셜 로그인 사용자 정보가 올바르지 않습니다."),
+    OAUTH2_ACCOUNT_NOT_LINKED(HttpStatus.UNAUTHORIZED, "연결된 소셜 계정을 찾을 수 없습니다."),
+    OAUTH2_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "소셜 로그인에 실패했습니다."),
+    OAUTH2_TICKET_REQUIRED(HttpStatus.BAD_REQUEST, "소셜 인증 티켓은 필수입니다."),
+    OAUTH2_TICKET_INVALID(HttpStatus.UNAUTHORIZED, "소셜 인증 티켓이 유효하지 않거나 만료되었습니다."),
+    INVALID_OAUTH2_TICKET_TYPE(HttpStatus.BAD_REQUEST, "소셜 회원가입에 사용할 수 없는 티켓입니다."),
+    OAUTH2_EMAIL_REQUIRED(HttpStatus.BAD_REQUEST, "소셜 회원가입을 위한 이메일 정보가 없습니다.");
 
     private final HttpStatus status;
     private final String message;
