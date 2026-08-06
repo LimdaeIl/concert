@@ -3,6 +3,8 @@ package com.concert.backend.auth.application;
 import com.concert.backend.auth.application.result.ExistingSocialMemberResult;
 import com.concert.backend.auth.application.result.NewSocialMemberResult;
 import com.concert.backend.auth.application.result.SocialAuthenticationResult;
+import com.concert.backend.auth.exception.AuthErrorCode;
+import com.concert.backend.auth.exception.AuthException;
 import com.concert.backend.auth.infrastructure.oauth.userinfo.OAuth2UserInfo;
 import com.concert.backend.member.domain.Member;
 import com.concert.backend.member.domain.MemberSocialAccount;
@@ -44,7 +46,7 @@ public class SocialAuthenticationService {
         Member member = socialAccount.getMember();
 
         if (!member.isSignInAllowed()) {
-            throw new IllegalStateException("로그인할 수 없는 회원 상태입니다.");
+            throw new AuthException(AuthErrorCode.OAUTH2_LOGIN_FAILED);
         }
 
         socialAccount.updateLastLoginAt(

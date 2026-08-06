@@ -44,23 +44,16 @@ public class SocialSignUpService {
     private final Clock clock;
 
     @Transactional
-    public SocialSignUpResult signUp(
-            SocialSignUpCommand command
-    ) {
+    public SocialSignUpResult signUp(SocialSignUpCommand command) {
         String ticketHash = hashTicket(command.ticket());
 
-        OAuth2TicketPayload ticketPayload =
-                findSignupTicket(ticketHash);
+        OAuth2TicketPayload ticketPayload = findSignupTicket(ticketHash);
 
         validateTicketPayload(ticketPayload);
 
-        String normalizedPhone =
-                phoneNumberNormalizer.normalize(command.phone());
+        String normalizedPhone = phoneNumberNormalizer.normalize(command.phone());
 
-        phoneVerificationService.validateVerificationToken(
-                normalizedPhone,
-                command.phoneVerificationToken()
-        );
+        phoneVerificationService.validateVerificationToken(normalizedPhone, command.phoneVerificationToken());
 
         validateDuplicateSocialAccount(ticketPayload);
         validateDuplicateEmail(ticketPayload.email());
