@@ -4,12 +4,17 @@ import com.concert.backend.auth.infrastructure.jwt.RefreshTokenCookieProvider;
 import com.concert.backend.auth.infrastructure.security.LoginMember;
 import com.concert.backend.auth.presentation.response.SignInResponse;
 import com.concert.backend.member.application.DeleteMeService;
+import com.concert.backend.member.application.GetMeService;
 import com.concert.backend.member.application.SignUpService;
 import com.concert.backend.member.application.SocialSignUpService;
+import com.concert.backend.member.application.UpdateMeService;
+import com.concert.backend.member.application.result.GetMeResult;
 import com.concert.backend.member.application.result.SignUpResult;
 import com.concert.backend.member.application.result.SocialSignUpResult;
 import com.concert.backend.member.presentation.request.SignUpRequest;
 import com.concert.backend.member.presentation.request.SocialSignUpRequest;
+import com.concert.backend.member.presentation.request.UpdateMeRequest;
+import com.concert.backend.member.presentation.response.GetMeResponse;
 import com.concert.backend.member.presentation.response.SignUpResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -18,6 +23,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +40,8 @@ public class MemberController implements MemberControllerDocs {
     private final SocialSignUpService socialSignUpService;
     private final RefreshTokenCookieProvider refreshTokenCookieProvider;
     private final DeleteMeService deleteMeService;
+    private final GetMeService getMeService;
+    private final UpdateMeService updateMeService;
 
     @PostMapping("/sign-up")
     public ResponseEntity<SignUpResponse> signUp(
@@ -80,6 +89,26 @@ public class MemberController implements MemberControllerDocs {
         refreshTokenCookieProvider.removeRefreshTokenCookie(response);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<GetMeResponse> getMe(
+            @AuthenticationPrincipal LoginMember loginMember
+    ) {
+        GetMeResult result = getMeService.getMe(loginMember.memberId());
+
+        return ResponseEntity.ok(GetMeResponse.from(result));
+    }
+
+    @PatchMapping("/me")
+    public ResponseEntity<GetMeResponse> updateMe(
+            @AuthenticationPrincipal LoginMember loginMember,
+            @RequestBody @Valid UpdateMeRequest request
+    ) {
+        GetMeResult result =
+                updateMeService.updateMe(loginMember.memberId(), request.toCommand());
+
+        return ResponseEntity.ok(GetMeResponse.from(result));
     }
 }
 
