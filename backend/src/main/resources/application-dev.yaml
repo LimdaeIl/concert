@@ -48,6 +48,50 @@ spring:
     username: ${NAVER_MAIL_USERNAME}
     password: ${NAVER_MAIL_PASSWORD}
 
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - openid
+              - profile
+              - email
+            client-name: Google
+
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - read:user
+              - user:email
+            client-name: GitHub
+
+          kakao:
+            provider: kakao
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - profile
+              - account_email
+            client-name: Kakao
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
 app:
   mail:
     sender: ${NAVER_MAIL_ADDRESS}
@@ -63,6 +107,20 @@ app:
     issuer: ${JWT_ISSUER}
     accessTokenExpiration: ${JWT_ACCESS_TOKEN_EXPIRE}
     refreshTokenExpiration: ${JWT_REFRESH_TOKEN_EXPIRE}
+
+  oauth2:
+    authorization-request-cookie:
+      name: oauth2_authorization_request
+      encryption-key: ${OAUTH2_COOKIE_ENCRYPTION_KEY}
+      expiration: 3m
+      secure: false
+
+    flow:
+      login-success-redirect-uri: http://localhost:5173/oauth/callback
+      signup-redirect-uri: http://localhost:5173/oauth/sign-up
+      failure-redirect-uri: http://localhost:5173/login
+      login-code-expiration: 1m
+      signup-ticket-expiration: 5m
 
 solapi:
   api-key: ${SOLAPI_API_KEY}
