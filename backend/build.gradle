@@ -2,6 +2,8 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '4.0.7'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.asciidoctor.jvm.convert' version '4.0.5'
+
 }
 
 group = 'com.app'
@@ -16,6 +18,10 @@ java {
 
 repositories {
     mavenCentral()
+}
+
+ext {
+    set('snippetsDir', file("build/generated-snippets"))
 }
 
 dependencies {
@@ -54,9 +60,19 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
     testImplementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client-test'
 
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
+    testImplementation 'org.springframework.boot:spring-boot-starter-restdocs'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+
+
 
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+tasks.named('asciidoctor') {
+    inputs.dir snippetsDir
+    dependsOn test
 }
