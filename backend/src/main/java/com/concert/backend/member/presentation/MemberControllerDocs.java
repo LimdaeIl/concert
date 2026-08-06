@@ -5,6 +5,7 @@ import com.concert.backend.auth.presentation.response.SignInResponse;
 import com.concert.backend.common.response.ErrorResponse;
 import com.concert.backend.member.presentation.request.SignUpRequest;
 import com.concert.backend.member.presentation.request.SocialSignUpRequest;
+import com.concert.backend.member.presentation.request.UpdateEmailRequest;
 import com.concert.backend.member.presentation.request.UpdateMeRequest;
 import com.concert.backend.member.presentation.request.UpdatePasswordRequest;
 import com.concert.backend.member.presentation.response.GetMeResponse;
@@ -237,6 +238,54 @@ public interface MemberControllerDocs {
             @AuthenticationPrincipal LoginMember loginMember,
 
             @Valid @RequestBody UpdatePasswordRequest request,
+
+            @Parameter(hidden = true)
+            HttpServletResponse response
+    );
+
+    @Operation(
+            summary = "이메일 변경",
+            description = """
+                인증이 완료된 새 이메일로 회원 이메일을 변경합니다.
+                변경 성공 시 기존 Refresh Token이 폐기되므로 다시 로그인해야 합니다.
+                소셜 제공자가 전달한 provider 이메일은 변경하지 않습니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "이메일 변경 성공"
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = """
+                인증 토큰 오류, 중복 이메일,
+                현재 이메일과 동일하거나 입력값이 올바르지 않음
+                """,
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "인증 정보가 없거나 Access Token이 유효하지 않음",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    ResponseEntity<Void> updateEmail(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal LoginMember loginMember,
+
+            @Valid @RequestBody UpdateEmailRequest request,
 
             @Parameter(hidden = true)
             HttpServletResponse response

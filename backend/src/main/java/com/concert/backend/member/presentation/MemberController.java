@@ -7,6 +7,7 @@ import com.concert.backend.member.application.DeleteMeService;
 import com.concert.backend.member.application.GetMeService;
 import com.concert.backend.member.application.SignUpService;
 import com.concert.backend.member.application.SocialSignUpService;
+import com.concert.backend.member.application.UpdateEmailService;
 import com.concert.backend.member.application.UpdateMeService;
 import com.concert.backend.member.application.UpdatePasswordService;
 import com.concert.backend.member.application.result.GetMeResult;
@@ -14,6 +15,7 @@ import com.concert.backend.member.application.result.SignUpResult;
 import com.concert.backend.member.application.result.SocialSignUpResult;
 import com.concert.backend.member.presentation.request.SignUpRequest;
 import com.concert.backend.member.presentation.request.SocialSignUpRequest;
+import com.concert.backend.member.presentation.request.UpdateEmailRequest;
 import com.concert.backend.member.presentation.request.UpdateMeRequest;
 import com.concert.backend.member.presentation.request.UpdatePasswordRequest;
 import com.concert.backend.member.presentation.response.GetMeResponse;
@@ -45,6 +47,7 @@ public class MemberController implements MemberControllerDocs {
     private final GetMeService getMeService;
     private final UpdateMeService updateMeService;
     private final UpdatePasswordService updatePasswordService;
+    private final UpdateEmailService updateEmailService;
 
     @PostMapping("/sign-up")
     public ResponseEntity<SignUpResponse> signUp(
@@ -122,6 +125,23 @@ public class MemberController implements MemberControllerDocs {
             HttpServletResponse response
     ) {
         updatePasswordService.updatePassword(
+                loginMember.memberId(),
+                request.toCommand()
+        );
+
+        refreshTokenCookieProvider.removeRefreshTokenCookie(response);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PatchMapping("/me/email")
+    public ResponseEntity<Void> updateEmail(
+            @AuthenticationPrincipal LoginMember loginMember,
+            @RequestBody @Valid UpdateEmailRequest request,
+            HttpServletResponse response
+    ) {
+        updateEmailService.updateEmail(
                 loginMember.memberId(),
                 request.toCommand()
         );
