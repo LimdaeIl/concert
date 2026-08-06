@@ -26,7 +26,9 @@ public record OAuth2FlowProperties(
         if (uri == null
                 || uri.getScheme() == null
                 || (!"http".equalsIgnoreCase(uri.getScheme())
-                && !"https".equalsIgnoreCase(uri.getScheme()))) {throw new IllegalArgumentException(fieldName + "는 유효한 HTTP(S) URI여야 합니다."
+                        && !"https".equalsIgnoreCase(uri.getScheme()))) {
+            throw new IllegalArgumentException(
+                    fieldName + "는 유효한 HTTP(S) URI여야 합니다."
             );
         }
     }
