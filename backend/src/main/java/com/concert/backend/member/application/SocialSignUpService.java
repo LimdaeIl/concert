@@ -127,7 +127,11 @@ public class SocialSignUpService {
     }
 
     private void consumeTicket(String ticketHash) {
-        boolean consumed = ticketRepository.consume(ticketHash);
+        boolean consumed =
+                ticketRepository.consume(
+                        ticketHash,
+                        null
+                );
 
         if (!consumed) {
             throw new AuthException(

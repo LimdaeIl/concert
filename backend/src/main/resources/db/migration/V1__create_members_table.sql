@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS v1_members
     name           VARCHAR(50)    NOT NULL COMMENT '이름',
     phone          VARCHAR(11)    NOT NULL COMMENT '휴대전화 번호',
     role           VARCHAR(20)    NOT NULL DEFAULT 'MEMBER' COMMENT 'MEMBER, MANAGER, ADMIN',
-    status         VARCHAR(20)    NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE, INACTIVE, SUSPENDED',
+    status         VARCHAR(20)    NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE, INACTIVE, SUSPENDED, WITHDRAWN',
     road_address   VARCHAR(255)   NOT NULL COMMENT '도로명 주소',
     jibun_address  VARCHAR(255)   NULL COMMENT '지번 주소',
     detail_address VARCHAR(255)   NULL COMMENT '상세 주소',

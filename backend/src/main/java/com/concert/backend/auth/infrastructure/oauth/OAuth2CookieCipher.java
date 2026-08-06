@@ -36,8 +36,7 @@ public class OAuth2CookieCipher {
          * 암호문을 이 쿠키 용도에 바인딩한다.
          * 동일한 키가 다른 용도에 실수로 사용돼도 암호문을 재사용하기 어렵게 한다.
          */
-        this.associatedData = properties.name()
-                .getBytes(StandardCharsets.UTF_8);
+        this.associatedData = properties.name().getBytes(StandardCharsets.UTF_8);
     }
 
     public String encrypt(byte[] plainText) {
@@ -55,9 +54,7 @@ public class OAuth2CookieCipher {
 
             byte[] cipherText = cipher.doFinal(plainText);
 
-            ByteBuffer encoded = ByteBuffer.allocate(
-                    1 + IV_LENGTH_BYTES + cipherText.length
-            );
+            ByteBuffer encoded = ByteBuffer.allocate(1 + IV_LENGTH_BYTES + cipherText.length);
 
             encoded.put(FORMAT_VERSION);
             encoded.put(iv);
@@ -67,10 +64,7 @@ public class OAuth2CookieCipher {
                     .withoutPadding()
                     .encodeToString(encoded.array());
         } catch (GeneralSecurityException exception) {
-            throw new OAuth2CookieException(
-                    "OAuth2 인증 요청 쿠키 암호화에 실패했습니다.",
-                    exception
-            );
+            throw new OAuth2CookieException("OAuth2 인증 요청 쿠키 암호화에 실패했습니다.", exception);
         }
     }
 
@@ -79,9 +73,7 @@ public class OAuth2CookieCipher {
             byte[] decoded = Base64.getUrlDecoder().decode(encodedValue);
 
             if (decoded.length <= 1 + IV_LENGTH_BYTES) {
-                throw new OAuth2CookieException(
-                        "OAuth2 인증 요청 쿠키 형식이 올바르지 않습니다."
-                );
+                throw new OAuth2CookieException("OAuth2 인증 요청 쿠키 형식이 올바르지 않습니다.");
             }
 
             ByteBuffer buffer = ByteBuffer.wrap(decoded);
@@ -89,9 +81,7 @@ public class OAuth2CookieCipher {
             byte version = buffer.get();
 
             if (version != FORMAT_VERSION) {
-                throw new OAuth2CookieException(
-                        "지원하지 않는 OAuth2 인증 요청 쿠키 버전입니다."
-                );
+                throw new OAuth2CookieException("지원하지 않는 OAuth2 인증 요청 쿠키 버전입니다.");
             }
 
             byte[] iv = new byte[IV_LENGTH_BYTES];
@@ -116,10 +106,7 @@ public class OAuth2CookieCipher {
              * GCM authentication tag 검증 실패도 여기로 들어온다.
              * 변조된 쿠키와 잘못된 키를 동일한 실패로 처리한다.
              */
-            throw new OAuth2CookieException(
-                    "OAuth2 인증 요청 쿠키가 유효하지 않습니다.",
-                    exception
-            );
+            throw new OAuth2CookieException("OAuth2 인증 요청 쿠키가 유효하지 않습니다.", exception);
         }
     }
 }

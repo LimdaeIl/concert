@@ -25,3 +25,4 @@ public class MemberSocialAccountRepositoryImpl implements MemberSocialAccountRep
         return jpaRepository.save(socialAccount);
     }
 }
+

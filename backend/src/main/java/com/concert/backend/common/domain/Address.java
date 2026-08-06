@@ -2,17 +2,18 @@ package com.concert.backend.common.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import java.math.BigDecimal;
+import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.util.Objects;
 
 @Getter
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Address {
+
+    private static final String WITHDRAWN_ROAD_ADDRESS = "WITHDRAWN";
 
     @Column(name = "road_address", nullable = false, length = 255)
     private String roadAddress;
@@ -29,7 +30,7 @@ public class Address {
     @Column(name = "latitude", precision = 10, scale = 7)
     private BigDecimal latitude;
 
-    @Column(name = "longitude",precision = 10, scale = 7)
+    @Column(name = "longitude", precision = 10, scale = 7)
     private BigDecimal longitude;
 
     private Address(
@@ -63,6 +64,17 @@ public class Address {
                 zipCode,
                 latitude,
                 longitude
+        );
+    }
+
+    public static Address anonymized() {
+        return new Address(
+                WITHDRAWN_ROAD_ADDRESS,
+                null,
+                null,
+                null,
+                null,
+                null
         );
     }
 }

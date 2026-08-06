@@ -27,12 +27,13 @@ public class OAuth2ExchangeService {
     public SignInResult exchange(String rawCode) {
         String codeHash = hashCode(rawCode);
 
-        OAuth2TicketPayload ticketPayload =
-                findLoginTicket(codeHash);
-
+        OAuth2TicketPayload ticketPayload = findLoginTicket(codeHash);
         validateLoginTicket(ticketPayload);
-
         Member member = findMember(ticketPayload.memberId());
+
+        if (!member.isSignInAllowed()) {
+            throw new AuthException(AuthErrorCode.OAUTH2_LOGIN_CODE_INVALID);
+        }
 
         validateMember(member);
 
@@ -42,45 +43,35 @@ public class OAuth2ExchangeService {
          * 동일 코드를 두 요청이 동시에 사용하면
          * Redis delete에 성공한 요청 하나만 토큰을 발급받는다.
          */
-        consumeLoginTicket(codeHash);
+        consumeLoginTicket(
+                codeHash,
+                ticketPayload.memberId()
+        );
 
         return tokenIssueService.issue(member);
     }
 
     private String hashCode(String rawCode) {
         if (rawCode == null || rawCode.isBlank()) {
-            throw new AuthException(
-                    AuthErrorCode.OAUTH2_LOGIN_CODE_REQUIRED
-            );
+            throw new AuthException(AuthErrorCode.OAUTH2_LOGIN_CODE_REQUIRED);
         }
 
         return jwtHashUtil.sha256(rawCode);
     }
 
-    private OAuth2TicketPayload findLoginTicket(
-            String codeHash
-    ) {
+    private OAuth2TicketPayload findLoginTicket(String codeHash) {
         return ticketRepository.find(codeHash)
-                .orElseThrow(() ->
-                        new AuthException(
-                                AuthErrorCode.OAUTH2_LOGIN_CODE_INVALID
-                        )
+                .orElseThrow(() -> new AuthException(AuthErrorCode.OAUTH2_LOGIN_CODE_INVALID)
                 );
     }
 
-    private void validateLoginTicket(
-            OAuth2TicketPayload payload
-    ) {
+    private void validateLoginTicket(OAuth2TicketPayload payload) {
         if (payload.type() != OAuth2TicketType.LOGIN) {
-            throw new AuthException(
-                    AuthErrorCode.INVALID_OAUTH2_LOGIN_TICKET_TYPE
-            );
+            throw new AuthException(AuthErrorCode.INVALID_OAUTH2_LOGIN_TICKET_TYPE);
         }
 
         if (payload.memberId() == null) {
-            throw new AuthException(
-                    AuthErrorCode.OAUTH2_LOGIN_CODE_INVALID
-            );
+            throw new AuthException(AuthErrorCode.OAUTH2_LOGIN_CODE_INVALID);
         }
 
         /*
@@ -91,11 +82,7 @@ public class OAuth2ExchangeService {
 
     private Member findMember(Long memberId) {
         return memberRepository.findById(memberId)
-                .orElseThrow(() ->
-                        new AuthException(
-                                AuthErrorCode.OAUTH2_LOGIN_CODE_INVALID
-                        )
-                );
+                .orElseThrow(() -> new AuthException(AuthErrorCode.OAUTH2_LOGIN_CODE_INVALID));
     }
 
     private void validateMember(Member member) {
@@ -103,19 +90,21 @@ public class OAuth2ExchangeService {
             /*
              * 회원 존재 여부나 상태를 외부에 구체적으로 노출하지 않는다.
              */
-            throw new AuthException(
-                    AuthErrorCode.OAUTH2_LOGIN_CODE_INVALID
-            );
+            throw new AuthException(AuthErrorCode.OAUTH2_LOGIN_CODE_INVALID);
         }
     }
 
-    private void consumeLoginTicket(String codeHash) {
-        boolean consumed = ticketRepository.consume(codeHash);
+    private void consumeLoginTicket(
+            String codeHash,
+            Long memberId
+    ) {
+        boolean consumed =
+                ticketRepository.consume(
+                        codeHash,
+                        memberId
+                );
 
         if (!consumed) {
-            /*
-             * 만료 또는 다른 요청이 먼저 소비한 경우다.
-             */
             throw new AuthException(
                     AuthErrorCode.OAUTH2_LOGIN_CODE_INVALID
             );

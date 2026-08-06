@@ -37,8 +37,7 @@ public class OAuth2AuthenticationSuccessHandler
             Authentication authentication
     ) throws IOException {
         try {
-            OAuth2AuthenticationToken oauthToken =
-                    requireOAuth2Authentication(authentication);
+            OAuth2AuthenticationToken oauthToken = requireOAuth2Authentication(authentication);
 
             OAuth2User principal = oauthToken.getPrincipal();
 
@@ -60,8 +59,7 @@ public class OAuth2AuthenticationSuccessHandler
 
             response.sendRedirect(redirectUri);
         } catch (RuntimeException exception) {
-            authorizationRequestRepository
-                    .deleteAuthorizationRequestCookie(response);
+            authorizationRequestRepository.deleteAuthorizationRequestCookie(response);
 
             String failureUri = UriComponentsBuilder
                     .fromUri(flowProperties.failureRedirectUri())
@@ -74,14 +72,10 @@ public class OAuth2AuthenticationSuccessHandler
         }
     }
 
-    private OAuth2AuthenticationToken requireOAuth2Authentication(
-            Authentication authentication
-    ) {
+    private OAuth2AuthenticationToken requireOAuth2Authentication(Authentication authentication) {
         if (!(authentication
                 instanceof OAuth2AuthenticationToken oauthToken)) {
-            throw new IllegalStateException(
-                    "OAuth2 인증 정보가 아닙니다."
-            );
+            throw new IllegalStateException("OAuth2 인증 정보가 아닙니다.");
         }
 
         return oauthToken;

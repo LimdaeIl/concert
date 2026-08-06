@@ -33,6 +33,10 @@ public class ReissueTokenService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new AuthException(AuthErrorCode.NOT_FOUND_BY_MEMBER_ID));
 
+        if (!member.isSignInAllowed()) {
+            throw new AuthException(AuthErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
         String newAccessToken = jwtTokenProvider.createAccessToken(
                 member.getId(),
                 member.getRole().name()

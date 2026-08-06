@@ -18,19 +18,14 @@ public class TokenIssueService {
     private final JWTHashUtil jwtHashUtil;
 
     public SignInResult issue(Member member) {
-        String accessToken = jwtTokenProvider.createAccessToken(
-                member.getId(),
-                member.getRole().name()
-        );
+        String accessToken = jwtTokenProvider.createAccessToken(member.getId(),
+                member.getRole().name());
 
-        String refreshToken = jwtTokenProvider.createRefreshToken(
-                member.getId()
-        );
+        String refreshToken =
+                jwtTokenProvider.createRefreshToken(member.getId());
 
         long refreshTokenRemainingMillis =
-                jwtTokenProvider.getRefreshTokenRemainingMillis(
-                        refreshToken
-                );
+                jwtTokenProvider.getRefreshTokenRemainingMillis(refreshToken);
 
         String hashedRefreshToken =
                 jwtHashUtil.sha256(refreshToken);

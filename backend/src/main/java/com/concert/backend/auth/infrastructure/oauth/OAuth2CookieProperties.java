@@ -16,15 +16,12 @@ public record OAuth2CookieProperties(
 
     public OAuth2CookieProperties {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException(
-                    "OAuth2 authorization request cookie name은 필수입니다."
-            );
+            throw new IllegalArgumentException("OAuth2 authorization request cookie name은 필수입니다.");
         }
 
         if (encryptionKey == null || encryptionKey.isBlank()) {
             throw new IllegalArgumentException(
-                    "OAuth2 authorization request cookie encryption key는 필수입니다."
-            );
+                    "OAuth2 authorization request cookie encryption key는 필수입니다.");
         }
 
         byte[] decodedKey;

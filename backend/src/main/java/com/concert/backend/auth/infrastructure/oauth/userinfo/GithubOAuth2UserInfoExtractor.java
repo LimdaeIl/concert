@@ -22,25 +22,17 @@ public class GithubOAuth2UserInfoExtractor {
         );
     }
 
-    private String requiredString(
-            Map<String, Object> attributes,
-            String key
-    ) {
+    private String requiredString(Map<String, Object> attributes, String key) {
         String value = nullableString(attributes, key);
 
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(
-                    "GitHub 사용자 정보에 " + key + " 값이 없습니다."
-            );
+            throw new IllegalArgumentException("GitHub 사용자 정보에 " + key + " 값이 없습니다.");
         }
 
         return value;
     }
 
-    private String nullableString(
-            Map<String, Object> attributes,
-            String key
-    ) {
+    private String nullableString(Map<String, Object> attributes, String key) {
         Object value = attributes.get(key);
         return value == null ? null : String.valueOf(value);
     }

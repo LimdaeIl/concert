@@ -1,7 +1,9 @@
 package com.concert.backend.member.presentation;
 
 import com.concert.backend.auth.infrastructure.jwt.RefreshTokenCookieProvider;
+import com.concert.backend.auth.infrastructure.security.LoginMember;
 import com.concert.backend.auth.presentation.response.SignInResponse;
+import com.concert.backend.member.application.DeleteMeService;
 import com.concert.backend.member.application.SignUpService;
 import com.concert.backend.member.application.SocialSignUpService;
 import com.concert.backend.member.application.result.SignUpResult;
@@ -14,6 +16,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +32,7 @@ public class MemberController {
     private final SignUpService signUpService;
     private final SocialSignUpService socialSignUpService;
     private final RefreshTokenCookieProvider refreshTokenCookieProvider;
+    private final DeleteMeService deleteMeService;
 
     @PostMapping("/sign-up")
     public ResponseEntity<SignUpResponse> signUp(
@@ -64,4 +69,17 @@ public class MemberController {
                         )
                 );
     }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMe(
+            @AuthenticationPrincipal LoginMember loginMember,
+            HttpServletResponse response
+    ) {
+        deleteMeService.deleteMe(loginMember.memberId());
+
+        refreshTokenCookieProvider.removeRefreshTokenCookie(response);
+
+        return ResponseEntity.noContent().build();
+    }
 }
+
