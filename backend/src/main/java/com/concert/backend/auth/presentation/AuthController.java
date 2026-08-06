@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
 @RestController
-public class AuthController {
+public class AuthController implements AuthControllerDocs {
 
     private final EmailVerificationService emailVerificationService;
     private final PhoneVerificationService phoneVerificationService;
