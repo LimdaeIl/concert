@@ -1,0 +1,30 @@
+package com.concert.backend.venuehall.presentation.request;
+
+import com.concert.backend.venuehall.application.command.UpdateVenueHallCommand;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+public record UpdateVenueHallRequest(
+
+        @NotBlank(message = "공연홀 이름은 필수입니다.")
+        @Size(max = 100)
+        String name,
+
+        @Size(max = 20)
+        String floor,
+
+        @NotNull(message = "수용 인원은 필수입니다.")
+        @Min(value = 1)
+        Integer capacity
+) {
+
+    public UpdateVenueHallCommand toCommand() {
+        return new UpdateVenueHallCommand(
+                name,
+                floor,
+                capacity
+        );
+    }
+}
