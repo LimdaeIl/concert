@@ -1,6 +1,8 @@
 package com.concert.backend.venuehall.domain;
 
 import com.concert.backend.common.domain.BaseAuditEntity;
+import com.concert.backend.venuehall.exception.VenueHallErrorCode;
+import com.concert.backend.venuehall.exception.VenueHallException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -61,4 +63,109 @@ public class VenueHall extends BaseAuditEntity {
             orphanRemoval = true
     )
     private final List<Seat> seats = new ArrayList<>();
+
+    private VenueHall(
+            Long venueId,
+            String name,
+            String floor,
+            Integer capacity
+    ) {
+        this.venueId = requireVenueId(venueId);
+        this.name = requireName(name);
+        this.floor = normalizeFloor(floor);
+        this.capacity = requireCapacity(capacity);
+        this.status = VenueHallStatus.ACTIVE;
+    }
+
+    public static VenueHall create(
+            Long venueId,
+            String name,
+            String floor,
+            Integer capacity
+    ) {
+        return new VenueHall(
+                venueId,
+                name,
+                floor,
+                capacity
+        );
+    }
+
+    public void update(
+            String name,
+            String floor,
+            Integer capacity
+    ) {
+        this.name = requireName(name);
+        this.floor = normalizeFloor(floor);
+        this.capacity = requireCapacity(capacity);
+    }
+
+    public void changeStatus(
+            VenueHallStatus newStatus
+    ) {
+        if (newStatus == null) {
+            throw new VenueHallException(
+                    VenueHallErrorCode.VENUE_HALL_STATUS_REQUIRED
+            );
+        }
+
+        if (status == newStatus) {
+            throw new VenueHallException(
+                    VenueHallErrorCode.SAME_VENUE_HALL_STATUS
+            );
+        }
+
+        this.status = newStatus;
+    }
+
+    public boolean isActive() {
+        return status == VenueHallStatus.ACTIVE;
+    }
+
+    private static Long requireVenueId(Long venueId) {
+        if (venueId == null || venueId <= 0) {
+            throw new VenueHallException(
+                    VenueHallErrorCode.VENUE_HALL_NOT_FOUND
+            );
+        }
+
+        return venueId;
+    }
+
+    private static String requireName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new VenueHallException(
+                    VenueHallErrorCode.VENUE_HALL_NAME_REQUIRED
+            );
+        }
+
+        return name.trim();
+    }
+
+    private static Integer requireCapacity(
+            Integer capacity
+    ) {
+        if (capacity == null) {
+            throw new VenueHallException(
+                    VenueHallErrorCode.VENUE_HALL_CAPACITY_REQUIRED
+            );
+        }
+
+        if (capacity <= 0) {
+            throw new VenueHallException(
+                    VenueHallErrorCode.INVALID_VENUE_HALL_CAPACITY
+            );
+        }
+
+        return capacity;
+    }
+
+    private static String normalizeFloor(String floor) {
+        if (floor == null || floor.isBlank()) {
+            return null;
+        }
+
+        return floor.trim();
+    }
 }
