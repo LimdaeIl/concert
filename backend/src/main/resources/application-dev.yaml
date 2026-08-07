@@ -126,6 +126,10 @@ app:
     payment-timeout: 10m
     expiration-scan-delay: 10000
 
+  toss:
+    payments:
+      secret-key: ${TOSS_PAYMENTS_SECRET_KEY}
+      api-url: https://api.tosspayments.com
 
 solapi:
   api-key: ${SOLAPI_API_KEY}
