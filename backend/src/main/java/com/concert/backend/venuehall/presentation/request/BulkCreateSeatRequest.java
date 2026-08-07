@@ -2,6 +2,7 @@ package com.concert.backend.venuehall.presentation.request;
 
 import com.concert.backend.venuehall.application.command.CreateSeatCommand;
 import com.concert.backend.venuehall.domain.SeatType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -41,6 +42,16 @@ public record BulkCreateSeatRequest(
             @Size(max = 20)
             String seatNumber,
 
+            @Schema(
+                    description = "좌석 유형",
+                    example = "STANDARD",
+                    allowableValues = {
+                            "STANDARD",
+                            "WHEELCHAIR",
+                            "COMPANION",
+                            "OBSTRUCTED_VIEW"
+                    }
+            )
             @NotNull
             SeatType seatType
     ) {
