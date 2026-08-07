@@ -1,6 +1,8 @@
 package com.concert.backend.payment.domain;
 
 import com.concert.backend.common.domain.BaseAuditEntity;
+import com.concert.backend.payment.exception.PaymentErrorCode;
+import com.concert.backend.payment.exception.PaymentException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -58,7 +60,7 @@ public class Payment extends BaseAuditEntity {
     private PaymentProvider provider;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(length = 30)
     private PaymentMethod method;
 
     @Column(name = "provider_payment_id", length = 200)
@@ -96,5 +98,207 @@ public class Payment extends BaseAuditEntity {
             orphanRemoval = true
     )
     private final List<PaymentCancellation> cancellations = new ArrayList<>();
+
+    private Payment(
+            String paymentNumber,
+            Long reservationId,
+            PaymentProvider provider,
+            Long amount,
+            LocalDateTime requestedAt
+    ) {
+        this.paymentNumber =
+                requirePaymentNumber(paymentNumber);
+
+        this.reservationId =
+                requireReservationId(reservationId);
+
+        this.provider =
+                requireProvider(provider);
+
+        this.method = null;
+
+        this.amount =
+                requireAmount(amount);
+
+        if (requestedAt == null) {
+            throw new PaymentException(
+                    PaymentErrorCode.PAYMENT_REQUESTED_AT_REQUIRED
+            );
+        }
+
+        this.requestedAt = requestedAt;
+        this.status = PaymentStatus.READY;
+    }
+
+    public static Payment create(
+            String paymentNumber,
+            Long reservationId,
+            PaymentProvider provider,
+            Long amount,
+            LocalDateTime requestedAt
+    ) {
+        return new Payment(
+                paymentNumber,
+                reservationId,
+                provider,
+                amount,
+                requestedAt
+        );
+    }
+
+    public void startConfirmation() {
+        if (status != PaymentStatus.READY) {
+            throw new PaymentException(
+                    PaymentErrorCode.PAYMENT_NOT_CONFIRMABLE
+            );
+        }
+
+        this.status = PaymentStatus.IN_PROGRESS;
+        clearFailure();
+    }
+
+    public void complete(
+            String providerPaymentId,
+            PaymentMethod method,
+            LocalDateTime approvedAt
+    ) {
+        if (status != PaymentStatus.IN_PROGRESS) {
+            throw new PaymentException(
+                    PaymentErrorCode.INVALID_PAYMENT_STATUS
+            );
+        }
+
+        if (providerPaymentId == null
+                || providerPaymentId.isBlank()) {
+            throw new PaymentException(
+                    PaymentErrorCode.PROVIDER_PAYMENT_ID_REQUIRED
+            );
+        }
+
+        if (method == null) {
+            throw new PaymentException(
+                    PaymentErrorCode.PAYMENT_METHOD_REQUIRED
+            );
+        }
+
+        if (approvedAt == null) {
+            throw new PaymentException(
+                    PaymentErrorCode.PAYMENT_APPROVED_AT_REQUIRED
+            );
+        }
+
+        this.providerPaymentId =
+                providerPaymentId;
+
+        this.method = method;
+        this.approvedAt = approvedAt;
+        this.status = PaymentStatus.PAID;
+
+        clearFailure();
+    }
+
+    public void fail(
+            String failureCode,
+            String failureMessage
+    ) {
+        if (status != PaymentStatus.IN_PROGRESS) {
+            throw new PaymentException(
+                    PaymentErrorCode.INVALID_PAYMENT_STATUS
+            );
+        }
+
+        this.status = PaymentStatus.FAILED;
+        this.failureCode = normalize(failureCode);
+        this.failureMessage =
+                normalize(failureMessage);
+    }
+
+    public boolean isReady() {
+        return status == PaymentStatus.READY;
+    }
+
+    public boolean isInProgress() {
+        return status == PaymentStatus.IN_PROGRESS;
+    }
+
+    public boolean isPaid() {
+        return status == PaymentStatus.PAID;
+    }
+
+    private static String requirePaymentNumber(
+            String paymentNumber
+    ) {
+        if (paymentNumber == null
+                || paymentNumber.isBlank()) {
+            throw new PaymentException(
+                    PaymentErrorCode.PAYMENT_NUMBER_REQUIRED
+            );
+        }
+
+        return paymentNumber;
+    }
+
+    private static Long requireReservationId(
+            Long reservationId
+    ) {
+        if (reservationId == null
+                || reservationId <= 0) {
+            throw new PaymentException(
+                    PaymentErrorCode.RESERVATION_REQUIRED
+            );
+        }
+
+        return reservationId;
+    }
+
+    private static PaymentProvider requireProvider(
+            PaymentProvider provider
+    ) {
+        if (provider == null) {
+            throw new PaymentException(
+                    PaymentErrorCode.PAYMENT_PROVIDER_REQUIRED
+            );
+        }
+
+        return provider;
+    }
+
+    private static PaymentMethod requireMethod(
+            PaymentMethod method
+    ) {
+        if (method == null) {
+            throw new PaymentException(
+                    PaymentErrorCode.PAYMENT_METHOD_REQUIRED
+            );
+        }
+
+        return method;
+    }
+
+    private static Long requireAmount(Long amount) {
+        if (amount == null || amount < 0) {
+            throw new PaymentException(
+                    PaymentErrorCode.INVALID_PAYMENT_AMOUNT
+            );
+        }
+
+        return amount;
+    }
+
+    private static String normalize(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        return value.trim();
+    }
+
+    private void clearFailure() {
+        failureCode = null;
+        failureMessage = null;
+    }
+
+
+
 
 }
