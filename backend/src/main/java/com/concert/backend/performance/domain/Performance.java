@@ -1,6 +1,8 @@
 package com.concert.backend.performance.domain;
 
 import com.concert.backend.common.domain.BaseAuditEntity;
+import com.concert.backend.performance.exception.PerformanceErrorCode;
+import com.concert.backend.performance.exception.PerformanceException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -72,5 +74,207 @@ public class Performance extends BaseAuditEntity {
             orphanRemoval = true
     )
     private final List<PerformanceSeat> seats = new ArrayList<>();
+
+    private Performance(
+            Long concertId,
+            Long venueHallId,
+            LocalDateTime startsAt,
+            LocalDateTime endsAt,
+            LocalDateTime reservationOpensAt,
+            LocalDateTime reservationClosesAt,
+            Integer maxTicketsPerMember
+    ) {
+        this.concertId = requireId(concertId);
+        this.venueHallId = requireId(venueHallId);
+
+        validatePeriod(
+                startsAt,
+                endsAt,
+                reservationOpensAt,
+                reservationClosesAt
+        );
+
+        this.startsAt = startsAt;
+        this.endsAt = endsAt;
+        this.reservationOpensAt = reservationOpensAt;
+        this.reservationClosesAt = reservationClosesAt;
+        this.maxTicketsPerMember =
+                requireMaxTickets(maxTicketsPerMember);
+
+        this.status = PerformanceStatus.SCHEDULED;
+    }
+
+
+    public static Performance create(
+            Long concertId,
+            Long venueHallId,
+            LocalDateTime startsAt,
+            LocalDateTime endsAt,
+            LocalDateTime reservationOpensAt,
+            LocalDateTime reservationClosesAt,
+            Integer maxTicketsPerMember
+    ) {
+        return new Performance(
+                concertId,
+                venueHallId,
+                startsAt,
+                endsAt,
+                reservationOpensAt,
+                reservationClosesAt,
+                maxTicketsPerMember
+        );
+    }
+
+    public void update(
+            Long venueHallId,
+            LocalDateTime startsAt,
+            LocalDateTime endsAt,
+            LocalDateTime reservationOpensAt,
+            LocalDateTime reservationClosesAt,
+            Integer maxTicketsPerMember
+    ) {
+        validateEditable();
+
+        validatePeriod(
+                startsAt,
+                endsAt,
+                reservationOpensAt,
+                reservationClosesAt
+        );
+
+        this.venueHallId = requireId(venueHallId);
+        this.startsAt = startsAt;
+        this.endsAt = endsAt;
+        this.reservationOpensAt = reservationOpensAt;
+        this.reservationClosesAt = reservationClosesAt;
+        this.maxTicketsPerMember =
+                requireMaxTickets(maxTicketsPerMember);
+    }
+
+    public void changeStatus(
+            PerformanceStatus newStatus
+    ) {
+        if (newStatus == null) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.PERFORMANCE_STATUS_REQUIRED
+            );
+        }
+
+        if (status == newStatus) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.SAME_PERFORMANCE_STATUS
+            );
+        }
+
+        if (!canChangeStatusTo(newStatus)) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_PERFORMANCE_STATUS_TRANSITION
+            );
+        }
+
+        this.status = newStatus;
+    }
+
+    private boolean canChangeStatusTo(
+            PerformanceStatus newStatus
+    ) {
+        return switch (status) {
+            case SCHEDULED ->
+                    newStatus == PerformanceStatus.OPEN
+                            || newStatus == PerformanceStatus.CANCELLED;
+
+            case OPEN ->
+                    newStatus == PerformanceStatus.SOLD_OUT
+                            || newStatus == PerformanceStatus.COMPLETED
+                            || newStatus == PerformanceStatus.CANCELLED;
+
+            case SOLD_OUT ->
+                    newStatus == PerformanceStatus.OPEN
+                            || newStatus == PerformanceStatus.COMPLETED
+                            || newStatus == PerformanceStatus.CANCELLED;
+
+            case COMPLETED, CANCELLED -> false;
+        };
+    }
+
+    private static void validatePeriod(
+            LocalDateTime startsAt,
+            LocalDateTime endsAt,
+            LocalDateTime reservationOpensAt,
+            LocalDateTime reservationClosesAt
+    ) {
+        if (startsAt == null) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.STARTS_AT_REQUIRED
+            );
+        }
+
+        if (endsAt == null) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.ENDS_AT_REQUIRED
+            );
+        }
+
+        if (reservationOpensAt == null) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.RESERVATION_OPENS_AT_REQUIRED
+            );
+        }
+
+        if (reservationClosesAt == null) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.RESERVATION_CLOSES_AT_REQUIRED
+            );
+        }
+
+        if (!endsAt.isAfter(startsAt)) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_PERFORMANCE_PERIOD
+            );
+        }
+
+        if (!reservationClosesAt.isAfter(
+                reservationOpensAt
+        )) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_RESERVATION_PERIOD
+            );
+        }
+
+        if (reservationClosesAt.isAfter(startsAt)) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_RESERVATION_CLOSE_TIME
+            );
+        }
+    }
+    private static Long requireId(Long id) {
+        if (id == null || id <= 0) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.PERFORMANCE_NOT_FOUND
+            );
+        }
+
+        return id;
+    }
+    private void validateEditable() {
+        if (status == PerformanceStatus.COMPLETED
+                || status == PerformanceStatus.CANCELLED) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.PERFORMANCE_NOT_EDITABLE
+            );
+        }
+    }
+
+    private static Integer requireMaxTickets(
+            Integer value
+    ) {
+        if (value == null || value <= 0) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_MAX_TICKETS_PER_MEMBER
+            );
+        }
+
+        return value;
+    }
 
 }
