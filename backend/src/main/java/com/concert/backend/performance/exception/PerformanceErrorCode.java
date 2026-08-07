@@ -92,6 +92,85 @@ public enum PerformanceErrorCode implements ErrorCode {
     PERFORMANCE_TIME_CONFLICT(
             HttpStatus.CONFLICT,
             "해당 공연홀에 시간이 겹치는 공연 회차가 존재합니다."
+    ),
+    PERFORMANCE_SEAT_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "공연 좌석을 찾을 수 없습니다."
+    ),
+
+    SEAT_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "좌석을 찾을 수 없습니다."
+    ),
+
+    DUPLICATE_PERFORMANCE_SEAT(
+            HttpStatus.CONFLICT,
+            "해당 공연 회차에 이미 등록된 좌석입니다."
+    ),
+
+    PERFORMANCE_SEAT_GRADE_REQUIRED(
+            HttpStatus.BAD_REQUEST,
+            "좌석 등급은 필수입니다."
+    ),
+
+    INVALID_PERFORMANCE_SEAT_PRICE(
+            HttpStatus.BAD_REQUEST,
+            "좌석 가격은 0원 이상이어야 합니다."
+    ),
+
+    PERFORMANCE_SEAT_STATUS_REQUIRED(
+            HttpStatus.BAD_REQUEST,
+            "공연 좌석 상태는 필수입니다."
+    ),
+
+    INVALID_ADMIN_SEAT_STATUS(
+            HttpStatus.BAD_REQUEST,
+            "관리자는 AVAILABLE 또는 BLOCKED 상태만 직접 지정할 수 있습니다."
+    ),
+
+    SAME_PERFORMANCE_SEAT_STATUS(
+            HttpStatus.BAD_REQUEST,
+            "현재 공연 좌석 상태와 동일합니다."
+    ),
+
+    PERFORMANCE_NOT_AVAILABLE_FOR_SEAT_CONFIGURATION(
+            HttpStatus.CONFLICT,
+            "현재 상태의 공연 회차에는 좌석을 구성할 수 없습니다."
+    ),
+
+    SEAT_NOT_AVAILABLE_FOR_PERFORMANCE(
+            HttpStatus.CONFLICT,
+            "사용할 수 없는 물리 좌석입니다."
+    ),
+
+    SEAT_NOT_AVAILABLE(
+            HttpStatus.CONFLICT,
+            "현재 사용할 수 없는 공연 좌석입니다."
+    ),
+
+    SEAT_NOT_HELD(
+            HttpStatus.CONFLICT,
+            "선점된 좌석이 아닙니다."
+    ),
+
+    SEAT_HELD_BY_ANOTHER_MEMBER(
+            HttpStatus.CONFLICT,
+            "다른 회원이 선점한 좌석입니다."
+    ),
+
+    SEAT_HOLD_EXPIRED(
+            HttpStatus.CONFLICT,
+            "좌석 선점 시간이 만료되었습니다."
+    ),
+
+    HELD_SEAT_CANNOT_BE_UPDATED(
+            HttpStatus.CONFLICT,
+            "선점 중인 좌석은 수정할 수 없습니다."
+    ),
+
+    RESERVED_SEAT_CANNOT_BE_UPDATED(
+            HttpStatus.CONFLICT,
+            "예약 완료된 좌석은 수정할 수 없습니다."
     );
 
     private final HttpStatus status;
