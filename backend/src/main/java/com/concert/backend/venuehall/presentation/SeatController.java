@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-public class SeatController {
+public class SeatController implements SeatControllerDocs {
 
     private final GetSeatsService getSeatsService;
     private final GetSeatService getSeatService;
