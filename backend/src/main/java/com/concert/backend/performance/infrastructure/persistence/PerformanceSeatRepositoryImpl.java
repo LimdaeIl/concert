@@ -4,6 +4,7 @@ import com.concert.backend.performance.domain.PerformanceSeat;
 import com.concert.backend.performance.domain.PerformanceSeatRepository;
 import com.concert.backend.performance.domain.PerformanceSeatStatus;
 import com.concert.backend.performance.infrastructure.jpa.JpaPerformanceSeatRepository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -11,11 +12,9 @@ import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
 @Repository
-public class PerformanceSeatRepositoryImpl
-        implements PerformanceSeatRepository {
+public class PerformanceSeatRepositoryImpl implements PerformanceSeatRepository {
 
-    private final JpaPerformanceSeatRepository
-            jpaPerformanceSeatRepository;
+    private final JpaPerformanceSeatRepository jpaPerformanceSeatRepository;
 
     @Override
     public List<PerformanceSeat> saveAll(
@@ -68,5 +67,10 @@ public class PerformanceSeatRepositoryImpl
                         performanceId,
                         seatId
                 );
+    }
+
+    @Override
+    public List<PerformanceSeat> findAllById(Collection<Long> performanceSeatIds) {
+        return jpaPerformanceSeatRepository.findAllById(performanceSeatIds);
     }
 }
