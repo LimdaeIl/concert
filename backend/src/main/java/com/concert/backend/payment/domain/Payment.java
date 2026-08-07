@@ -299,6 +299,140 @@ public class Payment extends BaseAuditEntity {
     }
 
 
+    public void cancel(
+
+            LocalDateTime cancelledAt
+    ) {
+
+        if (status != PaymentStatus.PAID
+                && status != PaymentStatus.PARTIAL_CANCELLED) {
+
+            throw new PaymentException(
+                    PaymentErrorCode.INVALID_PAYMENT_STATUS
+            );
+        }
+
+        this.status = PaymentStatus.CANCELLED;
+        this.cancelledAt = cancelledAt;
+    }
+
+    public PaymentCancellation requestCancellation(
+            String cancellationNumber,
+            Long amount,
+            String reason,
+            LocalDateTime requestedAt
+    ) {
+        validateCancellationAllowed(amount);
+
+        PaymentCancellation cancellation =
+                PaymentCancellation.create(
+                        this,
+                        cancellationNumber,
+                        amount,
+                        reason,
+                        requestedAt
+                );
+
+        cancellations.add(cancellation);
+
+        return cancellation;
+    }
+
+    public void completeCancellation(
+            PaymentCancellation cancellation,
+            String providerCancellationId,
+            LocalDateTime completedAt
+    ) {
+        if (cancellation == null
+                || !cancellations.contains(cancellation)) {
+            throw new PaymentException(
+                    PaymentErrorCode
+                            .INVALID_PAYMENT_CANCELLATION_STATUS
+            );
+        }
+
+        cancellation.complete(
+                providerCancellationId,
+                completedAt
+        );
+
+        long cancelledAmount =
+                calculateCompletedCancellationAmount();
+
+        if (cancelledAmount == amount) {
+            this.status = PaymentStatus.CANCELLED;
+            this.cancelledAt = completedAt;
+
+            return;
+        }
+
+        if (cancelledAmount > 0
+                && cancelledAmount < amount) {
+            this.status =
+                    PaymentStatus.PARTIAL_CANCELLED;
+
+            return;
+        }
+
+        throw new PaymentException(
+                PaymentErrorCode
+                        .PAYMENT_CANCELLATION_AMOUNT_EXCEEDED
+        );
+    }
+
+    public void failCancellation(
+            PaymentCancellation cancellation
+    ) {
+        if (cancellation == null
+                || !cancellations.contains(cancellation)) {
+            return;
+        }
+
+        cancellation.fail();
+    }
+
+    private void validateCancellationAllowed(
+            Long cancelAmount
+    ) {
+        if (status != PaymentStatus.PAID
+                && status
+                != PaymentStatus.PARTIAL_CANCELLED) {
+            throw new PaymentException(
+                    PaymentErrorCode.PAYMENT_NOT_CANCELLABLE
+            );
+        }
+
+        if (cancelAmount == null
+                || cancelAmount <= 0) {
+            throw new PaymentException(
+                    PaymentErrorCode
+                            .INVALID_PAYMENT_CANCELLATION_AMOUNT
+            );
+        }
+
+        if (cancelAmount > getCancellableAmount()) {
+            throw new PaymentException(
+                    PaymentErrorCode
+                            .PAYMENT_CANCELLATION_AMOUNT_EXCEEDED
+            );
+        }
+    }
+
+    public Long getCancellableAmount() {
+        return amount
+                - calculateCompletedCancellationAmount();
+    }
+
+    private long calculateCompletedCancellationAmount() {
+        return cancellations.stream()
+                .filter(
+                        PaymentCancellation::isCompleted
+                )
+                .mapToLong(
+                        PaymentCancellation::getAmount
+                )
+                .sum();
+    }
 
 
 }

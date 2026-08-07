@@ -117,41 +117,4 @@ public interface ReservationControllerDocs {
             @PathVariable
             Long reservationId
     );
-
-    @Operation(
-            summary = "예약 취소",
-            description = """
-                    본인의 예약을 취소합니다.
-                    결제 대기 예약의 좌석 선점은 즉시 해제됩니다.
-                    결제 완료 예약 취소는 결제 연동 단계에서
-                    결제 취소 흐름과 결합됩니다.
-                    """,
-            security = @SecurityRequirement(
-                    name = "Bearer Authentication"
-            )
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "예약 취소 성공"
-    )
-    @ApiResponse(
-            responseCode = "404",
-            description = "예약을 찾을 수 없음"
-    )
-    @ApiResponse(
-            responseCode = "409",
-            description = "취소할 수 없는 예약 상태"
-    )
-    ResponseEntity<ReservationResponse> cancel(
-            @Parameter(hidden = true)
-            @AuthenticationPrincipal
-            LoginMember loginMember,
-
-            @Parameter(
-                    description = "예약 ID",
-                    example = "1"
-            )
-            @PathVariable
-            Long reservationId
-    );
 }

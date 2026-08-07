@@ -17,7 +17,6 @@ public class TossPaymentsConfig {
 
     @Bean("tossPaymentsRestClient")
     public RestClient tossPaymentsRestClient(
-            RestClient.Builder builder,
             TossPaymentsProperties properties
     ) {
         String credentials =
@@ -31,7 +30,7 @@ public class TossPaymentsConfig {
                                 )
                         );
 
-        return builder
+        return RestClient.builder()
                 .baseUrl(properties.apiUrl())
                 .defaultHeader(
                         HttpHeaders.AUTHORIZATION,

@@ -1,7 +1,6 @@
-package com.concert.backend.venuehall.presentation.response;
+package com.concert.backend.performance.presentation.response;
 
 import com.concert.backend.performance.application.result.PerformanceSeatResult;
-import com.concert.backend.performance.presentation.response.PerformanceSeatResponse;
 import java.util.List;
 
 public record GetPerformanceSeatsResponse(
