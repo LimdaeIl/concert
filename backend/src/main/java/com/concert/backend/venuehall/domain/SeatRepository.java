@@ -1,5 +1,6 @@
 package com.concert.backend.venuehall.domain;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,4 +40,7 @@ public interface SeatRepository {
             String seatNumber,
             Long seatId
     );
+
+    List<Seat> findAllById(List<Long> seatIds);
+
 }

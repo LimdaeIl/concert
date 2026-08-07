@@ -11,8 +11,7 @@ import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
 @Repository
-public class SeatRepositoryImpl
-        implements SeatRepository {
+public class SeatRepositoryImpl implements SeatRepository {
 
     private final JpaSeatRepository jpaSeatRepository;
 
@@ -98,4 +97,10 @@ public class SeatRepositoryImpl
                         seatId
                 );
     }
+
+    @Override
+    public List<Seat> findAllById(List<Long> seatIds) {
+        return List.of();
+    }
+
 }
