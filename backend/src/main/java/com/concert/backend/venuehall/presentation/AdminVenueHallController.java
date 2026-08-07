@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-public class AdminVenueHallController {
+public class AdminVenueHallController implements AdminVenueHallControllerDocs {
 
     private final CreateVenueHallService createVenueHallService;
     private final UpdateVenueHallService updateVenueHallService;

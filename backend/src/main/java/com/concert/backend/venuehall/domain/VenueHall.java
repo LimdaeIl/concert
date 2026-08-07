@@ -1,6 +1,8 @@
 package com.concert.backend.venuehall.domain;
 
 import com.concert.backend.common.domain.BaseAuditEntity;
+import com.concert.backend.venuehall.exception.SeatErrorCode;
+import com.concert.backend.venuehall.exception.SeatException;
 import com.concert.backend.venuehall.exception.VenueHallErrorCode;
 import com.concert.backend.venuehall.exception.VenueHallException;
 import jakarta.persistence.CascadeType;
@@ -121,6 +123,22 @@ public class VenueHall extends BaseAuditEntity {
 
     public boolean isActive() {
         return status == VenueHallStatus.ACTIVE;
+    }
+
+    public void addSeat(Seat seat) {
+        if (seat == null) {
+            throw new SeatException(
+                    SeatErrorCode.SEAT_NOT_FOUND
+            );
+        }
+
+        if (seats.size() >= capacity) {
+            throw new SeatException(
+                    SeatErrorCode.VENUE_HALL_CAPACITY_EXCEEDED
+            );
+        }
+
+        seats.add(seat);
     }
 
     private static Long requireVenueId(Long venueId) {
