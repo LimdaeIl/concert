@@ -1,6 +1,9 @@
 package com.concert.backend.venuehall.domain;
 
 import com.concert.backend.common.domain.BaseAuditEntity;
+import com.concert.backend.venuehall.exception.SeatErrorCode;
+import com.concert.backend.venuehall.exception.SeatException;
+import com.concert.backend.venuehall.exception.VenueHallErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -73,4 +76,146 @@ public class Seat extends BaseAuditEntity {
     @Column(nullable = false, length = 20)
     private SeatStatus status;
 
+    private Seat(
+            VenueHall venueHall,
+            String sectionName,
+            Short floor,
+            String rowName,
+            String seatNumber,
+            SeatType seatType
+    ) {
+        this.venueHall = requireVenueHall(venueHall);
+        this.sectionName = requireSectionName(sectionName);
+        this.floor = requireFloor(floor);
+        this.rowName = requireRowName(rowName);
+        this.seatNumber = requireSeatNumber(seatNumber);
+        this.seatType = requireSeatType(seatType);
+        this.status = SeatStatus.ACTIVE;
+    }
+
+    public static Seat create(
+            VenueHall venueHall,
+            String sectionName,
+            Short floor,
+            String rowName,
+            String seatNumber,
+            SeatType seatType
+    ) {
+        return new Seat(
+                venueHall,
+                sectionName,
+                floor,
+                rowName,
+                seatNumber,
+                seatType
+        );
+    }
+
+    public void update(
+            String sectionName,
+            Short floor,
+            String rowName,
+            String seatNumber,
+            SeatType seatType
+    ) {
+        this.sectionName = requireSectionName(sectionName);
+        this.floor = requireFloor(floor);
+        this.rowName = requireRowName(rowName);
+        this.seatNumber = requireSeatNumber(seatNumber);
+        this.seatType = requireSeatType(seatType);
+    }
+
+    public void changeStatus(SeatStatus newStatus) {
+        if (newStatus == null) {
+            throw new SeatException(
+                    SeatErrorCode.SEAT_STATUS_REQUIRED
+            );
+        }
+
+        if (status == newStatus) {
+            throw new SeatException(
+                    SeatErrorCode.SAME_SEAT_STATUS
+            );
+        }
+
+        this.status = newStatus;
+    }
+
+    public boolean isActive() {
+        return status == SeatStatus.ACTIVE;
+    }
+
+    private static VenueHall requireVenueHall(
+            VenueHall venueHall
+    ) {
+        if (venueHall == null) {
+            throw new SeatException(
+                    VenueHallErrorCode.VENUE_HALL_NOT_FOUND
+            );
+        }
+
+        return venueHall;
+    }
+
+    private static String requireSectionName(
+            String sectionName
+    ) {
+        if (sectionName == null || sectionName.isBlank()) {
+            throw new SeatException(
+                    SeatErrorCode.SEAT_SECTION_REQUIRED
+            );
+        }
+
+        return sectionName.trim();
+    }
+
+    private static Short requireFloor(Short floor) {
+        if (floor == null) {
+            throw new SeatException(
+                    SeatErrorCode.SEAT_FLOOR_REQUIRED
+            );
+        }
+
+        if (floor <= 0) {
+            throw new SeatException(
+                    SeatErrorCode.INVALID_SEAT_FLOOR
+            );
+        }
+
+        return floor;
+    }
+
+    private static String requireRowName(String rowName) {
+        if (rowName == null || rowName.isBlank()) {
+            throw new SeatException(
+                    SeatErrorCode.SEAT_ROW_REQUIRED
+            );
+        }
+
+        return rowName.trim();
+    }
+
+    private static String requireSeatNumber(
+            String seatNumber
+    ) {
+        if (seatNumber == null || seatNumber.isBlank()) {
+            throw new SeatException(
+                    SeatErrorCode.SEAT_NUMBER_REQUIRED
+            );
+        }
+
+        return seatNumber.trim();
+    }
+
+    private static SeatType requireSeatType(
+            SeatType seatType
+    ) {
+        if (seatType == null) {
+            throw new SeatException(
+                    SeatErrorCode.SEAT_TYPE_REQUIRED
+            );
+        }
+
+        return seatType;
+    }
 }
