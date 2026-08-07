@@ -145,3 +145,8 @@ springdoc:
 
   api-docs:
     path: /v3/api-docs
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true

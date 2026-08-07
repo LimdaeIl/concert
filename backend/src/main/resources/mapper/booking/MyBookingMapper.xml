@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.concert.backend.booking.infrastructure.mybatis.MyBookingMapper">
+
+  <!-- =========================================================
+       공통 검색 조건
+       ========================================================= -->
+  <sql id="searchConditions">
+
+    WHERE r.member_id = #{memberId}
+
+    <if test="status != null">
+      AND r.status = #{status}
+    </if>
+
+    <if test="keyword != null and keyword != ''">
+      AND c.title LIKE CONCAT('%', #{keyword}, '%')
+    </if>
+
+    <if test="from != null">
+      AND r.created_at &gt;= #{from}
+    </if>
+
+    <if test="to != null">
+      AND r.created_at &lt; DATE_ADD(#{to}, INTERVAL 1 DAY)
+    </if>
+
+    <if test="concertProgress != null">
+
+      <choose>
+
+        <when test="concertProgress == 'UPCOMING'">
+          AND CURRENT_TIMESTAMP &lt; p.starts_at
+        </when>
+
+        <when test="concertProgress == 'ONGOING'">
+          AND p.starts_at &lt;= CURRENT_TIMESTAMP
+          AND CURRENT_TIMESTAMP &lt; p.ends_at
+        </when>
+
+        <when test="concertProgress == 'ENDED'">
+          AND p.ends_at &lt;= CURRENT_TIMESTAMP
+        </when>
+
+      </choose>
+
+    </if>
+
+  </sql>
+
+
+  <!-- =========================================================
+       공통 정렬 조건
+       ========================================================= -->
+  <sql id="searchOrderBy">
+
+    <choose>
+
+      <when test="sort == 'RESERVED_AT_ASC'">
+        ORDER BY
+        r.created_at ASC,
+        r.id ASC
+      </when>
+
+      <when test="sort == 'PERFORMANCE_DATE_ASC'">
+        ORDER BY
+        p.starts_at ASC,
+        r.id ASC
+      </when>
+
+      <when test="sort == 'PERFORMANCE_DATE_DESC'">
+        ORDER BY
+        p.starts_at DESC,
+        r.id DESC
+      </when>
+
+      <otherwise>
+        ORDER BY
+        r.created_at DESC,
+        r.id DESC
+      </otherwise>
+
+    </choose>
+
+  </sql>
+
+
+  <!-- =========================================================
+       내 예약 목록 조회
+       ========================================================= -->
+  <select
+    id="search"
+    resultType="com.concert.backend.booking.infrastructure.mybatis.dto.MyBookingQueryDto">
+
+    SELECT
+    r.id AS reservationId,
+    r.reservation_number AS reservationNumber,
+    r.status AS reservationStatus,
+
+    c.id AS concertId,
+    c.title AS concertTitle,
+    c.poster_url AS posterUrl,
+
+    p.id AS performanceId,
+    p.starts_at AS startsAt,
+    p.ends_at AS endsAt,
+
+    v.id AS venueId,
+    v.name AS venueName,
+
+    vh.id AS venueHallId,
+    vh.name AS venueHallName,
+
+    (
+    SELECT COUNT(*)
+    FROM v1_reservation_seats rs
+    WHERE rs.reservation_id = r.id
+    ) AS ticketCount,
+
+    r.total_amount AS totalAmount,
+
+    pay.id AS paymentId,
+    pay.payment_number AS paymentNumber,
+    pay.provider AS paymentProvider,
+    pay.method AS paymentMethod,
+    pay.status AS paymentStatus,
+    pay.approved_at AS approvedAt,
+
+    r.created_at AS reservedAt,
+
+    CASE
+    WHEN r.status = 'PENDING_PAYMENT'
+    AND CURRENT_TIMESTAMP &lt; p.starts_at
+    THEN TRUE
+
+    WHEN r.status = 'COMPLETED'
+    AND pay.status = 'PAID'
+    AND CURRENT_TIMESTAMP &lt; p.starts_at
+    AND (
+    payment_cancel.status IS NULL
+    OR payment_cancel.status = 'FAILED'
+    )
+    THEN TRUE
+
+    ELSE FALSE
+    END AS canCancel,
+
+    CASE
+    WHEN r.status = 'PENDING_PAYMENT'
+    AND CURRENT_TIMESTAMP &lt; p.starts_at
+    THEN 'RESERVATION'
+
+    WHEN r.status = 'COMPLETED'
+    AND pay.status = 'PAID'
+    AND CURRENT_TIMESTAMP &lt; p.starts_at
+    AND (
+    payment_cancel.status IS NULL
+    OR payment_cancel.status = 'FAILED'
+    )
+    THEN 'PAYMENT'
+
+    ELSE 'NONE'
+    END AS cancelType,
+
+    CASE
+    WHEN r.status = 'PENDING_PAYMENT'
+    AND CURRENT_TIMESTAMP &lt; r.expires_at
+    AND CURRENT_TIMESTAMP &lt; p.starts_at
+    THEN TRUE
+
+    ELSE FALSE
+    END AS requiresPayment,
+
+    CASE
+    WHEN payment_cancel.status IS NULL
+    THEN 'NONE'
+
+    ELSE payment_cancel.status
+    END AS refundStatus
+
+    FROM v1_reservations r
+
+    INNER JOIN v1_performances p
+    ON p.id = r.performance_id
+
+    INNER JOIN v1_concerts c
+    ON c.id = p.concert_id
+
+    INNER JOIN v1_venue_halls vh
+    ON vh.id = p.venue_hall_id
+
+    INNER JOIN v1_venues v
+    ON v.id = vh.venue_id
+
+    LEFT JOIN (
+    SELECT
+    ranked.id,
+    ranked.payment_number,
+    ranked.reservation_id,
+    ranked.provider,
+    ranked.method,
+    ranked.status,
+    ranked.approved_at
+    FROM (
+    SELECT
+    p2.id,
+    p2.payment_number,
+    p2.reservation_id,
+    p2.provider,
+    p2.method,
+    p2.status,
+    p2.approved_at,
+
+    ROW_NUMBER() OVER (
+    PARTITION BY p2.reservation_id
+    ORDER BY
+    p2.created_at DESC,
+    p2.id DESC
+    ) AS rn
+
+    FROM v1_payments p2
+    ) ranked
+
+    WHERE ranked.rn = 1
+    ) pay
+    ON pay.reservation_id = r.id
+
+    LEFT JOIN (
+    SELECT
+    ranked.payment_id,
+    ranked.status
+    FROM (
+    SELECT
+    pc2.payment_id,
+    pc2.status,
+
+    ROW_NUMBER() OVER (
+    PARTITION BY pc2.payment_id
+    ORDER BY
+    pc2.created_at DESC,
+    pc2.id DESC
+    ) AS rn
+
+    FROM v1_payment_cancellations pc2
+    ) ranked
+
+    WHERE ranked.rn = 1
+    ) payment_cancel
+    ON payment_cancel.payment_id = pay.id
+
+    <include refid="searchConditions"/>
+
+    <include refid="searchOrderBy"/>
+
+    LIMIT #{size}
+    OFFSET #{offset}
+
+  </select>
+
+
+  <!-- =========================================================
+       내 예약 목록 개수
+       ========================================================= -->
+  <select
+    id="count"
+    resultType="long">
+
+    SELECT COUNT(*)
+
+    FROM v1_reservations r
+
+    INNER JOIN v1_performances p
+    ON p.id = r.performance_id
+
+    INNER JOIN v1_concerts c
+    ON c.id = p.concert_id
+
+    <include refid="searchConditions"/>
+
+  </select>
+
+
+  <!-- =========================================================
+       내 예약 상세 조회
+       예약 + 공연 + 공연장 + 최신 결제 + 최신 취소
+       ========================================================= -->
+  <select
+    id="findDetail"
+    resultType="com.concert.backend.booking.infrastructure.mybatis.dto.MyBookingDetailQueryDto">
+
+    SELECT
+    r.id AS reservationId,
+    r.reservation_number AS reservationNumber,
+    r.status AS reservationStatus,
+    r.total_amount AS totalAmount,
+    r.expires_at AS expiresAt,
+    r.completed_at AS reservationCompletedAt,
+    r.cancelled_at AS reservationCancelledAt,
+    r.created_at AS reservedAt,
+
+    c.id AS concertId,
+    c.title AS concertTitle,
+    c.subtitle AS concertSubtitle,
+    c.category AS concertCategory,
+    c.running_time AS runningTime,
+    c.age_rating AS ageRating,
+    c.poster_url AS posterUrl,
+
+    p.id AS performanceId,
+    p.starts_at AS startsAt,
+    p.ends_at AS endsAt,
+    p.reservation_opens_at AS reservationOpensAt,
+    p.reservation_closes_at AS reservationClosesAt,
+
+    v.id AS venueId,
+    v.name AS venueName,
+    v.road_address AS venueRoadAddress,
+    v.jibun_address AS venueJibunAddress,
+    v.detail_address AS venueDetailAddress,
+    v.zip_code AS venueZipCode,
+
+    vh.id AS venueHallId,
+    vh.name AS venueHallName,
+    vh.floor AS venueHallFloor,
+
+    pay.id AS paymentId,
+    pay.payment_number AS paymentNumber,
+    pay.provider AS paymentProvider,
+    pay.method AS paymentMethod,
+    pay.provider_payment_id AS providerPaymentId,
+    pay.amount AS paymentAmount,
+    pay.status AS paymentStatus,
+    pay.failure_code AS failureCode,
+    pay.failure_message AS failureMessage,
+    pay.requested_at AS paymentRequestedAt,
+    pay.approved_at AS paymentApprovedAt,
+    pay.cancelled_at AS paymentCancelledAt,
+
+    pc.id AS paymentCancellationId,
+    pc.cancellation_number AS cancellationNumber,
+    pc.amount AS cancellationAmount,
+    pc.reason AS cancellationReason,
+    pc.status AS cancellationStatus,
+    pc.requested_at AS cancellationRequestedAt,
+    pc.completed_at AS cancellationCompletedAt,
+
+    CASE
+    WHEN r.status = 'PENDING_PAYMENT'
+    AND CURRENT_TIMESTAMP &lt; p.starts_at
+    THEN TRUE
+
+    WHEN r.status = 'COMPLETED'
+    AND pay.status = 'PAID'
+    AND CURRENT_TIMESTAMP &lt; p.starts_at
+    AND (
+    pc.status IS NULL
+    OR pc.status = 'FAILED'
+    )
+    THEN TRUE
+
+    ELSE FALSE
+    END AS canCancel,
+
+    CASE
+    WHEN r.status = 'PENDING_PAYMENT'
+    AND CURRENT_TIMESTAMP &lt; p.starts_at
+    THEN 'RESERVATION'
+
+    WHEN r.status = 'COMPLETED'
+    AND pay.status = 'PAID'
+    AND CURRENT_TIMESTAMP &lt; p.starts_at
+    AND (
+    pc.status IS NULL
+    OR pc.status = 'FAILED'
+    )
+    THEN 'PAYMENT'
+
+    ELSE 'NONE'
+    END AS cancelType,
+
+    CASE
+    WHEN r.status = 'PENDING_PAYMENT'
+    AND CURRENT_TIMESTAMP &lt; r.expires_at
+    AND CURRENT_TIMESTAMP &lt; p.starts_at
+    THEN TRUE
+
+    ELSE FALSE
+    END AS requiresPayment,
+
+    CASE
+    WHEN pc.status IS NULL
+    THEN 'NONE'
+
+    ELSE pc.status
+    END AS refundStatus
+
+    FROM v1_reservations r
+
+    INNER JOIN v1_performances p
+    ON p.id = r.performance_id
+
+    INNER JOIN v1_concerts c
+    ON c.id = p.concert_id
+
+    INNER JOIN v1_venue_halls vh
+    ON vh.id = p.venue_hall_id
+
+    INNER JOIN v1_venues v
+    ON v.id = vh.venue_id
+
+    LEFT JOIN (
+    SELECT
+    ranked_payment.id,
+    ranked_payment.payment_number,
+    ranked_payment.reservation_id,
+    ranked_payment.provider,
+    ranked_payment.method,
+    ranked_payment.provider_payment_id,
+    ranked_payment.amount,
+    ranked_payment.status,
+    ranked_payment.failure_code,
+    ranked_payment.failure_message,
+    ranked_payment.requested_at,
+    ranked_payment.approved_at,
+    ranked_payment.cancelled_at
+    FROM (
+    SELECT
+    p2.*,
+
+    ROW_NUMBER() OVER (
+    PARTITION BY p2.reservation_id
+    ORDER BY
+    p2.created_at DESC,
+    p2.id DESC
+    ) AS rn
+
+    FROM v1_payments p2
+    ) ranked_payment
+
+    WHERE ranked_payment.rn = 1
+    ) pay
+    ON pay.reservation_id = r.id
+
+    LEFT JOIN (
+    SELECT
+    ranked_cancellation.id,
+    ranked_cancellation.payment_id,
+    ranked_cancellation.cancellation_number,
+    ranked_cancellation.amount,
+    ranked_cancellation.reason,
+    ranked_cancellation.status,
+    ranked_cancellation.requested_at,
+    ranked_cancellation.completed_at
+    FROM (
+    SELECT
+    pc2.*,
+
+    ROW_NUMBER() OVER (
+    PARTITION BY pc2.payment_id
+    ORDER BY
+    pc2.created_at DESC,
+    pc2.id DESC
+    ) AS rn
+
+    FROM v1_payment_cancellations pc2
+    ) ranked_cancellation
+
+    WHERE ranked_cancellation.rn = 1
+    ) pc
+    ON pc.payment_id = pay.id
+
+    WHERE r.member_id = #{memberId}
+    AND r.id = #{reservationId}
+
+  </select>
+
+
+  <!-- =========================================================
+       내 예약 상세 좌석 조회
+       ========================================================= -->
+  <select
+    id="findSeats"
+    resultType="com.concert.backend.booking.infrastructure.mybatis.dto.MyBookingSeatQueryDto">
+
+    SELECT
+    rs.id AS reservationSeatId,
+    ps.id AS performanceSeatId,
+    s.id AS seatId,
+
+    s.section_name AS sectionName,
+    s.floor AS floor,
+    s.row_name AS rowName,
+    s.seat_number AS seatNumber,
+    s.seat_type AS seatType,
+
+    rs.grade AS grade,
+    rs.price AS price
+
+    FROM v1_reservations r
+
+    INNER JOIN v1_reservation_seats rs
+    ON rs.reservation_id = r.id
+
+    INNER JOIN v1_performance_seats ps
+    ON ps.id = rs.performance_seat_id
+
+    INNER JOIN v1_seats s
+    ON s.id = ps.seat_id
+
+    WHERE r.member_id = #{memberId}
+    AND r.id = #{reservationId}
+
+    ORDER BY
+    s.floor ASC,
+    s.section_name ASC,
+    s.row_name ASC,
+    s.seat_number ASC
+
+  </select>
+
+</mapper>
