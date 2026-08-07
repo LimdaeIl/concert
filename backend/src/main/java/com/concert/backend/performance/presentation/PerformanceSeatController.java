@@ -2,7 +2,7 @@ package com.concert.backend.performance.presentation;
 
 import com.concert.backend.performance.application.GetPerformanceSeatsService;
 import com.concert.backend.performance.application.result.PerformanceSeatResult;
-import com.concert.backend.venuehall.presentation.response.GetPerformanceSeatsResponse;
+import com.concert.backend.performance.presentation.response.GetPerformanceSeatsResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

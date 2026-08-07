@@ -105,6 +105,60 @@ public enum PaymentErrorCode implements ErrorCode {
     PAYMENT_PROVIDER_NOT_SUPPORTED(
             HttpStatus.BAD_REQUEST,
             "지원하지 않는 결제 제공자입니다."
+    ),
+    PAYMENT_CANCELLATION_NUMBER_REQUIRED(
+            HttpStatus.BAD_REQUEST,
+            "결제 취소 번호는 필수입니다."
+    ),
+
+    INVALID_PAYMENT_CANCELLATION_AMOUNT(
+            HttpStatus.BAD_REQUEST,
+            "결제 취소 금액은 0원보다 커야 합니다."
+    ),
+
+    PAYMENT_CANCELLATION_REASON_REQUIRED(
+            HttpStatus.BAD_REQUEST,
+            "결제 취소 사유는 필수입니다."
+    ),
+
+    PAYMENT_CANCELLATION_REQUESTED_AT_REQUIRED(
+            HttpStatus.BAD_REQUEST,
+            "결제 취소 요청일시는 필수입니다."
+    ),
+
+    PAYMENT_CANCELLATION_COMPLETED_AT_REQUIRED(
+            HttpStatus.BAD_REQUEST,
+            "결제 취소 완료일시는 필수입니다."
+    ),
+
+    PROVIDER_CANCELLATION_ID_REQUIRED(
+            HttpStatus.BAD_REQUEST,
+            "결제 제공자의 취소 거래 ID는 필수입니다."
+    ),
+
+    INVALID_PAYMENT_CANCELLATION_STATUS(
+            HttpStatus.CONFLICT,
+            "현재 결제 취소 상태에서는 요청한 작업을 수행할 수 없습니다."
+    ),
+
+    PAYMENT_NOT_CANCELLABLE(
+            HttpStatus.CONFLICT,
+            "현재 상태의 결제는 취소할 수 없습니다."
+    ),
+
+    PAYMENT_ALREADY_CANCELLED(
+            HttpStatus.CONFLICT,
+            "이미 취소된 결제입니다."
+    ),
+
+    PAYMENT_CANCELLATION_AMOUNT_EXCEEDED(
+            HttpStatus.BAD_REQUEST,
+            "취소 금액이 취소 가능한 결제 금액을 초과했습니다."
+    ),
+
+    PAYMENT_CANCELLATION_FAILED(
+            HttpStatus.BAD_GATEWAY,
+            "결제 취소 처리에 실패했습니다."
     );
 
     private final HttpStatus status;

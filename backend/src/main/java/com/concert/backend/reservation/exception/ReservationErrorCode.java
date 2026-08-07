@@ -102,6 +102,14 @@ public enum ReservationErrorCode implements ErrorCode {
     RESERVATION_CONFLICT(
             HttpStatus.CONFLICT,
             "좌석 예약이 동시에 처리되었습니다. 좌석 상태를 다시 확인해주세요."
+    ),
+    RESERVATION_NOT_REFUNDABLE(
+            HttpStatus.CONFLICT,
+            "현재 상태의 예약은 환불할 수 없습니다."
+    ),
+    RESERVATION_CANCELLATION_AFTER_PERFORMANCE_STARTED(
+            HttpStatus.CONFLICT,
+        "공연이 시작된 이후에는 사용자가 예약을 취소할 수 없습니다."
     );
 
     private final HttpStatus status;

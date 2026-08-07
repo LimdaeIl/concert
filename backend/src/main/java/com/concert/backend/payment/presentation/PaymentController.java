@@ -1,9 +1,11 @@
 package com.concert.backend.payment.presentation;
 
 import com.concert.backend.auth.infrastructure.security.LoginMember;
+import com.concert.backend.payment.application.CancelPaymentService;
 import com.concert.backend.payment.application.ConfirmPaymentService;
 import com.concert.backend.payment.application.PreparePaymentService;
 import com.concert.backend.payment.application.result.PaymentResult;
+import com.concert.backend.payment.presentation.request.CancelPaymentRequest;
 import com.concert.backend.payment.presentation.request.ConfirmPaymentRequest;
 import com.concert.backend.payment.presentation.request.PreparePaymentRequest;
 import com.concert.backend.payment.presentation.response.PaymentResponse;
@@ -29,6 +31,9 @@ public class PaymentController {
 
     private final ConfirmPaymentService
             confirmPaymentService;
+
+    private final CancelPaymentService
+            cancelPaymentService;
 
     @PostMapping(
             "/reservations/{reservationId}/payments"
@@ -79,6 +84,32 @@ public class PaymentController {
                         loginMember.memberId(),
                         paymentId,
                         request.amount(),
+                        request.providerData()
+                );
+
+        return ResponseEntity.ok(
+                PaymentResponse.from(result)
+        );
+    }
+    @PostMapping(
+            "/payments/{paymentId}/cancel"
+    )
+    public ResponseEntity<PaymentResponse> cancel(
+            @AuthenticationPrincipal
+            LoginMember loginMember,
+
+            @PathVariable
+            Long paymentId,
+
+            @Valid
+            @RequestBody
+            CancelPaymentRequest request
+    ) {
+        PaymentResult result =
+                cancelPaymentService.cancel(
+                        loginMember.memberId(),
+                        paymentId,
+                        request.reason(),
                         request.providerData()
                 );
 

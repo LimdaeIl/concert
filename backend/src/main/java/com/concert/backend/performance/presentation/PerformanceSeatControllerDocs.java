@@ -1,6 +1,6 @@
 package com.concert.backend.performance.presentation;
 
-import com.concert.backend.venuehall.presentation.response.GetPerformanceSeatsResponse;
+import com.concert.backend.performance.presentation.response.GetPerformanceSeatsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

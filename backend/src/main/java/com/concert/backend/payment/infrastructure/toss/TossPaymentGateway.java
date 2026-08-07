@@ -3,20 +3,23 @@ package com.concert.backend.payment.infrastructure.toss;
 import com.concert.backend.payment.domain.PaymentGateway;
 import com.concert.backend.payment.domain.PaymentGatewayApprovalCommand;
 import com.concert.backend.payment.domain.PaymentGatewayApprovalResult;
+import com.concert.backend.payment.domain.PaymentGatewayCancellationCommand;
+import com.concert.backend.payment.domain.PaymentGatewayCancellationResult;
 import com.concert.backend.payment.domain.PaymentGatewayException;
 import com.concert.backend.payment.domain.PaymentMethod;
 import com.concert.backend.payment.domain.PaymentProvider;
+import com.concert.backend.payment.infrastructure.toss.dto.TossCancelPaymentRequest;
+import com.concert.backend.payment.infrastructure.toss.dto.TossCancelPaymentResponse;
 import com.concert.backend.payment.infrastructure.toss.dto.TossConfirmPaymentRequest;
 import com.concert.backend.payment.infrastructure.toss.dto.TossErrorResponse;
 import com.concert.backend.payment.infrastructure.toss.dto.TossPaymentResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 public class TossPaymentGateway implements PaymentGateway {
@@ -140,7 +143,7 @@ public class TossPaymentGateway implements PaymentGateway {
                     error.message()
             );
 
-        } catch (IOException exception) {
+        } catch (RuntimeException exception) {
             return new PaymentGatewayException(
                     "TOSS_INVALID_ERROR_RESPONSE",
                     "토스페이먼츠 오류 응답을 처리할 수 없습니다.",
@@ -240,24 +243,19 @@ public class TossPaymentGateway implements PaymentGateway {
         }
 
         return switch (tossMethod) {
-            case "카드" ->
-                    PaymentMethod.CARD;
+            case "카드" -> PaymentMethod.CARD;
 
-            case "계좌이체" ->
-                    PaymentMethod.TRANSFER;
+            case "계좌이체" -> PaymentMethod.TRANSFER;
 
-            case "가상계좌" ->
-                    PaymentMethod.VIRTUAL_ACCOUNT;
+            case "가상계좌" -> PaymentMethod.VIRTUAL_ACCOUNT;
 
-            case "간편결제" ->
-                    PaymentMethod.EASY_PAY;
+            case "간편결제" -> PaymentMethod.EASY_PAY;
 
-            default ->
-                    throw new PaymentGatewayException(
-                            "TOSS_UNSUPPORTED_PAYMENT_METHOD",
-                            "지원하지 않는 토스페이먼츠 결제수단입니다: "
-                                    + tossMethod
-                    );
+            default -> throw new PaymentGatewayException(
+                    "TOSS_UNSUPPORTED_PAYMENT_METHOD",
+                    "지원하지 않는 토스페이먼츠 결제수단입니다: "
+                            + tossMethod
+            );
         };
     }
 
@@ -274,4 +272,115 @@ public class TossPaymentGateway implements PaymentGateway {
         return response.approvedAt()
                 .toLocalDateTime();
     }
+
+
+    @Override
+    public PaymentGatewayCancellationResult cancel(
+            PaymentGatewayCancellationCommand command
+    ) {
+        if (command.providerPaymentId() == null
+                || command.providerPaymentId().isBlank()) {
+            throw new PaymentGatewayException(
+                    "TOSS_PAYMENT_KEY_REQUIRED",
+                    "토스페이먼츠 paymentKey가 필요합니다."
+            );
+        }
+
+        TossCancelPaymentRequest request =
+                new TossCancelPaymentRequest(
+                        command.amount(),
+                        command.reason()
+                );
+
+        TossCancelPaymentResponse response =
+                requestCancellation(
+                        command.providerPaymentId(),
+                        request
+                );
+
+        TossCancelPaymentResponse.TossCancelInfo cancel =
+                findCompletedCancellation(
+                        command.amount(),
+                        response
+                );
+
+        return new PaymentGatewayCancellationResult(
+                cancel.transactionKey(),
+                cancel.cancelAmount(),
+                cancel.canceledAt()
+                        .toLocalDateTime()
+        );
+    }
+
+    private TossCancelPaymentResponse requestCancellation(
+            String paymentKey,
+            TossCancelPaymentRequest request
+    ) {
+        TossCancelPaymentResponse response =
+                tossPaymentsRestClient
+                        .post()
+                        .uri(
+                                "/v1/payments/{paymentKey}/cancel",
+                                paymentKey
+                        )
+                        .body(request)
+                        .retrieve()
+                        .onStatus(
+                                HttpStatusCode::isError,
+                                (httpRequest, httpResponse) -> {
+                                    throw createGatewayException(
+                                            httpResponse
+                                                    .getBody()
+                                                    .readAllBytes()
+                                    );
+                                }
+                        )
+                        .body(
+                                TossCancelPaymentResponse.class
+                        );
+
+        if (response == null) {
+            throw new PaymentGatewayException(
+                    "TOSS_CANCEL_EMPTY_RESPONSE",
+                    "토스페이먼츠 취소 응답이 비어 있습니다."
+            );
+        }
+
+        return response;
+    }
+
+    private TossCancelPaymentResponse.TossCancelInfo
+    findCompletedCancellation(
+            Long requestedAmount,
+            TossCancelPaymentResponse response
+    ) {
+        if (response.cancels() == null
+                || response.cancels().isEmpty()) {
+            throw new PaymentGatewayException(
+                    "TOSS_CANCEL_RESULT_NOT_FOUND",
+                    "토스페이먼츠 취소 결과를 찾을 수 없습니다."
+            );
+        }
+
+        return response.cancels()
+                .stream()
+                .filter(cancel ->
+                        requestedAmount.equals(
+                                cancel.cancelAmount()
+                        )
+                )
+                .filter(cancel ->
+                        "DONE".equals(
+                                cancel.cancelStatus()
+                        )
+                )
+                .findFirst()
+                .orElseThrow(() ->
+                        new PaymentGatewayException(
+                                "TOSS_CANCEL_NOT_COMPLETED",
+                                "토스페이먼츠 결제 취소가 완료되지 않았습니다."
+                        )
+                );
+    }
+
 }
