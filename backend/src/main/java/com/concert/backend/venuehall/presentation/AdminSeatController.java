@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-public class AdminSeatController {
+public class AdminSeatController implements AdminSeatControllerDocs {
 
     private final BulkCreateSeatService bulkCreateSeatService;
     private final UpdateSeatService updateSeatService;

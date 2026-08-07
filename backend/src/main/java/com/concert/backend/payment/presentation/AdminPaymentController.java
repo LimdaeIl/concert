@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin/payments")
 @RestController
-public class AdminPaymentController {
+public class AdminPaymentController implements AdminPaymentControllerDocs {
 
     private final AdminRefundPaymentService
             adminRefundPaymentService;
