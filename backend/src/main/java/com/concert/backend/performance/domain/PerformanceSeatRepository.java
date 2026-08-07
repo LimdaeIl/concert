@@ -1,5 +1,6 @@
 package com.concert.backend.performance.domain;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,5 +27,8 @@ public interface PerformanceSeatRepository {
     boolean existsByPerformanceIdAndSeatId(
             Long performanceId,
             Long seatId
+    );
+
+    List<PerformanceSeat> findAllById(Collection<Long> performanceSeatIds
     );
 }

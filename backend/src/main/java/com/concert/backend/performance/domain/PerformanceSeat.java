@@ -249,15 +249,29 @@ public class PerformanceSeat extends BaseAuditEntity {
      * 만료 좌석 정리 배치에서 사용.
      */
     public void releaseExpired(
+            Long memberId,
             LocalDateTime now
     ) {
-        if (isHeld()
-                && heldUntil != null
-                && !heldUntil.isAfter(now)) {
-            this.status = PerformanceSeatStatus.AVAILABLE;
-            clearHold();
+        if (!isHeld()) {
+            return;
         }
+
+        if (heldBy == null
+                || !heldBy.equals(memberId)) {
+            return;
+        }
+
+        if (heldUntil == null
+                || heldUntil.isAfter(now)) {
+            return;
+        }
+
+        this.status =
+                PerformanceSeatStatus.AVAILABLE;
+
+        clearHold();
     }
+
 
     /*
      * 예약 취소 후 RESERVED → AVAILABLE.

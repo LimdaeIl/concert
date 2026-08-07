@@ -122,6 +122,11 @@ app:
       login-code-expiration: 1m
       signup-ticket-expiration: 5m
 
+  reservation:
+    payment-timeout: 10m
+    expiration-scan-delay: 10000
+
+
 solapi:
   api-key: ${SOLAPI_API_KEY}
   api-secret: ${SOLAPI_API_SECRET}
