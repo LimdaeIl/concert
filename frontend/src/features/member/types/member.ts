@@ -1,43 +1,3 @@
-export interface MemberAddress {
-  roadAddress: string;
-  jibunAddress: string;
-  detailAddress: string;
-  zipCode: string;
-  latitude: number;
-  longitude: number;
-}
-
-export interface MemberMeResponse {
-  memberId: number;
-  email: string;
-  name: string;
-  phone: string;
-  role: string;
-  status: string;
-  address: MemberAddress;
-  socialProviders: string[];
-}
-
-export interface UpdateMemberProfileRequest {
-  name: string;
-  roadAddress: string;
-  jibunAddress: string;
-  detailAddress: string;
-  zipCode: string;
-  latitude: number;
-  longitude: number;
-}
-
-export interface ChangeEmailRequest {
-  email: string;
-  emailVerificationToken: string;
-}
-
-export interface ChangePhoneRequest {
-  phone: string;
-  phoneVerificationToken: string;
-}
-
 export interface SignUpRequest {
   email: string;
   password: string;
@@ -49,17 +9,45 @@ export interface SignUpRequest {
   detailAddress: string;
   zipCode: string;
 
-  latitude: number;
-  longitude: number;
-
   emailVerificationToken: string;
   phoneVerificationToken: string;
 }
 
 export interface SignUpResponse {
-  memberId: number;
+  id: number;
+}
+
+export interface MemberAddress {
+  roadAddress: string;
+  jibunAddress: string;
+  detailAddress: string;
+  zipCode: string;
+}
+
+export interface MemberMeResponse {
+  id: number;
   email: string;
   name: string;
-  role: string;
-  status: string;
+  phone: string;
+
+  address: MemberAddress;
+}
+
+export interface UpdateMemberProfileRequest {
+  name: string;
+
+  roadAddress: string;
+  jibunAddress: string;
+  detailAddress: string;
+  zipCode: string;
+}
+
+export interface ChangeEmailRequest {
+  email: string;
+  verificationToken: string;
+}
+
+export interface ChangePhoneRequest {
+  phone: string;
+  verificationToken: string;
 }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import ConcertPoster from '@/features/concert/components/ConcertPoster';
 
 import {
   AlertTriangle,
@@ -289,24 +290,14 @@ export default function ReservationDetailPage() {
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <div className="flex gap-4 p-4">
                 <div className="aspect-[3/4] w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                  {reservation.concert
-                      .posterUrl ? (
-                      <img
-                          src={
-                            reservation.concert
-                                .posterUrl
-                          }
-                          alt={`${reservation.concert.title} 포스터`}
-                          className="h-full w-full object-cover"
-                      />
-                  ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <Ticket
-                            size={28}
-                            className="text-slate-300"
-                        />
-                      </div>
-                  )}
+                  <ConcertPoster
+                      src={
+                        reservation.concert
+                            .posterUrl
+                      }
+                      alt={`${reservation.concert.title} 포스터`}
+                      className="h-full w-full object-cover"
+                  />
                 </div>
 
                 <div className="min-w-0 flex-1 py-1">

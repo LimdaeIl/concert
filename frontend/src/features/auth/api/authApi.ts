@@ -35,7 +35,9 @@ export async function reissue(): Promise<AuthenticationResponse> {
 }
 
 export async function signOut(): Promise<void> {
-  await apiClient.post('/api/v1/auth/sign-out');
+  await apiClient.post(
+      '/api/v1/auth/sign-out',
+  );
 }
 
 export async function sendEmailVerification(

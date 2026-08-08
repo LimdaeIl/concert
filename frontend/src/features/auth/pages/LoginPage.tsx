@@ -18,41 +18,43 @@ interface LocationState {
   from?: string;
 }
 
-interface LocationState {
-  from?: string;
-}
-
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const setAuthentication = useAuthStore(
-      (state) => state.setAuthentication,
-  );
+  const setAuthentication =
+      useAuthStore(
+          (state) =>
+              state.setAuthentication,
+      );
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [email, setEmail] =
+      useState('');
 
-  const state = location.state as LocationState | null;
+  const [password, setPassword] =
+      useState('');
 
-  navigate(
-      state?.from ?? '/',
-      {
-        replace: true,
-      },
-  );
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState('');
+
+  const [submitting, setSubmitting] =
+      useState(false);
 
   async function handleSubmit(
       event: SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
-    if (!email.trim() || !password) {
+    if (
+        !email.trim() ||
+        !password
+    ) {
       setErrorMessage(
           '이메일과 비밀번호를 입력해주세요.',
       );
+
       return;
     }
 
@@ -60,22 +62,33 @@ export function LoginPage() {
     setErrorMessage('');
 
     try {
-      const authentication = await signIn({
-        email: email.trim(),
-        password,
-      });
+      const authentication =
+          await signIn({
+            email: email.trim(),
+            password,
+          });
 
       setAuthentication(
           authentication.id,
           authentication.accessToken,
       );
 
+      /*
+       * ProtectedRoute에서 로그인 페이지로
+       * 보내면서 state.from을 넘겼다면
+       * 로그인 성공 후 원래 페이지로 돌아간다.
+       */
       const state =
-          location.state as LocationState | null;
+          location.state as
+              | LocationState
+              | null;
 
-      navigate(state?.from ?? '/', {
-        replace: true,
-      });
+      navigate(
+          state?.from ?? '/',
+          {
+            replace: true,
+          },
+      );
     } catch (error) {
       setErrorMessage(
           getApiErrorMessage(
@@ -89,13 +102,15 @@ export function LoginPage() {
   }
 
   return (
-      <main className="flex min-h-screen flex-col px-5 py-8">
-        <Link
-            to="/"
-            className="w-fit text-xl font-bold tracking-tight text-slate-950"
-        >
-          CONCERT
-        </Link>
+      <main className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col bg-white px-5">
+        <header className="flex h-16 items-center">
+          <Link
+              to="/"
+              className="text-lg font-black tracking-tight text-indigo-600"
+          >
+            CONCERT
+          </Link>
+        </header>
 
         <section className="flex flex-1 flex-col justify-center py-12">
           <div>
@@ -130,7 +145,9 @@ export function LoginPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(event) =>
-                      setEmail(event.target.value)
+                      setEmail(
+                          event.target.value,
+                      )
                   }
                   placeholder="user@example.com"
                   className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
@@ -151,7 +168,9 @@ export function LoginPage() {
                   autoComplete="current-password"
                   value={password}
                   onChange={(event) =>
-                      setPassword(event.target.value)
+                      setPassword(
+                          event.target.value,
+                      )
                   }
                   placeholder="비밀번호"
                   className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
@@ -172,12 +191,15 @@ export function LoginPage() {
                 disabled={submitting}
                 className="w-full rounded-xl bg-indigo-600 px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
-              {submitting ? '로그인 중...' : '로그인'}
+              {submitting
+                  ? '로그인 중...'
+                  : '로그인'}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-600">
             아직 계정이 없나요?{' '}
+
             <Link
                 to="/sign-up"
                 className="font-semibold text-indigo-600"
