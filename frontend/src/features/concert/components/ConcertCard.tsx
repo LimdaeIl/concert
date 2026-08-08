@@ -1,6 +1,12 @@
-import { CalendarDays } from 'lucide-react';
+import {
+  CalendarDays,
+} from 'lucide-react';
 
-import type { Concert } from '../types/concert';
+import ConcertPoster from './ConcertPoster';
+
+import type {
+  Concert,
+} from '../types/concert';
 
 interface ConcertCardProps {
   concert: Concert;
@@ -13,7 +19,10 @@ export default function ConcertCard({
                                       onClick,
                                       variant = 'grid',
                                     }: ConcertCardProps) {
-  if (variant === 'horizontal') {
+  if (
+      variant ===
+      'horizontal'
+  ) {
     return (
         <button
             type="button"
@@ -21,20 +30,13 @@ export default function ConcertCard({
             className="flex w-full gap-4 rounded-2xl border border-slate-200 bg-white p-3 text-left transition-colors hover:bg-slate-50"
         >
           <div className="aspect-[3/4] w-24 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-            {concert.posterUrl ? (
-                <img
-                    src={concert.posterUrl}
-                    alt={`${concert.title} 포스터`}
-                    className="h-full w-full object-cover"
-                />
-            ) : (
-                <div className="flex h-full items-center justify-center">
-                  <CalendarDays
-                      size={24}
-                      className="text-slate-300"
-                  />
-                </div>
-            )}
+            <ConcertPoster
+                src={
+                  concert.posterUrl
+                }
+                alt={`${concert.title} 포스터`}
+                className="h-full w-full object-cover"
+            />
           </div>
 
           <div className="min-w-0 flex-1 py-1">
@@ -53,9 +55,17 @@ export default function ConcertCard({
             )}
 
             <div className="mt-4 flex flex-wrap gap-2">
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500">
-              {concert.runningTime}분
-            </span>
+              {concert.runningTime && (
+                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500">
+                <CalendarDays
+                    size={11}
+                    className="mr-1 inline"
+                />
+
+                    {concert.runningTime}
+                    분
+              </span>
+              )}
 
               <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-500">
               {concert.ageRating}
@@ -70,23 +80,16 @@ export default function ConcertCard({
       <button
           type="button"
           onClick={onClick}
-          className="min-w-0 text-left"
+          className="group min-w-0 text-left"
       >
         <div className="aspect-[3/4] overflow-hidden rounded-xl bg-slate-100">
-          {concert.posterUrl ? (
-              <img
-                  src={concert.posterUrl}
-                  alt={`${concert.title} 포스터`}
-                  className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.03]"
-              />
-          ) : (
-              <div className="flex h-full items-center justify-center">
-                <CalendarDays
-                    size={28}
-                    className="text-slate-300"
-                />
-              </div>
-          )}
+          <ConcertPoster
+              src={
+                concert.posterUrl
+              }
+              alt={`${concert.title} 포스터`}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
         </div>
 
         <p className="mt-3 text-xs font-semibold text-indigo-600">

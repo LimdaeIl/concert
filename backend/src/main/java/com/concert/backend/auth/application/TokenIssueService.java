@@ -21,14 +21,11 @@ public class TokenIssueService {
         String accessToken = jwtTokenProvider.createAccessToken(member.getId(),
                 member.getRole().name());
 
-        String refreshToken =
-                jwtTokenProvider.createRefreshToken(member.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(member.getId());
 
-        long refreshTokenRemainingMillis =
-                jwtTokenProvider.getRefreshTokenRemainingMillis(refreshToken);
+        long refreshTokenRemainingMillis = jwtTokenProvider.getRefreshTokenRemainingMillis(refreshToken);
 
-        String hashedRefreshToken =
-                jwtHashUtil.sha256(refreshToken);
+        String hashedRefreshToken = jwtHashUtil.sha256(refreshToken);
 
         refreshTokenRepository.save(
                 member.getId(),

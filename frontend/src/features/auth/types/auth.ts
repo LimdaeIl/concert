@@ -17,10 +17,6 @@ export interface VerifyEmailRequest {
   verificationCode: string;
 }
 
-export interface VerificationTokenResponse {
-  verificationToken: string;
-}
-
 export interface SendPhoneVerificationRequest {
   phone: string;
 }
@@ -28,4 +24,20 @@ export interface SendPhoneVerificationRequest {
 export interface VerifyPhoneRequest {
   phone: string;
   verificationCode: string;
+}
+
+export interface VerificationTokenResponse {
+  verificationToken: string;
+}
+
+export interface EmailVerificationResponse {
+  email: string;
+  verificationToken: string;
+  expiresInSeconds: number;
+}
+
+export interface PhoneVerificationResponse {
+  phone: string;
+  verificationToken: string;
+  expiresInSeconds: number;
 }

@@ -1,47 +1,80 @@
 import { create } from 'zustand';
 
+import {
+  clearAuthSession,
+  markAuthSession,
+} from '@/features/auth/lib/authSession';
+
 interface AuthState {
   memberId: number | null;
   accessToken: string | null;
   initialized: boolean;
 
   isAuthenticated: () => boolean;
-  setAuthentication: (memberId: number, accessToken: string,) => void;
-  setAccessToken: (accessToken: string) => void;
+
+  setAuthentication: (
+      memberId: number,
+      accessToken: string,
+  ) => void;
+
+  setAccessToken: (
+      accessToken: string,
+  ) => void;
+
   clearAuthentication: () => void;
-  setInitialized: (initialized: boolean) => void;
+
+  setInitialized: (
+      initialized: boolean,
+  ) => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-  memberId: null,
-  accessToken: null,
-  initialized: false,
+export const useAuthStore =
+    create<AuthState>(
+        (set, get) => ({
+          memberId: null,
+          accessToken: null,
+          initialized: false,
 
-  isAuthenticated: () => Boolean(get().accessToken),
+          isAuthenticated: () =>
+              Boolean(
+                  get().accessToken,
+              ),
 
-  setAuthentication: (memberId, accessToken) => {
-    set({
-      memberId,
-      accessToken,
-    });
-  },
+          setAuthentication: (
+              memberId,
+              accessToken,
+          ) => {
+            markAuthSession();
 
-  setAccessToken: (accessToken) => {
-    set({
-      accessToken,
-    });
-  },
+            set({
+              memberId,
+              accessToken,
+            });
+          },
 
-  clearAuthentication: () => {
-    set({
-      memberId: null,
-      accessToken: null,
-    });
-  },
+          setAccessToken: (
+              accessToken,
+          ) => {
+            set({
+              accessToken,
+            });
+          },
 
-  setInitialized: (initialized) => {
-    set({
-      initialized,
-    });
-  },
-}));
+          clearAuthentication: () => {
+            clearAuthSession();
+
+            set({
+              memberId: null,
+              accessToken: null,
+            });
+          },
+
+          setInitialized: (
+              initialized,
+          ) => {
+            set({
+              initialized,
+            });
+          },
+        }),
+    );

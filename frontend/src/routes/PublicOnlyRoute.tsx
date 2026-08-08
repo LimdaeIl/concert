@@ -6,9 +6,11 @@ import {
 import { useAuthStore } from '@/features/auth/store/authStore';
 
 export default function PublicOnlyRoute() {
-  const accessToken = useAuthStore(
-      (state) => state.accessToken,
-  );
+  const accessToken =
+      useAuthStore(
+          (state) =>
+              state.accessToken,
+      );
 
   if (accessToken) {
     return (

@@ -4,31 +4,60 @@ import {
 } from 'react';
 
 import { reissue } from '@/features/auth/api/authApi';
+import { hasAuthSession } from '@/features/auth/lib/authSession';
 import { useAuthStore } from '@/features/auth/store/authStore';
 
-export function AuthInitializer({children,}: PropsWithChildren) {
-  const initialized = useAuthStore(
-      (state) => state.initialized,
-  );
+let initializationPromise:
+    Promise<void> | null = null;
 
-  const setAuthentication = useAuthStore(
-      (state) => state.setAuthentication,
-  );
+export function AuthInitializer({
+                                  children,
+                                }: PropsWithChildren) {
+  const initialized =
+      useAuthStore(
+          (state) =>
+              state.initialized,
+      );
 
-  const clearAuthentication = useAuthStore(
-      (state) => state.clearAuthentication,
-  );
+  const setAuthentication =
+      useAuthStore(
+          (state) =>
+              state.setAuthentication,
+      );
 
-  const setInitialized = useAuthStore(
-      (state) => state.setInitialized,
-  );
+  const clearAuthentication =
+      useAuthStore(
+          (state) =>
+              state.clearAuthentication,
+      );
+
+  const setInitialized =
+      useAuthStore(
+          (state) =>
+              state.setInitialized,
+      );
 
   useEffect(() => {
     let active = true;
 
+    /*
+     * 세션 흔적이 전혀 없다.
+     *
+     * reissue를 호출하지 않고
+     * 즉시 초기화 완료 처리한다.
+     */
+    if (!hasAuthSession()) {
+      setInitialized(true);
+
+      return () => {
+        active = false;
+      };
+    }
+
     async function initializeAuthentication() {
       try {
-        const authentication = await reissue();
+        const authentication =
+            await reissue();
 
         if (!active) {
           return;
@@ -39,17 +68,28 @@ export function AuthInitializer({children,}: PropsWithChildren) {
             authentication.accessToken,
         );
       } catch {
-        if (active) {
-          clearAuthentication();
+        if (!active) {
+          return;
         }
-      } finally {
-        if (active) {
-          setInitialized(true);
-        }
+
+        clearAuthentication();
       }
     }
 
-    void initializeAuthentication();
+    if (!initializationPromise) {
+      initializationPromise =
+          initializeAuthentication();
+    }
+
+    void initializationPromise.finally(
+        () => {
+          if (active) {
+            setInitialized(true);
+          }
+
+          initializationPromise = null;
+        },
+    );
 
     return () => {
       active = false;

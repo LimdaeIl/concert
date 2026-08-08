@@ -50,7 +50,7 @@ export interface MyReservationItem {
 
   concertId: number;
   concertTitle: string;
-  posterUrl: string;
+  posterUrl: string | null;
 
   performanceId: number;
   startsAt: string;
@@ -65,28 +65,25 @@ export interface MyReservationItem {
   ticketCount: number;
   totalAmount: number;
 
-  payment: ReservationPaymentSummary | null;
+  payment: MyReservationPayment | null;
 
   reservedAt: string;
 
   canCancel: boolean;
-  cancelType: string | null;
+  cancelType: string;
 
   requiresPayment: boolean;
-  refundStatus: string | null;
+  refundStatus: string;
 }
 
 export interface MyReservationPageResponse {
   content: MyReservationItem[];
 
-  page?: number;
-  size?: number;
+  page: number;
+  size: number;
 
-  totalElements?: number;
-  totalPages?: number;
-
-  first?: boolean;
-  last?: boolean;
+  totalElements: number;
+  totalPages: number;
 }
 
 export interface MyReservationConcert {

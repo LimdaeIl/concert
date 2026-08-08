@@ -14,6 +14,7 @@ import {
   useParams,
 } from 'react-router-dom';
 
+import ConcertPoster from '@/features/concert/components/ConcertPoster';
 import { getPerformances } from '@/features/performance/api/performanceApi';
 import type { Performance } from '@/features/performance/types/performance';
 import {
@@ -25,35 +26,55 @@ import { getConcert } from '../api/concertApi';
 import type { Concert } from '../types/concert';
 
 export default function ConcertDetailPage() {
-  const navigate = useNavigate();
-  const { concertId } = useParams();
+  const navigate =
+      useNavigate();
+
+  const { concertId } =
+      useParams();
 
   const numericConcertId =
       Number(concertId);
 
-  const [concert, setConcert] =
-      useState<Concert | null>(null);
+  const [
+    concert,
+    setConcert,
+  ] =
+      useState<Concert | null>(
+          null,
+      );
 
-  const [performances, setPerformances] =
-      useState<Performance[]>([]);
+  const [
+    performances,
+    setPerformances,
+  ] =
+      useState<Performance[]>(
+          [],
+      );
 
-  const [loading, setLoading] =
-      useState(true);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-  const [errorMessage, setErrorMessage] =
-      useState('');
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState('');
 
   useEffect(() => {
     let active = true;
 
     async function loadPage() {
       if (
-          !Number.isInteger(numericConcertId) ||
+          !Number.isInteger(
+              numericConcertId,
+          ) ||
           numericConcertId <= 0
       ) {
         setErrorMessage(
             '잘못된 공연 정보입니다.',
         );
+
         setLoading(false);
         return;
       }
@@ -63,7 +84,10 @@ export default function ConcertDetailPage() {
           concertResponse,
           performanceResponse,
         ] = await Promise.all([
-          getConcert(numericConcertId),
+          getConcert(
+              numericConcertId,
+          ),
+
           getPerformances(
               numericConcertId,
           ),
@@ -73,7 +97,10 @@ export default function ConcertDetailPage() {
           return;
         }
 
-        setConcert(concertResponse);
+        setConcert(
+            concertResponse,
+        );
+
         setPerformances(
             performanceResponse.performances,
         );
@@ -97,7 +124,9 @@ export default function ConcertDetailPage() {
     return () => {
       active = false;
     };
-  }, [numericConcertId]);
+  }, [
+    numericConcertId,
+  ]);
 
   if (loading) {
     return (
@@ -107,14 +136,23 @@ export default function ConcertDetailPage() {
     );
   }
 
-  if (errorMessage || !concert) {
+  if (
+      errorMessage ||
+      !concert
+  ) {
     return (
         <div className="px-5 py-8">
           <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() =>
+                  navigate(-1)
+              }
+              className="flex size-10 items-center justify-center rounded-full transition-colors hover:bg-slate-100"
+              aria-label="뒤로가기"
           >
-            <ArrowLeft size={22} />
+            <ArrowLeft
+                size={22}
+            />
           </button>
 
           <p className="mt-8 text-sm text-red-600">
@@ -130,11 +168,15 @@ export default function ConcertDetailPage() {
         <header className="sticky top-0 z-30 flex h-14 items-center border-b border-slate-100 bg-white/95 px-4 backdrop-blur">
           <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() =>
+                  navigate(-1)
+              }
               className="flex size-10 items-center justify-center rounded-full hover:bg-slate-100"
               aria-label="뒤로가기"
           >
-            <ArrowLeft size={22} />
+            <ArrowLeft
+                size={22}
+            />
           </button>
 
           <h1 className="ml-2 truncate text-base font-semibold text-slate-900">
@@ -144,17 +186,13 @@ export default function ConcertDetailPage() {
 
         <section className="px-5 pt-6">
           <div className="mx-auto aspect-[3/4] w-full max-w-[300px] overflow-hidden rounded-2xl bg-slate-100 shadow-sm">
-            {concert.posterUrl ? (
-                <img
-                    src={concert.posterUrl}
-                    alt={`${concert.title} 포스터`}
-                    className="h-full w-full object-cover"
-                />
-            ) : (
-                <div className="flex h-full items-center justify-center text-sm text-slate-400">
-                  포스터 없음
-                </div>
-            )}
+            <ConcertPoster
+                src={
+                  concert.posterUrl
+                }
+                alt={`${concert.title} 포스터`}
+                className="h-full w-full object-cover"
+            />
           </div>
 
           <div className="mt-7">
@@ -184,7 +222,9 @@ export default function ConcertDetailPage() {
               </div>
 
               <p className="mt-2 text-sm font-semibold text-slate-900">
-                {concert.runningTime}분
+                {concert.runningTime
+                    ? `${concert.runningTime}분`
+                    : '정보 없음'}
               </p>
             </div>
 
@@ -228,7 +268,8 @@ export default function ConcertDetailPage() {
             </h3>
           </div>
 
-          {performances.length === 0 ? (
+          {performances.length ===
+          0 ? (
               <div className="mt-5 rounded-2xl bg-slate-50 p-6 text-center">
                 <p className="text-sm text-slate-500">
                   현재 예매 가능한 회차가 없습니다.
@@ -248,7 +289,9 @@ export default function ConcertDetailPage() {
                                 performance.performanceId
                               }
                               type="button"
-                              disabled={disabled}
+                              disabled={
+                                disabled
+                              }
                               onClick={() =>
                                   navigate(
                                       `/performances/${performance.performanceId}/seats`,
@@ -317,21 +360,36 @@ function PerformanceStatusBadge({
   const label =
       status === 'OPEN'
           ? '예매 가능'
-          : status === 'SOLD_OUT'
+          : status ===
+          'SOLD_OUT'
               ? '매진'
-              : status === 'SCHEDULED'
+              : status ===
+              'SCHEDULED'
                   ? '예매 예정'
-                  : status;
+                  : status ===
+                  'COMPLETED'
+                      ? '공연 종료'
+                      : status ===
+                      'CANCELLED'
+                          ? '공연 취소'
+                          : status;
+
+  const className =
+      status === 'OPEN'
+          ? 'bg-emerald-50 text-emerald-600'
+          : status ===
+          'SOLD_OUT'
+              ? 'bg-red-50 text-red-500'
+              : status ===
+              'CANCELLED'
+                  ? 'bg-red-50 text-red-500'
+                  : 'bg-slate-100 text-slate-500';
 
   return (
       <span
           className={[
             'rounded-full px-2 py-1 text-[10px] font-semibold',
-            status === 'OPEN'
-                ? 'bg-emerald-50 text-emerald-600'
-                : status === 'SOLD_OUT'
-                    ? 'bg-red-50 text-red-500'
-                    : 'bg-slate-100 text-slate-500',
+            className,
           ].join(' ')}
       >
       {label}

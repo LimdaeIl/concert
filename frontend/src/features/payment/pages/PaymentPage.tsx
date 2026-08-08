@@ -23,6 +23,8 @@ import { getTossCustomerKey } from '../lib/getTossCustomerKey';
 import { savePaymentSession } from '../lib/paymentSession';
 import type { PreparePaymentResponse } from '../types/payment';
 
+import ConcertPoster from '@/features/concert/components/ConcertPoster';
+
 export default function PaymentPage() {
   const navigate = useNavigate();
   const { reservationId } = useParams();
@@ -227,7 +229,7 @@ export default function PaymentPage() {
 
     const clientKey =
         import.meta.env
-            .VITE_TOSS_CLIENT_KEY;
+            .VITE_TOSS_PAYMENTS_CLIENT_KEY;
 
     if (!clientKey) {
       setErrorMessage(
@@ -421,17 +423,14 @@ export default function PaymentPage() {
         <section className="mt-8 px-5">
           <div className="flex gap-4 rounded-2xl border border-slate-200 p-4">
             <div className="aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-              {reservation.concert
-                  .posterUrl ? (
-                  <img
-                      src={
-                        reservation.concert
-                            .posterUrl
-                      }
-                      alt={`${reservation.concert.title} 포스터`}
-                      className="h-full w-full object-cover"
-                  />
-              ) : null}
+              <ConcertPoster
+                  src={
+                    reservation.concert
+                        .posterUrl
+                  }
+                  alt={`${reservation.concert.title} 포스터`}
+                  className="h-full w-full object-cover"
+              />
             </div>
 
             <div className="min-w-0 flex-1 py-1">

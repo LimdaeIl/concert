@@ -18,9 +18,7 @@ public class PhoneVerificationTokenCleanupEventListener {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void consumeVerificationToken(MemberSignedUpEvent event) {
         try {
-            phoneVerificationService.consumeVerificationToken(
-                    event.phoneVerificationToken()
-            );
+            phoneVerificationService.consumeVerificationToken(event.phoneVerificationToken());
         } catch (RuntimeException exception) {
             /*
              * AFTER_COMMIT 단계에서는 회원가입 트랜잭션이 이미 성공한 상태입니다.

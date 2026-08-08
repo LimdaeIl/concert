@@ -24,9 +24,7 @@ public class SocialAuthenticationService {
     private final Clock clock;
 
     @Transactional
-    public SocialAuthenticationResult authenticate(
-            OAuth2UserInfo userInfo
-    ) {
+    public SocialAuthenticationResult authenticate(OAuth2UserInfo userInfo) {
 
         Optional<MemberSocialAccount> socialAccountOptional =
                 socialAccountRepository.findByProviderAndProviderUserId(
