@@ -6,10 +6,7 @@ interface AuthState {
   initialized: boolean;
 
   isAuthenticated: () => boolean;
-  setAuthentication: (
-      memberId: number,
-      accessToken: string,
-  ) => void;
+  setAuthentication: (memberId: number, accessToken: string,) => void;
   setAccessToken: (accessToken: string) => void;
   clearAuthentication: () => void;
   setInitialized: (initialized: boolean) => void;

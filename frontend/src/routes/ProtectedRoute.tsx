@@ -6,7 +6,7 @@ import {
 
 import { useAuthStore } from '@/features/auth/store/authStore';
 
-export function ProtectedRoute() {
+export default function ProtectedRoute() {
   const location = useLocation();
 
   const accessToken = useAuthStore(
@@ -19,7 +19,7 @@ export function ProtectedRoute() {
             to="/login"
             replace
             state={{
-              from: location.pathname,
+              from: `${location.pathname}${location.search}`,
             }}
         />
     );
