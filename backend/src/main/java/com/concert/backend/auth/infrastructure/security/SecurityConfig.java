@@ -104,7 +104,8 @@ public class SecurityConfig {
                                 HttpMethod.GET,
                                 "/api/v1/venues",
                                 "/api/v1/venues/**",
-                                "/api/v1/halls/**"
+                                "/api/v1/halls/**",
+                                "/api/v1/seats/*"
                         ).permitAll()
 
                         .requestMatchers(

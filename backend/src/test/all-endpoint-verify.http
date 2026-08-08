@@ -1,0 +1,90 @@
+@baseUrl = http://localhost:8080
+
+### 1. 휴대전화 인증번호 발송
+POST {{baseUrl}}/api/v1/auth/phone-verifications
+Content-Type: application/json
+
+{
+  "phone": "01063666725"
+}
+
+### Redis 또는 개발 로그에서 실제 번호 확인 후 입력
+@phoneVerificationCode = 324262
+
+### 2. 휴대전화 인증번호 검증
+POST {{baseUrl}}/api/v1/auth/phone-verifications/verify
+Content-Type: application/json
+
+{
+  "phone": "01063666725",
+  "verificationCode": "{{phoneVerificationCode}}"
+}
+
+> {%
+    client.global.set("phoneVerificationToken",response.body.verificationToken);
+%}
+
+### 3. 이메일 인증번호 전송
+# @name sendEmailVerification
+POST {{baseUrl}}/api/v1/auth/email-verifications
+Content-Type: application/json
+
+{
+  "email": "optional94@naver.com"
+}
+
+### 이메일 인증 번호 입력
+@verificationCode=979856
+
+### 2. 이메일 인증번호 검증 및 일회용 토큰 발급
+### 위 verificationCode를 실제 이메일로 받은 값으로 변경한 후 실행하세요.
+# @name verifyEmail
+POST {{baseUrl}}/api/v1/auth/email-verifications/verify
+Content-Type: application/json
+
+{
+  "email": "optional94@naver.com",
+  "verificationCode": "{{verificationCode}}"
+}
+
+> {%
+  client.global.set("emailVerificationToken",response.body.verificationToken);
+%}
+
+
+### 3. 회원가입
+POST {{baseUrl}}/api/v1/members/sign-up
+Content-Type: application/json
+
+{
+  "email": "optional94@naver.com",
+  "password": "password123!",
+  "name": "홍길동",
+  "phone": "01063666725",
+  "roadAddress": "서울특별시 강남구 테헤란로 1",
+  "jibunAddress": null,
+  "detailAddress": "101호",
+  "zipCode": "06234",
+  "latitude": 37.500000,
+  "longitude": 127.030000,
+  "emailVerificationToken": "{{emailVerificationToken}}",
+  "phoneVerificationToken": "{{phoneVerificationToken}}"
+}
+
+
+### 로그인
+POST http://localhost:8080/api/v1/auth/sign-in
+Content-Type: application/json
+
+{
+  "email": "optional94@naver.com",
+  "password": "password123!"
+}
+
+### 토큰 재발급
+POST http://localhost:8080/api/v1/auth/reissue
+Content-Type: application/json
+
+### 로그아웃
+POST http://localhost:8080/api/v1/auth/sign-out
+Content-Type: application/json

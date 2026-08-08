@@ -23,23 +23,17 @@ public class VenueController implements VenueControllerDocs {
 
     @GetMapping
     public ResponseEntity<GetVenuesResponse> getVenues() {
-        List<VenueResult> results =
-                getVenuesService.getVenues();
+        List<VenueResult> results = getVenuesService.getVenues();
 
-        return ResponseEntity.ok(
-                GetVenuesResponse.from(results)
-        );
+        return ResponseEntity.ok(GetVenuesResponse.from(results));
     }
 
     @GetMapping("/{venueId}")
     public ResponseEntity<VenueResponse> getVenue(
             @PathVariable Long venueId
     ) {
-        VenueResult result =
-                getVenueService.getVenue(venueId);
+        VenueResult result = getVenueService.getVenue(venueId);
 
-        return ResponseEntity.ok(
-                VenueResponse.from(result)
-        );
+        return ResponseEntity.ok(VenueResponse.from(result));
     }
 }

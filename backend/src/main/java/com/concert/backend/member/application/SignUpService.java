@@ -28,8 +28,10 @@ public class SignUpService {
 
     @Transactional
     public SignUpResult signUp(SignUpCommand command) {
-        emailVerificationService.validateVerificationToken(command.email(), command.emailVerificationToken());
-        phoneVerificationService.validateVerificationToken(command.phone(), command.phoneVerificationToken());
+        emailVerificationService.validateVerificationToken(command.email(),
+                command.emailVerificationToken());
+        phoneVerificationService.validateVerificationToken(command.phone(),
+                command.phoneVerificationToken());
 
         validateDuplicateEmail(command.email());
         validateDuplicatePhone(command.phone());
