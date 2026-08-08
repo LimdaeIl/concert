@@ -1,5 +1,5 @@
 import {
-  type FormEvent,
+  type SubmitEvent,
   useState,
 } from 'react';
 
@@ -18,6 +18,10 @@ interface LocationState {
   from?: string;
 }
 
+interface LocationState {
+  from?: string;
+}
+
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,8 +35,17 @@ export function LoginPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const state = location.state as LocationState | null;
+
+  navigate(
+      state?.from ?? '/',
+      {
+        replace: true,
+      },
+  );
+
   async function handleSubmit(
-      event: FormEvent<HTMLFormElement>,
+      event: SubmitEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 

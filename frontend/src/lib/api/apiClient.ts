@@ -7,8 +7,7 @@ import { useAuthStore } from '@/features/auth/store/authStore';
 import type { AuthenticationResponse } from '@/features/auth/types/auth';
 import type { ProblemDetail } from '@/types/api';
 
-interface RetryableRequestConfig
-    extends InternalAxiosRequestConfig {
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
@@ -52,8 +51,7 @@ async function reissueAccessToken(): Promise<string> {
 }
 
 apiClient.interceptors.request.use((config) => {
-  const accessToken =
-      useAuthStore.getState().accessToken;
+  const accessToken = useAuthStore.getState().accessToken;
 
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
@@ -62,20 +60,13 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-apiClient.interceptors.response.use(
-    (response) => response,
+apiClient.interceptors.response.use((response) => response,
 
     async (error: AxiosError<ProblemDetail>) => {
-      const originalRequest = error.config as
-          | RetryableRequestConfig
-          | undefined;
+      const originalRequest = error.config as | RetryableRequestConfig | undefined;
+      const isUnauthorized = error.response?.status === 401;
 
-      const isUnauthorized =
-          error.response?.status === 401;
-
-      const isRetryable =
-          originalRequest &&
-          !originalRequest._retry;
+      const isRetryable = originalRequest && !originalRequest._retry;
 
       if (!isUnauthorized || !isRetryable) {
         return Promise.reject(error);
@@ -84,17 +75,12 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const accessToken =
-            await reissueAccessToken();
-
-        originalRequest.headers.Authorization =
-            `Bearer ${accessToken}`;
+        const accessToken = await reissueAccessToken();
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
 
         return apiClient(originalRequest);
       } catch (reissueError) {
-        useAuthStore
-        .getState()
-        .clearAuthentication();
+        useAuthStore.getState().clearAuthentication();
 
         return Promise.reject(reissueError);
       }

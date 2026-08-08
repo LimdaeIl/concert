@@ -6,9 +6,7 @@ import {
 import { reissue } from '@/features/auth/api/authApi';
 import { useAuthStore } from '@/features/auth/store/authStore';
 
-export function AuthInitializer({
-                                  children,
-                                }: PropsWithChildren) {
+export function AuthInitializer({children,}: PropsWithChildren) {
   const initialized = useAuthStore(
       (state) => state.initialized,
   );
@@ -64,12 +62,15 @@ export function AuthInitializer({
 
   if (!initialized) {
     return (
-        <div className="flex min-h-screen items-center justify-center bg-slate-100">
-          <div className="flex flex-col items-center gap-3">
-            <div className="size-8 animate-spin rounded-full border-4 border-slate-300 border-t-indigo-600" />
-            <p className="text-sm text-slate-600">
-              로그인 상태를 확인하고 있습니다.
-            </p>
+        <div className="min-h-dvh bg-slate-100">
+          <div className="mx-auto flex min-h-dvh w-full max-w-[640px] items-center justify-center bg-white">
+            <div className="flex flex-col items-center gap-3">
+              <div className="size-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
+
+              <p className="text-sm text-slate-500">
+                로그인 상태를 확인하고 있습니다.
+              </p>
+            </div>
           </div>
         </div>
     );
