@@ -49,7 +49,7 @@ jobs:
       - name: Create production env
         shell: bash
         run: |
-          printf '%s' "${{ secrets.PROD_ENV }}" > .env
+          printf '%s' "${{ secrets.DEV_ENV }}" > .env
           chmod 600 .env
 
       - name: Upload production env
