@@ -136,7 +136,6 @@ export default function ChangeEmailPage() {
     try {
       await changeEmail({
         email: email.trim(),
-        emailVerificationToken:
         verificationToken,
       });
 
