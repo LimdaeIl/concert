@@ -162,7 +162,7 @@ export default function MyPage() {
                 </div>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  회원번호 {member.memberId}
+                  회원번호 {member.id}
                 </p>
               </div>
             </div>

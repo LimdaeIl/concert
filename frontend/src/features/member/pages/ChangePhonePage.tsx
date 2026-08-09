@@ -123,7 +123,6 @@ export default function ChangePhonePage() {
     try {
       await changePhone({
         phone: phone.trim(),
-        phoneVerificationToken:
         verificationToken,
       });
 
