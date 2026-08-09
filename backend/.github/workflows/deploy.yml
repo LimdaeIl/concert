@@ -1,0 +1,146 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy.yml"
+
+  workflow_dispatch:
+
+concurrency:
+  group: backend-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Configure SSH
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+
+          printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key
+          chmod 600 ~/.ssh/ec2_key
+
+          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Update source on EC2
+        shell: bash
+        run: |
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          cd /home/ubuntu/app/concert
+
+          git fetch origin
+          git reset --hard origin/main
+
+          EOF
+
+      - name: Create production env
+        shell: bash
+        run: |
+          printf '%s' "${{ secrets.PROD_ENV }}" > .env
+          chmod 600 .env
+
+      - name: Upload production env
+        shell: bash
+        run: |
+          scp \
+            -i ~/.ssh/ec2_key \
+            .env \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/concert/backend/.env"
+
+      - name: Build and restart backend
+        shell: bash
+        run: |
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          cd /home/ubuntu/app/concert/backend
+
+          if [ ! -f .env ]; then
+            echo ".env file not found"
+            exit 1
+          fi
+
+          chmod 600 .env
+
+          set -a
+          source .env
+          set +a
+
+          echo "===== Java ====="
+          java -version
+
+          echo "===== Build ====="
+          chmod +x gradlew
+          ./gradlew clean bootJar -x test
+
+          JAR_FILE=$(find build/libs \
+            -maxdepth 1 \
+            -type f \
+            -name '*.jar' \
+            ! -name '*-plain.jar' \
+            | head -n 1)
+
+          if [ -z "$JAR_FILE" ]; then
+            echo "Jar file not found"
+            exit 1
+          fi
+
+          echo "===== Stop existing application ====="
+          if [ -f app.pid ]; then
+            OLD_PID=$(cat app.pid)
+
+            if kill -0 "$OLD_PID" 2>/dev/null; then
+              kill "$OLD_PID"
+
+              for i in {1..15}; do
+                if ! kill -0 "$OLD_PID" 2>/dev/null; then
+                  break
+                fi
+                sleep 1
+              done
+
+              if kill -0 "$OLD_PID" 2>/dev/null; then
+                kill -9 "$OLD_PID"
+              fi
+            fi
+
+            rm -f app.pid
+          fi
+
+          echo "===== Start application ====="
+          nohup java -jar "$JAR_FILE" \
+            --spring.profiles.active=prod \
+            > app.log 2>&1 &
+
+          NEW_PID=$!
+          echo "$NEW_PID" > app.pid
+
+          sleep 10
+
+          if ! kill -0 "$NEW_PID" 2>/dev/null; then
+            echo "Application failed"
+            tail -n 200 app.log
+            exit 1
+          fi
+
+          echo "===== Deployment success ====="
+          ps -fp "$NEW_PID"
+          tail -n 50 app.log
+
+          EOF
