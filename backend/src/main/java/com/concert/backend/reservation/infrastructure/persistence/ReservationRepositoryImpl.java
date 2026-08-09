@@ -13,13 +13,19 @@ import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
 @Repository
-public class ReservationRepositoryImpl implements ReservationRepository {
+public class ReservationRepositoryImpl
+        implements ReservationRepository {
 
-    private final JpaReservationRepository jpaReservationRepository;
+    private final JpaReservationRepository
+            jpaReservationRepository;
 
     @Override
-    public Reservation save(Reservation reservation) {
-        return jpaReservationRepository.save(reservation);
+    public Reservation save(
+            Reservation reservation
+    ) {
+        return jpaReservationRepository.save(
+                reservation
+        );
     }
 
     @Override
@@ -74,7 +80,42 @@ public class ReservationRepositoryImpl implements ReservationRepository {
                 .findExpiredReservations(
                         ReservationStatus.PENDING_PAYMENT,
                         now,
-                        PageRequest.of(0, limit)
+                        PageRequest.of(
+                                0,
+                                limit
+                        )
                 );
+    }
+
+    @Override
+    public long countActiveReservationSeats(
+            Long memberId,
+            Long performanceId
+    ) {
+        return jpaReservationRepository
+                .countActiveReservationSeats(
+                        memberId,
+                        performanceId
+                );
+    }
+
+    @Override
+    public Optional<Reservation> findActivePendingReservation(
+            Long memberId,
+            Long performanceId,
+            LocalDateTime now
+    ) {
+        return jpaReservationRepository
+                .findActivePendingReservations(
+                        memberId,
+                        performanceId,
+                        now,
+                        PageRequest.of(
+                                0,
+                                1
+                        )
+                )
+                .stream()
+                .findFirst();
     }
 }

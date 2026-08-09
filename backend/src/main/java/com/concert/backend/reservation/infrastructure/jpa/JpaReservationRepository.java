@@ -10,7 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface JpaReservationRepository extends JpaRepository<Reservation, Long> {
+public interface JpaReservationRepository
+        extends JpaRepository<Reservation, Long> {
 
     Optional<Reservation> findByIdAndMemberId(
             Long id,
@@ -34,8 +35,34 @@ public interface JpaReservationRepository extends JpaRepository<Reservation, Lon
               )
             """)
     long countActiveReservationSeats(
-            @Param("memberId") Long memberId,
-            @Param("performanceId") Long performanceId
+            @Param("memberId")
+            Long memberId,
+
+            @Param("performanceId")
+            Long performanceId
+    );
+
+    @Query("""
+            select r
+            from Reservation r
+            where r.memberId = :memberId
+              and r.performanceId = :performanceId
+              and r.status =
+                  com.concert.backend.reservation.domain.ReservationStatus.PENDING_PAYMENT
+              and r.expiresAt > :now
+            order by r.createdAt desc
+            """)
+    List<Reservation> findActivePendingReservations(
+            @Param("memberId")
+            Long memberId,
+
+            @Param("performanceId")
+            Long performanceId,
+
+            @Param("now")
+            LocalDateTime now,
+
+            Pageable pageable
     );
 
     @Query("""
@@ -46,10 +73,12 @@ public interface JpaReservationRepository extends JpaRepository<Reservation, Lon
             order by r.expiresAt asc
             """)
     List<Reservation> findExpiredReservations(
-            @Param("status") ReservationStatus status,
-            @Param("now") LocalDateTime now,
+            @Param("status")
+            ReservationStatus status,
+
+            @Param("now")
+            LocalDateTime now,
+
             Pageable pageable
     );
-
-
 }

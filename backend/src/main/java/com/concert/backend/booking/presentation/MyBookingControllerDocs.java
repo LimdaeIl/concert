@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(
         name = "My Booking",
@@ -28,22 +27,22 @@ public interface MyBookingControllerDocs {
     @Operation(
             summary = "내 예약 목록 조회",
             description = """
-                로그인 회원의 공연 예약 목록을 조회합니다.
-
-                예약 상태, 공연 진행상태, 공연명,
-                예약 기간 조건으로 검색할 수 있습니다.
-
-                지원하는 공연 진행 상태:
-                - UPCOMING: 공연 시작 전
-                - ONGOING: 공연 진행 중
-                - ENDED: 공연 종료
-
-                지원하는 정렬:
-                - RESERVED_AT_DESC
-                - RESERVED_AT_ASC
-                - PERFORMANCE_DATE_DESC
-                - PERFORMANCE_DATE_ASC
-                """,
+                    로그인 회원의 공연 예약 목록을 조회합니다.
+                    
+                    예약 상태, 공연 진행상태, 공연명,
+                    예약 기간 조건으로 검색할 수 있습니다.
+                    
+                    지원하는 공연 진행 상태:
+                    - UPCOMING: 공연 시작 전
+                    - ONGOING: 공연 진행 중
+                    - ENDED: 공연 종료
+                    
+                    지원하는 정렬:
+                    - RESERVED_AT_DESC
+                    - RESERVED_AT_ASC
+                    - PERFORMANCE_DATE_DESC
+                    - PERFORMANCE_DATE_ASC
+                    """,
             security = @SecurityRequirement(
                     name = "Bearer Authentication"
             )
@@ -69,11 +68,11 @@ public interface MyBookingControllerDocs {
     @Operation(
             summary = "내 예약 상세 조회",
             description = """
-                로그인 회원 본인의 예약 상세 정보를 조회합니다.
-
-                예약 정보와 함께 공연, 회차, 공연장,
-                공연홀, 좌석, 최신 결제 및 결제 취소 정보를 제공합니다.
-                """,
+                    로그인 회원 본인의 예약 상세 정보를 조회합니다.
+                    
+                    예약 정보와 함께 공연, 회차, 공연장,
+                    공연홀, 좌석, 최신 결제 및 결제 취소 정보를 제공합니다.
+                    """,
             security = @SecurityRequirement(
                     name = "Bearer Authentication"
             )

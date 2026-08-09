@@ -10,11 +10,13 @@ import com.concert.backend.reservation.presentation.request.CreateReservationReq
 import com.concert.backend.reservation.presentation.response.GetReservationsResponse;
 import com.concert.backend.reservation.presentation.response.ReservationResponse;
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -106,4 +108,28 @@ public class ReservationController
                 ReservationResponse.from(result)
         );
     }
+
+    @Override
+    @DeleteMapping(
+            "/reservations/{reservationId}"
+    )
+    public ResponseEntity<Void>
+    cancelPendingReservation(
+            @AuthenticationPrincipal
+            LoginMember loginMember,
+
+            @PathVariable
+            Long reservationId
+    ) {
+        cancelReservationService
+                .cancelPendingReservation(
+                        loginMember.memberId(),
+                        reservationId,
+                        LocalDateTime.now()
+                );
+
+        return ResponseEntity.noContent()
+                .build();
+    }
+
 }
