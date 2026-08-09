@@ -4,7 +4,7 @@ import type {
   CreateReservationRequest,
   CreateReservationResponse,
   MyReservationDetail,
-  MyReservationPageResponse,
+  MyReservationPageResponse, ReservationContext,
   ReservationDetail,
   ReservationListResponse,
 } from '../types/reservation';
@@ -28,6 +28,17 @@ export async function getReservation(
   const { data } =
       await apiClient.get<ReservationDetail>(
           `/api/v1/reservations/${reservationId}`,
+      );
+
+  return data;
+}
+
+export async function getReservationContext(
+    performanceId: number,
+): Promise<ReservationContext> {
+  const { data } =
+      await apiClient.get<ReservationContext>(
+          `/api/v1/me/performances/${performanceId}/reservation-context`,
       );
 
   return data;
@@ -63,6 +74,14 @@ export async function getMyBookingReservations(
       );
 
   return data;
+}
+
+export async function cancelPendingReservation(
+    reservationId: number,
+): Promise<void> {
+  await apiClient.delete(
+      `/api/v1/reservations/${reservationId}`,
+  );
 }
 
 export async function getMyBookingReservation(

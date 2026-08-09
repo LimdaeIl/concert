@@ -5,9 +5,18 @@ import {
   markAuthSession,
 } from '@/features/auth/lib/authSession';
 
+interface AuthMember {
+  id: number;
+  name: string;
+  email: string;
+}
+
 interface AuthState {
   memberId: number | null;
   accessToken: string | null;
+
+  member: AuthMember | null;
+
   initialized: boolean;
 
   isAuthenticated: () => boolean;
@@ -15,6 +24,10 @@ interface AuthState {
   setAuthentication: (
       memberId: number,
       accessToken: string,
+  ) => void;
+
+  setMember: (
+      member: AuthMember,
   ) => void;
 
   setAccessToken: (
@@ -33,6 +46,7 @@ export const useAuthStore =
         (set, get) => ({
           memberId: null,
           accessToken: null,
+          member: null,
           initialized: false,
 
           isAuthenticated: () =>
@@ -52,6 +66,14 @@ export const useAuthStore =
             });
           },
 
+          setMember: (
+              member,
+          ) => {
+            set({
+              member,
+            });
+          },
+
           setAccessToken: (
               accessToken,
           ) => {
@@ -66,6 +88,7 @@ export const useAuthStore =
             set({
               memberId: null,
               accessToken: null,
+              member: null,
             });
           },
 
@@ -78,3 +101,4 @@ export const useAuthStore =
           },
         }),
     );
+

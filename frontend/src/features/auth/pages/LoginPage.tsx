@@ -9,6 +9,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 
+import { getMe } from '@/features/member/api/memberApi';
 import { getApiErrorMessage } from '@/lib/api/getApiErrorMessage';
 
 import { signIn } from '../api/authApi';
@@ -19,13 +20,22 @@ interface LocationState {
 }
 
 export function LoginPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate =
+      useNavigate();
+
+  const location =
+      useLocation();
 
   const setAuthentication =
       useAuthStore(
           (state) =>
               state.setAuthentication,
+      );
+
+  const setMember =
+      useAuthStore(
+          (state) =>
+              state.setMember,
       );
 
   const [email, setEmail] =
@@ -39,8 +49,10 @@ export function LoginPage() {
     setErrorMessage,
   ] = useState('');
 
-  const [submitting, setSubmitting] =
-      useState(false);
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
 
   async function handleSubmit(
       event: SubmitEvent<HTMLFormElement>,
@@ -73,11 +85,20 @@ export function LoginPage() {
           authentication.accessToken,
       );
 
-      /*
-       * ProtectedRoute에서 로그인 페이지로
-       * 보내면서 state.from을 넘겼다면
-       * 로그인 성공 후 원래 페이지로 돌아간다.
-       */
+      const member =
+          await getMe();
+
+      setMember({
+        id:
+        member.id,
+
+        name:
+        member.name,
+
+        email:
+        member.email,
+      });
+
       const state =
           location.state as
               | LocationState

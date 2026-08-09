@@ -168,3 +168,23 @@ export interface MyReservationDetail {
   seats: MyReservationSeat[];
 }
 
+export interface PendingReservation {
+  reservationId: number;
+  reservationNumber: string;
+
+  ticketCount: number;
+  totalAmount: number;
+
+  expiresAt: string | null;
+}
+
+export interface ReservationContext {
+  maxTicketsPerMember: number;
+
+  reservedTicketCount: number;
+  remainingTicketCount: number;
+
+  pendingReservation:
+    | PendingReservation
+    | null;
+}

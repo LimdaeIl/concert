@@ -1,39 +1,14 @@
-import {
-  CalendarDays,
-  ChevronRight,
-  CreditCard,
-  MapPin,
-  Search,
-  Ticket,
-} from 'lucide-react';
-import type {
-  KeyboardEvent,
-} from 'react';
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
-import {
-  useNavigate,
-  useSearchParams,
-} from 'react-router-dom';
+import {CalendarDays, ChevronRight, CreditCard, MapPin, Search, Ticket,} from 'lucide-react';
+import type {KeyboardEvent,} from 'react';
+import {useEffect, useMemo, useState,} from 'react';
+import {useNavigate, useSearchParams,} from 'react-router-dom';
 
 import ConcertPoster from '@/features/concert/components/ConcertPoster';
-import {
-  formatDate,
-  formatTime,
-} from '@/lib/date/formatDateTime';
-import {
-  getApiErrorMessage,
-} from '@/lib/api/getApiErrorMessage';
+import {formatDate, formatTime,} from '@/lib/date/formatDateTime';
+import {getApiErrorMessage,} from '@/lib/api/getApiErrorMessage';
 
-import {
-  getMyBookingReservations,
-} from '../api/reservationApi';
-import type {
-  MyReservationItem,
-} from '../types/reservation';
+import {getMyBookingReservations,} from '../api/reservationApi';
+import type {MyReservationItem,} from '../types/reservation';
 
 type ReservationFilter =
     | 'ALL'
@@ -58,7 +33,7 @@ const RESERVATION_FILTERS: {
   },
   {
     value: 'PENDING_PAYMENT',
-    label: '결제 대기',
+    label: '결제 필요',
   },
   {
     value: 'COMPLETED',
@@ -108,9 +83,7 @@ export default function ReservationListPage() {
   const [
     reservations,
     setReservations,
-  ] = useState<
-      MyReservationItem[]
-  >([]);
+  ] = useState<MyReservationItem[]>([]);
 
   const [
     loading,
@@ -126,8 +99,7 @@ export default function ReservationListPage() {
     keyword,
     setKeyword,
   ] = useState(
-      searchParams.get('keyword') ??
-      '',
+      searchParams.get('keyword') ?? '',
   );
 
   const status =
@@ -146,8 +118,10 @@ export default function ReservationListPage() {
       searchParams.get('sort') ??
       'RESERVED_AT_DESC';
 
-  const [totalElements, setTotalElements] =
-      useState(0);
+  const [
+    totalElements,
+    setTotalElements,
+  ] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -158,31 +132,27 @@ export default function ReservationListPage() {
 
       try {
         const response =
-            await getMyBookingReservations(
-                {
-                  status:
-                      status === 'ALL'
-                          ? undefined
-                          : status,
+            await getMyBookingReservations({
+              status:
+                  status === 'ALL'
+                      ? undefined
+                      : status,
 
-                  concertProgress:
-                      concertProgress ===
-                      'ALL'
-                          ? undefined
-                          : concertProgress,
+              concertProgress:
+                  concertProgress === 'ALL'
+                      ? undefined
+                      : concertProgress,
 
-                  keyword:
-                      searchParams.get(
-                          'keyword',
-                      ) ||
-                      undefined,
+              keyword:
+                  searchParams.get(
+                      'keyword',
+                  ) || undefined,
 
-                  sort,
+              sort,
 
-                  page: 0,
-                  size: 50,
-                },
-            );
+              page: 0,
+              size: 50,
+            });
 
         if (!active) {
           return;
@@ -193,8 +163,7 @@ export default function ReservationListPage() {
         );
 
         setTotalElements(
-            response.totalElements ??
-            0,
+            response.totalElements ?? 0,
         );
       } catch (error) {
         if (!active) {
@@ -228,14 +197,18 @@ export default function ReservationListPage() {
 
   const hasFilters =
       status !== 'ALL' ||
-      concertProgress !==
-      'ALL' ||
+      concertProgress !== 'ALL' ||
       Boolean(
           searchParams.get(
               'keyword',
           ),
       );
 
+  /*
+   * 단순히 PENDING_PAYMENT 개수가 아니라
+   * 현재 실제로 결제를 다시 진행할 수 있는
+   * 예약만 계산한다.
+   */
   const pendingPaymentCount =
       useMemo(
           () =>
@@ -278,8 +251,7 @@ export default function ReservationListPage() {
 
     updateParam(
         'keyword',
-        normalized ||
-        undefined,
+        normalized || undefined,
     );
   }
 
@@ -315,8 +287,7 @@ export default function ReservationListPage() {
               </h1>
 
               <p className="mt-1 text-sm text-slate-500">
-                공연 예매 및 결제
-                내역을 확인하세요.
+                공연 예매 및 결제 내역을 확인하세요.
               </p>
             </div>
 
@@ -332,30 +303,31 @@ export default function ReservationListPage() {
           </div>
         </section>
 
-        {/* 결제 대기 안내 */}
+        {/* 미완료 결제 안내 */}
         {!loading &&
             pendingPaymentCount > 0 && (
                 <section className="mt-5 px-5">
-                  <div className="flex items-center gap-3 rounded-2xl bg-amber-50 px-4 py-4">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                  <div
+                      className="flex items-start gap-3 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-4">
+                    <div
+                        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
                       <CreditCard
                           size={19}
                       />
                     </div>
 
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-amber-800">
-                        결제가 필요한 예매가{' '}
-                        {
-                          pendingPaymentCount
-                        }
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-amber-900">
+                        결제를 완료하지 않은 예매가{' '}
+                        {pendingPaymentCount}
                         건 있습니다.
                       </p>
 
-                      <p className="mt-1 text-xs text-amber-600">
-                        결제 시간이 지나면
-                        예약이 만료될 수
-                        있습니다.
+                      <p className="mt-1.5 text-xs leading-5 text-amber-700">
+                        결제 도중 창을 닫았거나 결제를 중단한 경우
+                        예매가 아직 확정되지 않습니다.
+                        결제 가능 시간이 지나기 전에 다시 결제를
+                        진행해주세요.
                       </p>
                     </div>
                   </div>
@@ -415,8 +387,7 @@ export default function ReservationListPage() {
                           onClick={() =>
                               updateParam(
                                   'status',
-                                  filter.value ===
-                                  'ALL'
+                                  filter.value === 'ALL'
                                       ? undefined
                                       : filter.value,
                               )
@@ -426,13 +397,9 @@ export default function ReservationListPage() {
                             active
                                 ? 'bg-slate-950 text-white'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200',
-                          ].join(
-                              ' ',
-                          )}
+                          ].join(' ')}
                       >
-                        {
-                          filter.label
-                        }
+                        {filter.label}
                       </button>
                   );
                 },
@@ -440,7 +407,7 @@ export default function ReservationListPage() {
           </div>
         </section>
 
-        {/* 공연 진행상태 */}
+        {/* 공연 진행 상태 */}
         <section className="mt-3">
           <div className="flex gap-2 overflow-x-auto px-5 pb-1">
             {PROGRESS_FILTERS.map(
@@ -458,8 +425,7 @@ export default function ReservationListPage() {
                           onClick={() =>
                               updateParam(
                                   'concertProgress',
-                                  filter.value ===
-                                  'ALL'
+                                  filter.value === 'ALL'
                                       ? undefined
                                       : filter.value,
                               )
@@ -469,13 +435,9 @@ export default function ReservationListPage() {
                             active
                                 ? 'bg-indigo-50 text-indigo-600'
                                 : 'text-slate-500 hover:bg-slate-100',
-                          ].join(
-                              ' ',
-                          )}
+                          ].join(' ')}
                       >
-                        {
-                          filter.label
-                        }
+                        {filter.label}
                       </button>
                   );
                 },
@@ -500,7 +462,7 @@ export default function ReservationListPage() {
 
         {/* 로딩 */}
         {loading && (
-            <ReservationListSkeleton />
+            <ReservationListSkeleton/>
         )}
 
         {/* 오류 */}
@@ -509,9 +471,7 @@ export default function ReservationListPage() {
                 <section className="px-5 py-8">
                   <div className="rounded-2xl bg-red-50 p-5">
                     <p className="text-sm text-red-700">
-                      {
-                        errorMessage
-                      }
+                      {errorMessage}
                     </p>
                   </div>
                 </section>
@@ -520,10 +480,11 @@ export default function ReservationListPage() {
         {/* 빈 목록 */}
         {!loading &&
             !errorMessage &&
-            reservations.length ===
-            0 && (
-                <section className="flex min-h-[360px] flex-col items-center justify-center px-5 text-center">
-                  <div className="flex size-16 items-center justify-center rounded-full bg-slate-100">
+            reservations.length === 0 && (
+                <section
+                    className="flex min-h-[360px] flex-col items-center justify-center px-5 text-center">
+                  <div
+                      className="flex size-16 items-center justify-center rounded-full bg-slate-100">
                     <Ticket
                         size={28}
                         className="text-slate-400"
@@ -535,8 +496,7 @@ export default function ReservationListPage() {
                   </h2>
 
                   <p className="mt-2 text-sm leading-6 text-slate-400">
-                    원하는 공연을 찾아
-                    예매해보세요.
+                    원하는 공연을 찾아 예매해보세요.
                   </p>
 
                   <button
@@ -556,8 +516,7 @@ export default function ReservationListPage() {
         {/* 예약 목록 */}
         {!loading &&
             !errorMessage &&
-            reservations.length >
-            0 && (
+            reservations.length > 0 && (
                 <section className="mt-5 space-y-4 px-5">
                   {reservations.map(
                       (reservation) => (
@@ -620,7 +579,7 @@ function ReservationCard({
             className="w-full text-left"
         >
           <div className="flex gap-4 p-4">
-            {/* 기본 이미지 fallback */}
+            {/* 포스터 fallback */}
             <div className="h-32 w-24 shrink-0 overflow-hidden rounded-xl bg-slate-100">
               <ConcertPoster
                   src={
@@ -770,9 +729,9 @@ function ReservationAction({
                              onPayment,
                            }: ReservationActionProps) {
   /*
-   * 가장 중요한 분기:
-   * reservationStatus만 보지 않고
-   * 백엔드 requiresPayment를 사용한다.
+   * 결제가 가능한 PENDING_PAYMENT 예약이면
+   * 기존 예약 ID를 그대로 사용해서
+   * 결제를 다시 진행한다.
    */
   if (
       reservation.requiresPayment
@@ -782,6 +741,7 @@ function ReservationAction({
             type="button"
             onClick={(event) => {
               event.stopPropagation();
+
               onPayment();
             }}
             className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-4 text-xs font-semibold text-white transition-colors hover:bg-indigo-500"
@@ -790,7 +750,7 @@ function ReservationAction({
               size={14}
           />
 
-          결제하기
+          다시 결제하기
         </button>
     );
   }
@@ -800,7 +760,8 @@ function ReservationAction({
       'REQUESTED'
   ) {
     return (
-        <span className="shrink-0 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-600">
+        <span
+            className="shrink-0 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-600">
         환불 처리 중
       </span>
     );
@@ -811,6 +772,7 @@ function ReservationAction({
           type="button"
           onClick={(event) => {
             event.stopPropagation();
+
             onDetail();
           }}
           className="h-9 shrink-0 rounded-lg border border-slate-200 px-4 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50"
@@ -848,7 +810,7 @@ function getReservationDisplayState(
     reservation: MyReservationItem,
 ) {
   /*
-   * 환불/취소 진행 상태를 가장 먼저 본다.
+   * 환불 상태를 예약 상태보다 우선해서 표시한다.
    */
   if (
       reservation.refundStatus ===
@@ -856,11 +818,15 @@ function getReservationDisplayState(
   ) {
     return {
       label: '환불 처리 중',
+
       className:
           'bg-amber-50 text-amber-600',
+
       muted: false,
+
       description:
           '결제 취소 요청이 처리되고 있습니다.',
+
       descriptionClassName:
           'border-amber-100 bg-amber-50/50 text-amber-700',
     };
@@ -872,11 +838,15 @@ function getReservationDisplayState(
   ) {
     return {
       label: '환불 완료',
+
       className:
           'bg-slate-100 text-slate-600',
+
       muted: true,
+
       description:
           '결제 취소 및 환불 처리가 완료되었습니다.',
+
       descriptionClassName:
           'border-slate-100 bg-slate-50 text-slate-500',
     };
@@ -888,19 +858,26 @@ function getReservationDisplayState(
   ) {
     return {
       label: '환불 실패',
+
       className:
           'bg-red-50 text-red-600',
+
       muted: false,
+
       description:
           '환불 처리에 실패했습니다. 예매 상세에서 상태를 확인해주세요.',
+
       descriptionClassName:
           'border-red-100 bg-red-50/50 text-red-600',
     };
   }
 
   /*
-   * PENDING_PAYMENT라 해도
-   * 실제 결제가 가능한지는 requiresPayment가 기준.
+   * 결제 대기 예약.
+   *
+   * 같은 PENDING_PAYMENT라도
+   * requiresPayment 값에 따라
+   * 현재 다시 결제할 수 있는지 구분한다.
    */
   if (
       reservation.reservationStatus ===
@@ -910,74 +887,103 @@ function getReservationDisplayState(
         reservation.requiresPayment
     ) {
       return {
-        label: '결제 대기',
+        label: '결제 필요',
+
         className:
-            'bg-amber-50 text-amber-600',
+            'bg-amber-50 text-amber-700',
+
         muted: false,
+
         description:
-            '결제를 완료해야 예매가 확정됩니다.',
+            '결제가 완료되지 않았습니다. 예매를 확정하려면 결제를 다시 진행해주세요.',
+
         descriptionClassName:
-            'border-amber-100 bg-amber-50/50 text-amber-700',
+            'border-amber-100 bg-amber-50/50 text-amber-800',
       };
     }
 
     return {
       label: '결제 만료',
+
       className:
           'bg-slate-100 text-slate-500',
+
       muted: true,
+
       description:
-          '결제 가능 시간이 지나 더 이상 결제할 수 없습니다.',
+          '결제 가능 시간이 지나 더 이상 결제를 진행할 수 없습니다.',
+
       descriptionClassName:
           'border-slate-100 bg-slate-50 text-slate-500',
     };
   }
 
+  /*
+   * 결제까지 정상 완료된 예약.
+   */
   if (
       reservation.reservationStatus ===
       'COMPLETED'
   ) {
     return {
       label: '예매 완료',
+
       className:
           'bg-emerald-50 text-emerald-600',
+
       muted: false,
+
       description:
           reservation.canCancel
-              ? '공연 시작 전까지 예매 취소가 가능합니다.'
-              : undefined,
+              ? '결제가 완료되어 예매가 확정되었습니다. 공연 시작 전까지 예매 취소가 가능합니다.'
+              : '결제가 완료되어 예매가 확정되었습니다.',
+
       descriptionClassName:
           'border-emerald-100 bg-emerald-50/40 text-emerald-700',
     };
   }
 
+  /*
+   * 취소 완료.
+   */
   if (
       reservation.reservationStatus ===
       'CANCELLED'
   ) {
     return {
       label: '예매 취소',
+
       className:
           'bg-slate-100 text-slate-500',
+
       muted: true,
+
       description:
           '취소된 예매입니다.',
+
       descriptionClassName:
           'border-slate-100 bg-slate-50 text-slate-500',
     };
   }
 
+  /*
+   * 결제 시간 초과 등으로 예약 자체가 만료됨.
+   */
   if (
       reservation.reservationStatus ===
       'EXPIRED'
   ) {
     return {
       label: '예약 만료',
+
       className:
           'bg-slate-100 text-slate-500',
+
       muted: true,
+
       description:
           '결제 시간이 만료되어 예약이 종료되었습니다.',
+
       descriptionClassName:
           'border-slate-100 bg-slate-50 text-slate-500',
     };
@@ -986,11 +992,17 @@ function getReservationDisplayState(
   return {
     label:
     reservation.reservationStatus,
+
     className:
         'bg-slate-100 text-slate-500',
+
     muted: false,
-    description: undefined,
-    descriptionClassName: '',
+
+    description:
+    undefined,
+
+    descriptionClassName:
+        '',
   };
 }
 
@@ -1028,32 +1040,34 @@ function ReservationListSkeleton() {
       <section className="mt-6 space-y-4 px-5">
         {Array.from({
           length: 4,
-        }).map((_, index) => (
-            <div
-                key={index}
-                className="animate-pulse overflow-hidden rounded-2xl border border-slate-200 bg-white"
-            >
-              <div className="flex gap-4 p-4">
-                <div className="h-32 w-24 shrink-0 rounded-xl bg-slate-200" />
+        }).map(
+            (_, index) => (
+                <div
+                    key={index}
+                    className="animate-pulse overflow-hidden rounded-2xl border border-slate-200 bg-white"
+                >
+                  <div className="flex gap-4 p-4">
+                    <div className="h-32 w-24 shrink-0 rounded-xl bg-slate-200"/>
 
-                <div className="flex-1 py-1">
-                  <div className="h-5 w-16 rounded-full bg-slate-200" />
+                    <div className="flex-1 py-1">
+                      <div className="h-5 w-16 rounded-full bg-slate-200"/>
 
-                  <div className="mt-4 h-5 w-full rounded bg-slate-200" />
+                      <div className="mt-4 h-5 w-full rounded bg-slate-200"/>
 
-                  <div className="mt-2 h-4 w-2/3 rounded bg-slate-200" />
+                      <div className="mt-2 h-4 w-2/3 rounded bg-slate-200"/>
 
-                  <div className="mt-4 h-3 w-32 rounded bg-slate-200" />
+                      <div className="mt-4 h-3 w-32 rounded bg-slate-200"/>
 
-                  <div className="mt-2 h-3 w-40 rounded bg-slate-200" />
+                      <div className="mt-2 h-3 w-40 rounded bg-slate-200"/>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-100 px-4 py-3">
+                    <div className="h-9 rounded-lg bg-slate-100"/>
+                  </div>
                 </div>
-              </div>
-
-              <div className="border-t border-slate-100 px-4 py-3">
-                <div className="h-9 rounded-lg bg-slate-100" />
-              </div>
-            </div>
-        ))}
+            ),
+        )}
       </section>
   );
 }
