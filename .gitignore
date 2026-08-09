@@ -508,6 +508,7 @@ sketch
 *.htm
 *.html
 !frontend/index.html
+!frontend/src/index.css
 *.js
 *.jsp
 *.php
