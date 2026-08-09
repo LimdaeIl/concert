@@ -117,4 +117,58 @@ public interface ReservationControllerDocs {
             @PathVariable
             Long reservationId
     );
+    @Operation(
+            summary = "결제 전 예약 취소",
+            description = """
+                로그인 회원 본인의 결제 대기 예약을 취소합니다.
+
+                PENDING_PAYMENT 상태의 예약만 취소할 수 있습니다.
+
+                예약 취소 시 임시 선점된 좌석은 해제되어
+                다시 예약 가능한 상태로 변경됩니다.
+
+                이미 결제가 완료된 예약은 이 API로 취소할 수 없으며,
+                결제 취소 API를 이용해야 합니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "예약 취소 성공"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "예약을 찾을 수 없음",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "409",
+            description = "취소할 수 없는 예약 상태",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation = ErrorResponse.class
+                    )
+            )
+    )
+    ResponseEntity<Void>
+    cancelPendingReservation(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal
+            LoginMember loginMember,
+
+            @Parameter(
+                    description = "예약 ID",
+                    example = "1"
+            )
+            @PathVariable
+            Long reservationId
+    );
 }

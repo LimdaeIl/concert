@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import ConcertPoster from '@/features/concert/components/ConcertPoster';
-
+import type {
+  ReactNode,
+} from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -21,22 +21,37 @@ import {
   useParams,
 } from 'react-router-dom';
 
-import { cancelPayment } from '@/features/payment/api/paymentApi';
+import ConcertPoster from '@/features/concert/components/ConcertPoster';
+import {
+  cancelPayment,
+} from '@/features/payment/api/paymentApi';
 import PaymentCancelDialog from '@/features/payment/components/PaymentCancelDialog';
-import { useReservationCountdown } from '@/features/reservation/hooks/useReservationCountdown';
-import { getApiErrorMessage } from '@/lib/api/getApiErrorMessage';
+import {
+  useReservationCountdown,
+} from '@/features/reservation/hooks/useReservationCountdown';
+import {
+  getApiErrorMessage,
+} from '@/lib/api/getApiErrorMessage';
 import {
   formatDate,
   formatDateTime,
   formatTime,
 } from '@/lib/date/formatDateTime';
 
-import { getMyBookingReservation } from '../api/reservationApi';
-import type { MyReservationDetail } from '../types/reservation';
+import {
+  cancelPendingReservation,
+  getMyBookingReservation,
+} from '../api/reservationApi';
+import type {
+  MyReservationDetail,
+} from '../types/reservation';
 
 export default function ReservationDetailPage() {
-  const navigate = useNavigate();
-  const { reservationId } = useParams();
+  const navigate =
+      useNavigate();
+
+  const { reservationId } =
+      useParams();
 
   const numericReservationId =
       Number(reservationId);
@@ -44,15 +59,20 @@ export default function ReservationDetailPage() {
   const [
     reservation,
     setReservation,
-  ] = useState<MyReservationDetail | null>(
-      null,
-  );
+  ] =
+      useState<MyReservationDetail | null>(
+          null,
+      );
 
-  const [loading, setLoading] =
-      useState(true);
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-  const [errorMessage, setErrorMessage] =
-      useState('');
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] = useState('');
 
   const [
     actionErrorMessage,
@@ -60,12 +80,30 @@ export default function ReservationDetailPage() {
   ] = useState('');
 
   const [
-    cancelDialogOpen,
-    setCancelDialogOpen,
+    successMessage,
+    setSuccessMessage,
+  ] = useState('');
+
+  /*
+   * 결제 완료 예약의 Toss 결제 취소 Dialog.
+   */
+  const [
+    paymentCancelDialogOpen,
+    setPaymentCancelDialogOpen,
   ] = useState(false);
 
-  const [cancelling, setCancelling] =
-      useState(false);
+  /*
+   * 결제 전 PENDING_PAYMENT 예약 취소 Dialog.
+   */
+  const [
+    pendingCancelDialogOpen,
+    setPendingCancelDialogOpen,
+  ] = useState(false);
+
+  const [
+    cancelling,
+    setCancelling,
+  ] = useState(false);
 
   const countdown =
       useReservationCountdown(
@@ -73,17 +111,29 @@ export default function ReservationDetailPage() {
       );
 
   const reloadReservation =
-      useCallback(async () => {
-        const response =
-            await getMyBookingReservation(
-                numericReservationId,
+      useCallback(
+          async () => {
+            const response =
+                await getMyBookingReservation(
+                    numericReservationId,
+                );
+
+            setReservation(
+                response,
             );
 
-        setReservation(response);
+            return response;
+          },
+          [
+            numericReservationId,
+          ],
+      );
 
-        return response;
-      }, [numericReservationId]);
-
+  /*
+   * -------------------------------------------------------
+   * 최초 조회
+   * -------------------------------------------------------
+   */
   useEffect(() => {
     let active = true;
 
@@ -99,6 +149,7 @@ export default function ReservationDetailPage() {
         );
 
         setLoading(false);
+
         return;
       }
 
@@ -112,7 +163,9 @@ export default function ReservationDetailPage() {
           return;
         }
 
-        setReservation(response);
+        setReservation(
+            response,
+        );
       } catch (error) {
         if (!active) {
           return;
@@ -136,8 +189,14 @@ export default function ReservationDetailPage() {
     return () => {
       active = false;
     };
-  }, [numericReservationId]);
+  }, [
+    numericReservationId,
+  ]);
 
+  /*
+   * 결제 시간이 화면에서 만료되면
+   * 서버의 최신 예약 상태를 다시 조회한다.
+   */
   useEffect(() => {
     if (
         !countdown.expired ||
@@ -147,9 +206,12 @@ export default function ReservationDetailPage() {
       return;
     }
 
-    void reloadReservation().catch(() => {
-      // 만료 직후 자동 재조회 실패 시
-      // 현재 화면 상태를 유지한다.
+    void reloadReservation()
+    .catch(() => {
+      /*
+       * 자동 갱신 실패 시
+       * 현재 화면 상태 유지.
+       */
     });
   }, [
     countdown.expired,
@@ -157,8 +219,14 @@ export default function ReservationDetailPage() {
     reloadReservation,
   ]);
 
+  /*
+   * -------------------------------------------------------
+   * 수동 상태 갱신
+   * -------------------------------------------------------
+   */
   async function handleRefreshReservation() {
     setActionErrorMessage('');
+    setSuccessMessage('');
 
     try {
       await reloadReservation();
@@ -172,6 +240,59 @@ export default function ReservationDetailPage() {
     }
   }
 
+  /*
+   * -------------------------------------------------------
+   * 결제 전 예약 취소
+   *
+   * PENDING_PAYMENT
+   * HELD -> AVAILABLE
+   * Reservation -> CANCELLED
+   * -------------------------------------------------------
+   */
+  async function handleCancelPendingReservation() {
+    if (!reservation) {
+      return;
+    }
+
+    setCancelling(true);
+    setActionErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      await cancelPendingReservation(
+          reservation.reservationId,
+      );
+
+      await reloadReservation();
+
+      setPendingCancelDialogOpen(
+          false,
+      );
+
+      setSuccessMessage(
+          '예약이 취소되었습니다. 확보되어 있던 좌석을 다시 선택할 수 있습니다.',
+      );
+    } catch (error) {
+      setActionErrorMessage(
+          getApiErrorMessage(
+              error,
+              '예약 취소에 실패했습니다.',
+          ),
+      );
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  /*
+   * -------------------------------------------------------
+   * 결제 완료 예약 취소
+   *
+   * Toss 결제 취소
+   * RESERVED -> AVAILABLE
+   * Reservation -> CANCELLED
+   * -------------------------------------------------------
+   */
   async function handleCancelPayment(
       reason: string,
   ) {
@@ -185,6 +306,7 @@ export default function ReservationDetailPage() {
 
     setCancelling(true);
     setActionErrorMessage('');
+    setSuccessMessage('');
 
     try {
       await cancelPayment(
@@ -197,7 +319,13 @@ export default function ReservationDetailPage() {
 
       await reloadReservation();
 
-      setCancelDialogOpen(false);
+      setPaymentCancelDialogOpen(
+          false,
+      );
+
+      setSuccessMessage(
+          '예매 및 결제가 취소되었습니다.',
+      );
     } catch (error) {
       setActionErrorMessage(
           getApiErrorMessage(
@@ -210,6 +338,11 @@ export default function ReservationDetailPage() {
     }
   }
 
+  /*
+   * -------------------------------------------------------
+   * Loading
+   * -------------------------------------------------------
+   */
   if (loading) {
     return (
         <div className="flex min-h-dvh items-center justify-center">
@@ -224,6 +357,11 @@ export default function ReservationDetailPage() {
     );
   }
 
+  /*
+   * -------------------------------------------------------
+   * Error
+   * -------------------------------------------------------
+   */
   if (
       errorMessage ||
       !reservation
@@ -233,11 +371,15 @@ export default function ReservationDetailPage() {
           <header className="flex h-14 items-center border-b border-slate-100 px-4">
             <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={() =>
+                    navigate(-1)
+                }
                 className="flex size-10 items-center justify-center rounded-full hover:bg-slate-100"
                 aria-label="뒤로가기"
             >
-              <ArrowLeft size={22} />
+              <ArrowLeft
+                  size={22}
+              />
             </button>
 
             <h1 className="ml-2 text-base font-semibold text-slate-900">
@@ -259,26 +401,55 @@ export default function ReservationDetailPage() {
       reservation.reservationStatus ===
       'PENDING_PAYMENT';
 
+  const isCompleted =
+      reservation.reservationStatus ===
+      'COMPLETED';
+
   const isCancelled =
       reservation.reservationStatus ===
       'CANCELLED';
+
+  const isExpired =
+      reservation.reservationStatus ===
+      'EXPIRED';
 
   const paymentExpired =
       isPendingPayment &&
       reservation.expiresAt !== null &&
       countdown.expired;
 
+  /*
+   * 결제 전 예약 취소 가능.
+   */
+  const canCancelPendingReservation =
+      isPendingPayment &&
+      reservation.canCancel &&
+      !paymentExpired;
+
+  /*
+   * 결제 완료 후 전체 결제 취소 가능.
+   */
+  const canCancelCompletedReservation =
+      isCompleted &&
+      reservation.canCancel &&
+      reservation.payment !== null;
+
   return (
       <>
-        <div className="min-h-dvh pb-32">
+        <div className="min-h-dvh pb-36">
+          {/* Header */}
           <header className="sticky top-0 z-30 flex h-14 items-center border-b border-slate-100 bg-white px-4">
             <button
                 type="button"
-                onClick={() => navigate(-1)}
+                onClick={() =>
+                    navigate(-1)
+                }
                 className="flex size-10 items-center justify-center rounded-full hover:bg-slate-100"
                 aria-label="뒤로가기"
             >
-              <ArrowLeft size={22} />
+              <ArrowLeft
+                  size={22}
+              />
             </button>
 
             <h1 className="ml-2 text-base font-semibold text-slate-900">
@@ -286,13 +457,15 @@ export default function ReservationDetailPage() {
             </h1>
           </header>
 
+          {/* 공연 */}
           <section className="px-5 pt-6">
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <div className="flex gap-4 p-4">
                 <div className="aspect-[3/4] w-28 shrink-0 overflow-hidden rounded-xl bg-slate-100">
                   <ConcertPoster
                       src={
-                        reservation.concert
+                        reservation
+                            .concert
                             .posterUrl
                       }
                       alt={`${reservation.concert.title} 포스터`}
@@ -303,29 +476,34 @@ export default function ReservationDetailPage() {
                 <div className="min-w-0 flex-1 py-1">
                   <ReservationStatusBadge
                       status={
-                        reservation.reservationStatus
+                        reservation
+                            .reservationStatus
                       }
                   />
 
                   <p className="mt-3 text-xs font-semibold text-indigo-600">
                     {
-                      reservation.concert
+                      reservation
+                          .concert
                           .category
                     }
                   </p>
 
                   <h2 className="mt-1 line-clamp-2 text-lg font-bold leading-7 text-slate-950">
                     {
-                      reservation.concert
+                      reservation
+                          .concert
                           .title
                     }
                   </h2>
 
-                  {reservation.concert
+                  {reservation
+                      .concert
                       .subtitle && (
                       <p className="mt-1 truncate text-sm text-slate-500">
                         {
-                          reservation.concert
+                          reservation
+                              .concert
                               .subtitle
                         }
                       </p>
@@ -336,47 +514,64 @@ export default function ReservationDetailPage() {
               <div className="border-t border-dashed border-slate-200 px-5 py-5">
                 <InfoRow
                     icon={
-                      <CalendarDays size={17} />
+                      <CalendarDays
+                          size={17}
+                      />
                     }
                     label="공연일"
                     value={`${formatDate(
-                        reservation.performance
+                        reservation
+                            .performance
                             .startsAt,
                     )} ${formatTime(
-                        reservation.performance
+                        reservation
+                            .performance
                             .startsAt,
                     )}`}
                 />
 
                 <InfoRow
                     icon={
-                      <Clock3 size={17} />
+                      <Clock3
+                          size={17}
+                      />
                     }
                     label="공연시간"
                     value={`${formatTime(
-                        reservation.performance
+                        reservation
+                            .performance
                             .startsAt,
                     )} ~ ${formatTime(
-                        reservation.performance
+                        reservation
+                            .performance
                             .endsAt,
                     )}`}
                 />
 
                 <InfoRow
                     icon={
-                      <MapPin size={17} />
+                      <MapPin
+                          size={17}
+                      />
                     }
                     label="공연장"
-                    value={`${reservation.venue.name} · ${reservation.venue.venueHallName}`}
+                    value={
+                        `${reservation.venue.name} · ` +
+                        reservation.venue
+                            .venueHallName
+                    }
                 />
 
                 <InfoRow
                     icon={
-                      <Ticket size={17} />
+                      <Ticket
+                          size={17}
+                      />
                     }
                     label="예약번호"
                     value={
-                      reservation.reservationNumber
+                      reservation
+                          .reservationNumber
                     }
                     last
                 />
@@ -384,6 +579,7 @@ export default function ReservationDetailPage() {
             </div>
           </section>
 
+          {/* 결제 대기 */}
           {isPendingPayment &&
               reservation.expiresAt && (
                   <section className="mt-6 px-5">
@@ -400,40 +596,75 @@ export default function ReservationDetailPage() {
                             </p>
 
                             <p className="mt-1 text-xs leading-5 text-red-500">
-                              서버의 최신 예약 상태를
-                              확인해주세요.
+                              서버의 최신 예약 상태를 확인해주세요.
                             </p>
                           </div>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-between rounded-2xl bg-amber-50 p-4">
-                          <div className="flex items-center gap-3">
-                            <Clock3
-                                size={20}
-                                className="text-amber-500"
-                            />
+                        <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Clock3
+                                  size={20}
+                                  className="text-amber-500"
+                              />
 
-                            <div>
-                              <p className="text-sm font-semibold text-amber-700">
-                                결제 대기 중
-                              </p>
+                              <div>
+                                <p className="text-sm font-semibold text-amber-700">
+                                  결제 대기 중
+                                </p>
 
-                              <p className="mt-1 text-xs text-amber-600">
-                                남은 시간
-                              </p>
+                                <p className="mt-1 text-xs text-amber-600">
+                                  남은 시간
+                                </p>
+                              </div>
                             </div>
+
+                            <strong className="font-mono text-xl text-amber-700">
+                              {
+                                countdown
+                                    .remainingText
+                              }
+                            </strong>
                           </div>
 
-                          <strong className="font-mono text-xl text-amber-700">
-                            {
-                              countdown.remainingText
-                            }
-                          </strong>
+                          <p className="mt-3 border-t border-amber-100 pt-3 text-xs leading-5 text-amber-700">
+                            결제를 완료하면 예매가 확정됩니다.
+                            다른 좌석을 선택하려면 현재 예약을 먼저
+                            취소해주세요.
+                          </p>
                         </div>
                     )}
                   </section>
               )}
 
+          {/* 성공 */}
+          {successMessage && (
+              <section className="mt-5 px-5">
+                <p
+                    role="status"
+                    className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+                >
+                  {successMessage}
+                </p>
+              </section>
+          )}
+
+          {/* Action error */}
+          {actionErrorMessage && (
+              <section className="mt-5 px-5">
+                <p
+                    role="alert"
+                    className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
+                >
+                  {
+                    actionErrorMessage
+                  }
+                </p>
+              </section>
+          )}
+
+          {/* 좌석 */}
           <section className="mt-8 px-5">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-950">
@@ -441,7 +672,12 @@ export default function ReservationDetailPage() {
               </h3>
 
               <span className="text-sm text-slate-500">
-              {reservation.seats.length}매
+              {
+                reservation
+                    .seats
+                    .length
+              }
+                매
             </span>
             </div>
 
@@ -450,18 +686,24 @@ export default function ReservationDetailPage() {
                   (seat) => (
                       <div
                           key={
-                            seat.reservationSeatId
+                            seat
+                                .reservationSeatId
                           }
                           className="flex items-center justify-between rounded-2xl bg-slate-50 p-4"
                       >
                         <div>
                           <div className="flex items-center gap-2">
                       <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600">
-                        {seat.grade}
+                        {
+                          seat.grade
+                        }
                       </span>
 
                             <span className="text-sm font-semibold text-slate-900">
-                        {seat.sectionName}
+                        {
+                          seat
+                              .sectionName
+                        }
                       </span>
                           </div>
 
@@ -484,6 +726,7 @@ export default function ReservationDetailPage() {
             </div>
           </section>
 
+          {/* 공연장 */}
           <section className="mt-8 px-5">
             <h3 className="text-lg font-bold text-slate-950">
               공연장
@@ -491,16 +734,22 @@ export default function ReservationDetailPage() {
 
             <div className="mt-4 rounded-2xl border border-slate-200 p-5">
               <p className="font-semibold text-slate-900">
-                {reservation.venue.name}
+                {
+                  reservation
+                      .venue
+                      .name
+                }
               </p>
 
               <p className="mt-1 text-sm text-slate-500">
                 {
-                  reservation.venue
+                  reservation
+                      .venue
                       .venueHallName
                 }
 
-                {reservation.venue
+                {reservation
+                    .venue
                     .venueHallFloor
                     ? ` · ${reservation.venue.venueHallFloor}`
                     : ''}
@@ -508,11 +757,13 @@ export default function ReservationDetailPage() {
 
               <p className="mt-4 text-sm leading-6 text-slate-600">
                 {
-                  reservation.venue
+                  reservation
+                      .venue
                       .roadAddress
                 }
 
-                {reservation.venue
+                {reservation
+                    .venue
                     .detailAddress
                     ? ` ${reservation.venue.detailAddress}`
                     : ''}
@@ -520,6 +771,7 @@ export default function ReservationDetailPage() {
             </div>
           </section>
 
+          {/* 결제 */}
           <section className="mt-8 px-5">
             <h3 className="text-lg font-bold text-slate-950">
               결제
@@ -532,7 +784,9 @@ export default function ReservationDetailPage() {
               </span>
 
                 <strong className="text-lg text-slate-950">
-                  {reservation.totalAmount.toLocaleString(
+                  {reservation
+                  .totalAmount
+                  .toLocaleString(
                       'ko-KR',
                   )}
                   원
@@ -544,7 +798,8 @@ export default function ReservationDetailPage() {
                     <DetailRow
                         label="결제번호"
                         value={
-                          reservation.payment
+                          reservation
+                              .payment
                               .paymentNumber
                         }
                     />
@@ -552,7 +807,8 @@ export default function ReservationDetailPage() {
                     <DetailRow
                         label="결제사"
                         value={
-                          reservation.payment
+                          reservation
+                              .payment
                               .provider
                         }
                     />
@@ -560,15 +816,18 @@ export default function ReservationDetailPage() {
                     <DetailRow
                         label="결제수단"
                         value={
-                            reservation.payment
-                                .method || '-'
+                            reservation
+                                .payment
+                                .method ||
+                            '-'
                         }
                     />
 
                     <DetailRow
                         label="결제상태"
                         value={
-                          reservation.payment
+                          reservation
+                              .payment
                               .status
                         }
                         last
@@ -584,39 +843,35 @@ export default function ReservationDetailPage() {
             </div>
           </section>
 
-          {reservation.canCancel &&
-              reservation.payment && (
-                  <section className="mt-6 px-5">
-                    <button
-                        type="button"
-                        onClick={() => {
-                          setActionErrorMessage('');
-                          setCancelDialogOpen(true);
-                        }}
-                        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-white text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
-                    >
-                      <XCircle size={18} />
+          {/* 결제 완료 예약 취소 */}
+          {canCancelCompletedReservation && (
+              <section className="mt-6 px-5">
+                <button
+                    type="button"
+                    onClick={() => {
+                      setActionErrorMessage('');
+                      setSuccessMessage('');
 
-                      예매 취소
-                    </button>
-
-                    <p className="mt-2 text-center text-xs text-slate-400">
-                      결제 전체 취소가 진행됩니다.
-                    </p>
-                  </section>
-              )}
-
-          {actionErrorMessage && (
-              <section className="mt-5 px-5">
-                <p
-                    role="alert"
-                    className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
+                      setPaymentCancelDialogOpen(
+                          true,
+                      );
+                    }}
+                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-white text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
                 >
-                  {actionErrorMessage}
+                  <XCircle
+                      size={18}
+                  />
+
+                  예매 취소
+                </button>
+
+                <p className="mt-2 text-center text-xs text-slate-400">
+                  결제 전체 취소 및 좌석 반환이 진행됩니다.
                 </p>
               </section>
           )}
 
+          {/* 예약 정보 */}
           <section className="mt-8 px-5">
             <h3 className="text-lg font-bold text-slate-950">
               예약 정보
@@ -625,35 +880,47 @@ export default function ReservationDetailPage() {
             <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200">
               <DetailRow
                   label="예약일"
-                  value={formatDateTime(
-                      reservation.reservedAt,
-                  )}
+                  value={
+                    formatDateTime(
+                        reservation
+                            .reservedAt,
+                    )
+                  }
               />
 
               {reservation.expiresAt && (
                   <DetailRow
                       label="결제 만료"
-                      value={formatDateTime(
-                          reservation.expiresAt,
-                      )}
+                      value={
+                        formatDateTime(
+                            reservation
+                                .expiresAt,
+                        )
+                      }
                   />
               )}
 
               {reservation.completedAt && (
                   <DetailRow
                       label="예매 완료"
-                      value={formatDateTime(
-                          reservation.completedAt,
-                      )}
+                      value={
+                        formatDateTime(
+                            reservation
+                                .completedAt,
+                        )
+                      }
                   />
               )}
 
               {reservation.cancelledAt && (
                   <DetailRow
                       label="취소일"
-                      value={formatDateTime(
-                          reservation.cancelledAt,
-                      )}
+                      value={
+                        formatDateTime(
+                            reservation
+                                .cancelledAt,
+                        )
+                      }
                   />
               )}
 
@@ -661,7 +928,8 @@ export default function ReservationDetailPage() {
                   <DetailRow
                       label="환불 상태"
                       value={
-                        reservation.refundStatus
+                        reservation
+                            .refundStatus
                       }
                       last
                   />
@@ -669,25 +937,76 @@ export default function ReservationDetailPage() {
             </div>
           </section>
 
+          {/* Footer */}
           <div className="fixed bottom-0 left-1/2 z-40 w-full max-w-[640px] -translate-x-1/2 border-t border-slate-200 bg-white p-4">
             {reservation.requiresPayment &&
             !paymentExpired ? (
-                <button
-                    type="button"
-                    onClick={() =>
-                        navigate(
-                            `/reservations/${reservation.reservationId}/payment`,
-                        )
-                    }
-                    className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
-                >
-                  <CreditCard size={18} />
+                canCancelPendingReservation ? (
+                    /*
+                     * 결제 전에는:
+                     *
+                     * [예약 취소] [결제하기]
+                     */
+                    <div className="grid grid-cols-[0.8fr_1.2fr] gap-3">
+                      <button
+                          type="button"
+                          disabled={
+                            cancelling
+                          }
+                          onClick={() => {
+                            setActionErrorMessage('');
+                            setSuccessMessage('');
 
-                  {reservation.totalAmount.toLocaleString(
-                      'ko-KR',
-                  )}
-                  원 결제하기
-                </button>
+                            setPendingCancelDialogOpen(
+                                true,
+                            );
+                          }}
+                          className="h-12 rounded-xl border border-red-200 bg-white text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        예약 취소
+                      </button>
+
+                      <button
+                          type="button"
+                          disabled={
+                            cancelling
+                          }
+                          onClick={() =>
+                              navigate(
+                                  `/reservations/${reservation.reservationId}/payment`,
+                              )
+                          }
+                          className="flex h-12 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-50"
+                      >
+                        <CreditCard
+                            size={18}
+                        />
+
+                        결제하기
+                      </button>
+                    </div>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={() =>
+                            navigate(
+                                `/reservations/${reservation.reservationId}/payment`,
+                            )
+                        }
+                        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
+                    >
+                      <CreditCard
+                          size={18}
+                      />
+
+                      {reservation
+                      .totalAmount
+                      .toLocaleString(
+                          'ko-KR',
+                      )}
+                      원 결제하기
+                    </button>
+                )
             ) : paymentExpired ? (
                 <button
                     type="button"
@@ -702,11 +1021,25 @@ export default function ReservationDetailPage() {
                 <button
                     type="button"
                     onClick={() =>
-                        navigate('/concerts')
+                        navigate(
+                            `/performances/${reservation.performance.performanceId}/seats`,
+                        )
                     }
-                    className="h-12 w-full rounded-xl bg-slate-900 text-sm font-semibold text-white"
+                    className="h-12 w-full rounded-xl bg-indigo-600 text-sm font-semibold text-white"
                 >
-                  다른 공연 찾아보기
+                  다시 좌석 선택하기
+                </button>
+            ) : isExpired ? (
+                <button
+                    type="button"
+                    onClick={() =>
+                        navigate(
+                            `/performances/${reservation.performance.performanceId}/seats`,
+                        )
+                    }
+                    className="h-12 w-full rounded-xl bg-indigo-600 text-sm font-semibold text-white"
+                >
+                  다시 좌석 선택하기
                 </button>
             ) : (
                 <button
@@ -724,19 +1057,143 @@ export default function ReservationDetailPage() {
           </div>
         </div>
 
-        <PaymentCancelDialog
-            open={cancelDialogOpen}
-            submitting={cancelling}
+        {/* 결제 전 예약 취소 확인 */}
+        <PendingReservationCancelDialog
+            open={
+              pendingCancelDialogOpen
+            }
+            submitting={
+              cancelling
+            }
             onClose={() => {
               if (!cancelling) {
-                setCancelDialogOpen(false);
+                setPendingCancelDialogOpen(
+                    false,
+                );
               }
             }}
-            onConfirm={handleCancelPayment}
+            onConfirm={() =>
+                void handleCancelPendingReservation()
+            }
+        />
+
+        {/* 결제 완료 후 Toss 결제 취소 */}
+        <PaymentCancelDialog
+            open={
+              paymentCancelDialogOpen
+            }
+            submitting={
+              cancelling
+            }
+            onClose={() => {
+              if (!cancelling) {
+                setPaymentCancelDialogOpen(
+                    false,
+                );
+              }
+            }}
+            onConfirm={
+              handleCancelPayment
+            }
         />
       </>
   );
 }
+
+/*
+ * -----------------------------------------------------------
+ * PENDING_PAYMENT 예약 취소 Dialog
+ * -----------------------------------------------------------
+ */
+
+interface PendingReservationCancelDialogProps {
+  open: boolean;
+  submitting: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+function PendingReservationCancelDialog({
+                                          open,
+                                          submitting,
+                                          onClose,
+                                          onConfirm,
+                                        }: PendingReservationCancelDialogProps) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+      <div className="fixed inset-0 z-[110] flex items-end justify-center bg-slate-950/45 sm:items-center sm:p-5">
+        <div className="w-full max-w-[560px] rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl">
+          <div className="flex size-12 items-center justify-center rounded-full bg-red-50 text-red-500">
+            <XCircle
+                size={23}
+            />
+          </div>
+
+          <h2 className="mt-5 text-xl font-bold text-slate-950">
+            예약을 취소할까요?
+          </h2>
+
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            아직 결제가 완료되지 않은 예약입니다.
+            예약을 취소하면 현재 확보되어 있는 좌석이
+            즉시 해제됩니다.
+          </p>
+
+          <div className="mt-4 flex gap-3 rounded-2xl bg-amber-50 p-4">
+            <AlertTriangle
+                size={19}
+                className="mt-0.5 shrink-0 text-amber-600"
+            />
+
+            <p className="text-xs leading-5 text-amber-800">
+              취소된 좌석은 다른 회원이 바로 예매할 수
+              있습니다. 다시 예매하려면 좌석 선택부터
+              진행해야 합니다.
+            </p>
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <button
+                type="button"
+                disabled={
+                  submitting
+                }
+                onClick={
+                  onClose
+                }
+                className="h-12 rounded-xl border border-slate-300 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
+            >
+              계속 결제하기
+            </button>
+
+            <button
+                type="button"
+                disabled={
+                  submitting
+                }
+                onClick={
+                  onConfirm
+                }
+                className="h-12 rounded-xl bg-red-600 text-sm font-semibold text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-red-300"
+            >
+              {submitting
+                  ? '취소 중...'
+                  : '예약 취소하기'}
+            </button>
+          </div>
+        </div>
+      </div>
+  );
+}
+
+/*
+ * -----------------------------------------------------------
+ * Info Row
+ * -----------------------------------------------------------
+ */
 
 interface InfoRowProps {
   icon: ReactNode;
@@ -777,6 +1234,12 @@ function InfoRow({
   );
 }
 
+/*
+ * -----------------------------------------------------------
+ * Detail Row
+ * -----------------------------------------------------------
+ */
+
 interface DetailRowProps {
   label: string;
   value: string;
@@ -808,6 +1271,12 @@ function DetailRow({
   );
 }
 
+/*
+ * -----------------------------------------------------------
+ * Status Badge
+ * -----------------------------------------------------------
+ */
+
 interface ReservationStatusBadgeProps {
   status: string;
 }
@@ -822,7 +1291,9 @@ function ReservationStatusBadge({
               ? '예매 완료'
               : status === 'CANCELLED'
                   ? '취소'
-                  : status;
+                  : status === 'EXPIRED'
+                      ? '만료'
+                      : status;
 
   const className =
       status === 'PENDING_PAYMENT'
@@ -831,7 +1302,9 @@ function ReservationStatusBadge({
               ? 'bg-emerald-50 text-emerald-600'
               : status === 'CANCELLED'
                   ? 'bg-red-50 text-red-500'
-                  : 'bg-slate-100 text-slate-500';
+                  : status === 'EXPIRED'
+                      ? 'bg-slate-100 text-slate-500'
+                      : 'bg-slate-100 text-slate-500';
 
   return (
       <span

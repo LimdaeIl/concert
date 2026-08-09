@@ -6,6 +6,7 @@ import {
 import { reissue } from '@/features/auth/api/authApi';
 import { hasAuthSession } from '@/features/auth/lib/authSession';
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { getMe } from '@/features/member/api/memberApi';
 
 let initializationPromise:
     Promise<void> | null = null;
@@ -25,6 +26,12 @@ export function AuthInitializer({
               state.setAuthentication,
       );
 
+  const setMember =
+      useAuthStore(
+          (state) =>
+              state.setMember,
+      );
+
   const clearAuthentication =
       useAuthStore(
           (state) =>
@@ -40,12 +47,6 @@ export function AuthInitializer({
   useEffect(() => {
     let active = true;
 
-    /*
-     * 세션 흔적이 전혀 없다.
-     *
-     * reissue를 호출하지 않고
-     * 즉시 초기화 완료 처리한다.
-     */
     if (!hasAuthSession()) {
       setInitialized(true);
 
@@ -67,12 +68,26 @@ export function AuthInitializer({
             authentication.id,
             authentication.accessToken,
         );
-      } catch {
+
+        const member =
+            await getMe();
+
         if (!active) {
           return;
         }
 
-        clearAuthentication();
+        setMember({
+          id:
+          member.id,
+          name:
+          member.name,
+          email:
+          member.email,
+        });
+      } catch {
+        if (active) {
+          clearAuthentication();
+        }
       }
     }
 
@@ -98,19 +113,14 @@ export function AuthInitializer({
     clearAuthentication,
     setAuthentication,
     setInitialized,
+    setMember,
   ]);
 
   if (!initialized) {
     return (
         <div className="min-h-dvh bg-slate-100">
           <div className="mx-auto flex min-h-dvh w-full max-w-[640px] items-center justify-center bg-white">
-            <div className="flex flex-col items-center gap-3">
-              <div className="size-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
-
-              <p className="text-sm text-slate-500">
-                로그인 상태를 확인하고 있습니다.
-              </p>
-            </div>
+            <div className="size-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600" />
           </div>
         </div>
     );

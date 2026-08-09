@@ -88,9 +88,7 @@ public class CreateReservationService {
                 performanceSeats
         );
 
-        LocalDateTime expiresAt = now.plus(
-                properties.paymentTimeout()
-        );
+        LocalDateTime expiresAt = calculateExpiresAt(performance, now);
 
         /*
          * 예매 종료 이후까지 결제를 허용하면 안 된다.
@@ -210,6 +208,17 @@ public class CreateReservationService {
                             .DUPLICATE_RESERVATION_SEAT
             );
         }
+    }
+
+    private LocalDateTime calculateExpiresAt(Performance performance, LocalDateTime now) {
+        LocalDateTime expiresAt = now.plus(properties.paymentTimeout());
+        if (performance.getReservationClosesAt().isBefore(expiresAt)) {
+            expiresAt = performance.getReservationClosesAt();
+        }
+        if (performance.getStartsAt().isBefore(expiresAt)) {
+            expiresAt = performance.getStartsAt();
+        }
+        return expiresAt;
     }
 
     private void validatePerformanceSeats(
