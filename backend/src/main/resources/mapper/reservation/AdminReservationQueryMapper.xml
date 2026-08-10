@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.concert.backend.reservation.query.AdminReservationQueryMapper">
+
+  <sql id="searchConditions">
+
+    WHERE 1 = 1
+
+    <if test="condition.keyword != null and condition.keyword != ''">
+      AND (
+      r.reservation_number LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+
+      OR m.email LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+
+      OR m.name LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+
+      OR c.title LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+      )
+    </if>
+
+    <if test="condition.status != null">
+      AND r.status =
+      #{condition.status}
+    </if>
+
+    <if test="condition.performanceId != null">
+      AND r.performance_id =
+      #{condition.performanceId}
+    </if>
+
+    <if test="condition.from != null">
+      AND r.created_at &gt;=
+      #{condition.from}
+    </if>
+
+    <if test="condition.to != null">
+      AND r.created_at &lt;=
+      #{condition.to}
+    </if>
+
+  </sql>
+
+
+  <sql id="searchOrderBy">
+
+    <choose>
+
+      <when test="
+                condition.sort != null
+                and
+                condition.sort.name() == 'RESERVED_AT_ASC'
+            ">
+        ORDER BY
+        r.created_at ASC,
+        r.id ASC
+      </when>
+
+      <when test="
+                condition.sort != null
+                and
+                condition.sort.name() == 'PERFORMANCE_DATE_ASC'
+            ">
+        ORDER BY
+        p.starts_at ASC,
+        r.id ASC
+      </when>
+
+      <when test="
+                condition.sort != null
+                and
+                condition.sort.name() == 'PERFORMANCE_DATE_DESC'
+            ">
+        ORDER BY
+        p.starts_at DESC,
+        r.id DESC
+      </when>
+
+      <otherwise>
+        ORDER BY
+        r.created_at DESC,
+        r.id DESC
+      </otherwise>
+
+    </choose>
+
+  </sql>
+
+
+  <select
+    id="findAll"
+    resultType="com.concert.backend.reservation.query.AdminReservationQueryRow"
+  >
+
+    SELECT
+    r.id AS reservationId,
+    r.reservation_number AS reservationNumber,
+    r.status AS reservationStatus,
+
+    m.id AS memberId,
+    m.email AS memberEmail,
+    m.name AS memberName,
+
+    c.id AS concertId,
+    c.title AS concertTitle,
+    c.poster_url AS posterUrl,
+
+    p.id AS performanceId,
+    p.starts_at AS startsAt,
+    p.ends_at AS endsAt,
+
+    v.id AS venueId,
+    v.name AS venueName,
+
+    vh.id AS venueHallId,
+    vh.name AS venueHallName,
+
+    (
+    SELECT COUNT(*)
+
+    FROM v1_reservation_seats rs
+
+    WHERE rs.reservation_id = r.id
+    ) AS ticketCount,
+
+    r.total_amount AS totalAmount,
+
+    pay.id AS paymentId,
+    pay.payment_number AS paymentNumber,
+    pay.provider AS paymentProvider,
+    pay.method AS paymentMethod,
+    pay.status AS paymentStatus,
+    pay.approved_at AS paymentApprovedAt,
+
+    r.expires_at AS expiresAt,
+    r.completed_at AS completedAt,
+    r.cancelled_at AS cancelledAt,
+    r.created_at AS reservedAt
+
+    FROM v1_reservations r
+
+    INNER JOIN v1_members m
+    ON m.id = r.member_id
+
+    INNER JOIN v1_performances p
+    ON p.id = r.performance_id
+
+    INNER JOIN v1_concerts c
+    ON c.id = p.concert_id
+
+    INNER JOIN v1_venue_halls vh
+    ON vh.id = p.venue_hall_id
+
+    INNER JOIN v1_venues v
+    ON v.id = vh.venue_id
+
+    LEFT JOIN (
+    SELECT
+    ranked.id,
+    ranked.payment_number,
+    ranked.reservation_id,
+    ranked.provider,
+    ranked.method,
+    ranked.status,
+    ranked.approved_at
+
+    FROM (
+    SELECT
+    p2.id,
+    p2.payment_number,
+    p2.reservation_id,
+    p2.provider,
+    p2.method,
+    p2.status,
+    p2.approved_at,
+
+    ROW_NUMBER() OVER (
+    PARTITION BY p2.reservation_id
+    ORDER BY
+    p2.created_at DESC,
+    p2.id DESC
+    ) AS rn
+
+    FROM v1_payments p2
+
+    ) ranked
+
+    WHERE ranked.rn = 1
+
+    ) pay
+    ON pay.reservation_id = r.id
+
+    <include refid="searchConditions"/>
+
+    <include refid="searchOrderBy"/>
+
+    LIMIT #{condition.size}
+    OFFSET #{condition.offset}
+
+  </select>
+
+
+  <select
+    id="count"
+    resultType="long"
+  >
+
+    SELECT COUNT(*)
+
+    FROM v1_reservations r
+
+    INNER JOIN v1_members m
+    ON m.id = r.member_id
+
+    INNER JOIN v1_performances p
+    ON p.id = r.performance_id
+
+    INNER JOIN v1_concerts c
+    ON c.id = p.concert_id
+
+    <include refid="searchConditions"/>
+
+  </select>
+
+</mapper>
