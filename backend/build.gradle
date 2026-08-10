@@ -68,7 +68,8 @@ dependencies {
     testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:4.0.1'
 
 
-
+    implementation platform('software.amazon.awssdk:bom:2.42.35')
+    implementation 'software.amazon.awssdk:s3'
 
 }
 
