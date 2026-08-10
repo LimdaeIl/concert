@@ -5,14 +5,19 @@ import type {
 import {
   CalendarDays,
   ChevronRight,
+  Clock3,
   Search,
+  Sparkles,
+  Ticket,
   X,
 } from 'lucide-react';
+
 import {
   useEffect,
   useMemo,
   useState,
 } from 'react';
+
 import {
   useNavigate,
 } from 'react-router-dom';
@@ -20,8 +25,13 @@ import {
 import {
   getConcerts,
 } from '@/features/concert/api/concertApi';
-import ConcertCard from '@/features/concert/components/ConcertCard';
-import ConcertPoster from '@/features/concert/components/ConcertPoster';
+
+import ConcertCard
+  from '@/features/concert/components/ConcertCard';
+
+import ConcertPoster
+  from '@/features/concert/components/ConcertPoster';
+
 import type {
   Concert,
 } from '@/features/concert/types/concert';
@@ -29,6 +39,7 @@ import type {
 import {
   getPerformances,
 } from '@/features/performance/api/performanceApi';
+
 import type {
   Performance,
 } from '@/features/performance/types/performance';
@@ -43,6 +54,16 @@ interface UpcomingPerformance {
   performance: Performance;
 }
 
+const CATEGORY_LABELS:
+    Record<string, string> = {
+  CONCERT: '콘서트',
+  MUSICAL: '뮤지컬',
+  PLAY: '연극',
+  CLASSIC: '클래식',
+  DANCE: '무용',
+  ETC: '기타',
+};
+
 export default function HomePage() {
   const navigate =
       useNavigate();
@@ -50,29 +71,36 @@ export default function HomePage() {
   const [
     keyword,
     setKeyword,
-  ] = useState('');
+  ] =
+      useState('');
 
   const [
     concerts,
     setConcerts,
-  ] = useState<Concert[]>([]);
+  ] =
+      useState<Concert[]>(
+          [],
+      );
 
   const [
     upcomingPerformances,
     setUpcomingPerformances,
-  ] = useState<
-      UpcomingPerformance[]
-  >([]);
+  ] =
+      useState<
+          UpcomingPerformance[]
+      >([]);
 
   const [
     loading,
     setLoading,
-  ] = useState(true);
+  ] =
+      useState(true);
 
   const [
     errorMessage,
     setErrorMessage,
-  ] = useState('');
+  ] =
+      useState('');
 
   useEffect(() => {
     let active = true;
@@ -95,13 +123,17 @@ export default function HomePage() {
         );
 
         /*
-         * 현재 별도의 홈/다가오는 공연 API가 없으므로
-         * 앞쪽 공연들의 회차를 조회해서 조합한다.
+         * 현재 홈 전용 공연 일정 API가 없으므로
+         * 공개 공연 일부의 회차를 조회해서
+         * 가까운 일정을 구성한다.
          */
         const results =
             await Promise.all(
                 concertList
-                .slice(0, 8)
+                .slice(
+                    0,
+                    8,
+                )
                 .map(
                     async (
                         concert,
@@ -122,8 +154,8 @@ export default function HomePage() {
                         );
                       } catch {
                         /*
-                         * 특정 공연의 회차 조회만 실패하면
-                         * 홈 전체를 실패시키지 않는다.
+                         * 개별 공연의 회차 조회 실패는
+                         * 홈 전체 실패로 처리하지 않는다.
                          */
                         return [];
                       }
@@ -154,22 +186,27 @@ export default function HomePage() {
                       Number.isFinite(
                           startsAt,
                       ) &&
-                      startsAt > now
+                      startsAt >
+                      now
                   );
                 },
             )
             .sort(
-                (a, b) =>
+                (
+                    a,
+                    b,
+                ) =>
                     new Date(
-                        a.performance
-                            .startsAt,
+                        a.performance.startsAt,
                     ).getTime() -
                     new Date(
-                        b.performance
-                            .startsAt,
+                        b.performance.startsAt,
                     ).getTime(),
             )
-            .slice(0, 5);
+            .slice(
+                0,
+                5,
+            );
 
         setUpcomingPerformances(
             upcoming,
@@ -184,7 +221,9 @@ export default function HomePage() {
         );
       } finally {
         if (active) {
-          setLoading(false);
+          setLoading(
+              false,
+          );
         }
       }
     }
@@ -197,17 +236,33 @@ export default function HomePage() {
   }, []);
 
   /*
-   * 아직 실제 인기순 API가 없으므로
-   * 공개 공연 목록 앞 6개를 노출한다.
+   * 현재 추천/인기 랭킹 API는 없기 때문에
+   * 공개 공연 순서를 그대로 이용한다.
    */
-  const popularConcerts =
+  const featuredConcert =
+      concerts[0] ??
+      null;
+
+  const displayConcerts =
       useMemo(
           () =>
-              concerts.slice(
+              concerts
+              .filter(
+                  (
+                      concert,
+                  ) =>
+                      concert.concertId !==
+                      featuredConcert
+                          ?.concertId,
+              )
+              .slice(
                   0,
                   6,
               ),
-          [concerts],
+          [
+            concerts,
+            featuredConcert,
+          ],
       );
 
   function handleSearch() {
@@ -230,7 +285,8 @@ export default function HomePage() {
   }
 
   function handleKeyDown(
-      event: KeyboardEvent<HTMLInputElement>,
+      event:
+      KeyboardEvent<HTMLInputElement>,
   ) {
     if (
         event.key ===
@@ -242,26 +298,36 @@ export default function HomePage() {
 
   if (loading) {
     return (
-        <HomeSkeleton />
+        <HomeSkeleton/>
     );
   }
 
   return (
-      <div className="pb-8">
-        {/* 상단 인트로 */}
+      <div className="pb-10">
+        {/*
+         * =====================================================
+         * Intro
+         * =====================================================
+         */}
         <section className="px-5 pt-6">
           <p className="text-sm font-medium text-slate-500">
             오늘 어떤 공연을 볼까요?
           </p>
 
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950">
-            공연을 찾아보세요
-          </h2>
+          <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950">
+            당신의 다음 공연을
+            <br/>
+            찾아보세요
+          </h1>
         </section>
 
-        {/* 검색 */}
+        {/*
+         * =====================================================
+         * Search
+         * =====================================================
+         */}
         <section className="mt-6 px-5">
-          <div className="flex h-12 items-center gap-3 rounded-xl bg-slate-100 px-4">
+          <div className="flex h-13 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 transition focus-within:border-indigo-300 focus-within:bg-white focus-within:ring-4 focus-within:ring-indigo-50">
             <Search
                 size={19}
                 className="shrink-0 text-slate-400"
@@ -269,7 +335,9 @@ export default function HomePage() {
 
             <input
                 type="search"
-                value={keyword}
+                value={
+                  keyword
+                }
                 onChange={(
                     event,
                 ) =>
@@ -280,7 +348,7 @@ export default function HomePage() {
                 onKeyDown={
                   handleKeyDown
                 }
-                placeholder="공연, 아티스트를 검색해보세요"
+                placeholder="공연 제목을 검색해보세요"
                 className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
             />
 
@@ -290,36 +358,136 @@ export default function HomePage() {
                     onClick={() =>
                         setKeyword('')
                     }
-                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-200 hover:text-slate-600"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-600"
                     aria-label="검색어 지우기"
                 >
                   <X
-                      size={17}
+                      size={16}
                   />
                 </button>
             )}
+
+            <button
+                type="button"
+                onClick={
+                  handleSearch
+                }
+                className="hidden h-8 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white sm:flex"
+            >
+              검색
+            </button>
           </div>
         </section>
 
-        {/* 에러 */}
+        {/*
+         * =====================================================
+         * Error
+         * =====================================================
+         */}
         {errorMessage && (
-            <section className="mt-6 px-5">
-              <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+            <section className="mt-5 px-5">
+              <p className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {errorMessage}
               </p>
             </section>
         )}
 
-        {/* 인기 공연 */}
-        <section className="mt-9">
-          <div className="flex items-center justify-between px-5">
+        {/*
+         * =====================================================
+         * Featured Concert
+         * =====================================================
+         */}
+        {featuredConcert && (
+            <section className="mt-7 px-5">
+              <button
+                  type="button"
+                  onClick={() =>
+                      navigate(
+                          `/concerts/${featuredConcert.concertId}`,
+                      )
+                  }
+                  className="group relative block aspect-[16/10] w-full overflow-hidden rounded-[24px] bg-slate-900 text-left shadow-sm"
+              >
+                {featuredConcert.posterUrl ? (
+                    <>
+                      <ConcertPoster
+                          src={
+                            featuredConcert.posterUrl
+                          }
+                          alt={`${featuredConcert.title} 포스터`}
+                          className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                      />
+
+                      {/*
+                       * 포스터 위 텍스트 가독성 확보.
+                       */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/35 to-slate-900/5"/>
+                    </>
+                ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-500"/>
+                )}
+
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur">
+                      <Sparkles
+                          size={11}
+                      />
+
+                      추천 공연
+                    </span>
+
+                    <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold text-white/90 backdrop-blur">
+                      {
+                          CATEGORY_LABELS[
+                              featuredConcert.category
+                              ] ??
+                          featuredConcert.category
+                      }
+                    </span>
+                  </div>
+
+                  <h2 className="mt-3 line-clamp-2 max-w-[90%] text-xl font-black leading-7 text-white sm:text-2xl">
+                    {
+                      featuredConcert.title
+                    }
+                  </h2>
+
+                  {featuredConcert.subtitle && (
+                      <p className="mt-1.5 line-clamp-1 text-sm text-white/75">
+                        {
+                          featuredConcert.subtitle
+                        }
+                      </p>
+                  )}
+
+                  <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-white">
+                    공연 보기
+
+                    <ChevronRight
+                        size={15}
+                        className="transition-transform group-hover:translate-x-1"
+                    />
+                  </div>
+                </div>
+              </button>
+            </section>
+        )}
+
+        {/*
+         * =====================================================
+         * Concerts
+         * =====================================================
+         */}
+        <section className="mt-10">
+          <div className="flex items-end justify-between px-5">
             <div>
-              <h3 className="text-lg font-bold text-slate-950">
-                인기 공연
-              </h3>
+              <h2 className="text-lg font-bold text-slate-950">
+                지금 만나볼 공연
+              </h2>
 
               <p className="mt-1 text-xs text-slate-400">
-                지금 만나볼 수 있는 공연
+                현재 공개 중인 공연을 둘러보세요
               </p>
             </div>
 
@@ -330,7 +498,7 @@ export default function HomePage() {
                         '/concerts',
                     )
                 }
-                className="flex items-center gap-0.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+                className="flex shrink-0 items-center gap-0.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
             >
               전체보기
 
@@ -340,22 +508,43 @@ export default function HomePage() {
             </button>
           </div>
 
-          {popularConcerts.length ===
+          {concerts.length ===
           0 ? (
-              <div className="px-5 py-8">
-                <p className="text-sm text-slate-400">
-                  현재 공개된 공연이 없습니다.
-                </p>
+              <div className="px-5 py-10">
+                <div className="rounded-2xl bg-slate-50 p-7 text-center">
+                  <Ticket
+                      size={26}
+                      className="mx-auto text-slate-300"
+                  />
+
+                  <p className="mt-3 text-sm font-semibold text-slate-600">
+                    현재 공개된 공연이 없습니다.
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-400">
+                    새로운 공연이 공개되면 이곳에 표시됩니다.
+                  </p>
+                </div>
               </div>
           ) : (
-              <div className="mt-4 flex gap-4 overflow-x-auto px-5 pb-2">
-                {popularConcerts.map(
-                    (concert) => (
+              <div className="mt-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {/*
+                 * featured 제외 목록이 비어 있으면
+                 * featured 자체도 카드 목록에 표시한다.
+                 */}
+                {(displayConcerts.length >
+                    0
+                        ? displayConcerts
+                        : concerts
+                ).map(
+                    (
+                        concert,
+                    ) => (
                         <div
                             key={
                               concert.concertId
                             }
-                            className="w-40 shrink-0"
+                            className="w-[158px] shrink-0 snap-start sm:w-[174px]"
                         >
                           <ConcertCard
                               concert={
@@ -374,16 +563,20 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* 곧 시작하는 공연 */}
-        <section className="mt-9 px-5">
-          <div className="flex items-center justify-between">
+        {/*
+         * =====================================================
+         * Upcoming Performances
+         * =====================================================
+         */}
+        <section className="mt-10 px-5">
+          <div className="flex items-end justify-between gap-3">
             <div>
-              <h3 className="text-lg font-bold text-slate-950">
+              <h2 className="text-lg font-bold text-slate-950">
                 곧 시작하는 공연
-              </h3>
+              </h2>
 
               <p className="mt-1 text-xs text-slate-400">
-                가까운 일정부터 확인해보세요
+                가장 가까운 공연 일정부터 확인해보세요
               </p>
             </div>
 
@@ -394,7 +587,7 @@ export default function HomePage() {
                         '/concerts',
                     )
                 }
-                className="flex items-center gap-0.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+                className="flex shrink-0 items-center gap-0.5 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
             >
               전체보기
 
@@ -406,18 +599,20 @@ export default function HomePage() {
 
           {upcomingPerformances.length ===
           0 ? (
-              <div className="mt-4 rounded-2xl bg-slate-50 p-6 text-center">
+              <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 p-7 text-center">
                 <CalendarDays
-                    size={26}
+                    size={27}
                     className="mx-auto text-slate-300"
                 />
 
-                <p className="mt-3 text-sm font-medium text-slate-600">
+                <p className="mt-3 text-sm font-semibold text-slate-600">
                   예정된 공연이 없습니다.
                 </p>
 
-                <p className="mt-1 text-xs text-slate-400">
-                  새로운 공연 일정이 등록되면 이곳에 표시됩니다.
+                <p className="mt-1 text-xs leading-5 text-slate-400">
+                  새로운 공연 일정이 등록되면
+                  <br/>
+                  이곳에서 가장 먼저 확인할 수 있습니다.
                 </p>
               </div>
           ) : (
@@ -437,89 +632,110 @@ export default function HomePage() {
                                     `/concerts/${concert.concertId}`,
                                 )
                             }
-                            className="group flex w-full gap-4 rounded-2xl border border-slate-200 bg-white p-3 text-left transition-all hover:border-indigo-200 hover:bg-indigo-50/30"
+                            className="group flex w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 text-left transition hover:border-indigo-200 hover:shadow-sm"
                         >
-                          {/* 포스터 */}
-                          <div className="h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                          {/*
+                           * Poster
+                           */}
+                          <div className="h-[118px] w-[86px] shrink-0 overflow-hidden rounded-xl bg-slate-100">
                             <ConcertPoster
                                 src={
                                   concert.posterUrl
                                 }
                                 alt={`${concert.title} 포스터`}
-                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                                className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
                             />
                           </div>
 
-                          {/* 공연 정보 */}
-                          <div className="min-w-0 flex-1 py-1">
-                            <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-600">
-                        {
-                          concert.category
-                        }
-                      </span>
+                          {/*
+                           * Information
+                           */}
+                          <div className="min-w-0 flex-1 py-0.5 pl-4">
+                            <div className="flex min-w-0 items-center gap-2">
+                              <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-600">
+                                {
+                                    CATEGORY_LABELS[
+                                        concert.category
+                                        ] ??
+                                    concert.category
+                                }
+                              </span>
 
-                              <span className="text-[11px] font-medium text-emerald-600">
-                        {
-                          getPerformanceStatusLabel(
-                              performance.status,
-                          )
-                        }
-                      </span>
+                              <span
+                                  className={[
+                                    'truncate text-[10px] font-bold',
+                                    getPerformanceStatusClass(
+                                        performance.status,
+                                    ),
+                                  ].join(
+                                      ' ',
+                                  )}
+                              >
+                                {
+                                  getPerformanceStatusLabel(
+                                      performance.status,
+                                  )
+                                }
+                              </span>
                             </div>
 
-                            <h4 className="mt-2 line-clamp-2 text-base font-semibold leading-6 text-slate-900">
+                            <h3 className="mt-2 line-clamp-2 text-[15px] font-bold leading-5 text-slate-900">
                               {
                                 concert.title
                               }
-                            </h4>
+                            </h3>
 
                             {concert.subtitle && (
-                                <p className="mt-1 truncate text-xs text-slate-400">
+                                <p className="mt-1 truncate text-[11px] text-slate-400">
                                   {
                                     concert.subtitle
                                   }
                                 </p>
                             )}
 
-                            <div className="mt-3 flex items-center gap-2 text-sm font-medium text-slate-600">
+                            <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-slate-600">
                               <CalendarDays
-                                  size={15}
+                                  size={14}
                                   className="shrink-0 text-slate-400"
                               />
 
                               <span>
-                        {formatDate(
-                            performance.startsAt,
-                        )}
-                      </span>
+                                {formatDate(
+                                    performance.startsAt,
+                                )}
+                              </span>
                             </div>
 
-                            <div className="mt-1 flex items-center gap-2 pl-[23px]">
-                      <span className="text-sm text-slate-500">
-                        {formatTime(
-                            performance.startsAt,
-                        )}
-                      </span>
+                            <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-500">
+                              <Clock3
+                                  size={14}
+                                  className="shrink-0 text-slate-400"
+                              />
 
-                              <span className="text-xs text-slate-300">
-                        ·
-                      </span>
+                              <span>
+                                {formatTime(
+                                    performance.startsAt,
+                                )}
+                              </span>
 
-                              <span className="text-xs text-slate-400">
-                        최대{' '}
+                              <span className="text-slate-300">
+                                ·
+                              </span>
+
+                              <span className="truncate">
+                                최대{' '}
                                 {
                                   performance.maxTicketsPerMember
                                 }
                                 매
-                      </span>
+                              </span>
                             </div>
                           </div>
 
-                          <div className="flex shrink-0 items-center">
+                          <div className="flex shrink-0 items-center pl-1">
                             <ChevronRight
-                                size={19}
-                                className="text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-indigo-400"
+                                size={18}
+                                className="text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-indigo-400"
                             />
                           </div>
                         </button>
@@ -532,68 +748,92 @@ export default function HomePage() {
   );
 }
 
+/*
+ * ============================================================
+ * Loading Skeleton
+ * ============================================================
+ */
+
 function HomeSkeleton() {
   return (
-      <div className="animate-pulse pb-8">
+      <div className="animate-pulse pb-10">
         <section className="px-5 pt-6">
-          <div className="h-4 w-36 rounded bg-slate-200" />
+          <div className="h-4 w-36 rounded bg-slate-200"/>
 
-          <div className="mt-3 h-7 w-48 rounded bg-slate-200" />
+          <div className="mt-3 h-7 w-52 rounded bg-slate-200"/>
 
-          <div className="mt-6 h-12 rounded-xl bg-slate-200" />
+          <div className="mt-2 h-7 w-40 rounded bg-slate-200"/>
+
+          <div className="mt-6 h-13 rounded-2xl bg-slate-200"/>
         </section>
 
-        {/* 인기 공연 */}
-        <section className="mt-9 px-5">
-          <div className="h-5 w-24 rounded bg-slate-200" />
+        <section className="mt-7 px-5">
+          <div className="aspect-[16/10] rounded-[24px] bg-slate-200"/>
+        </section>
+
+        <section className="mt-10 px-5">
+          <div className="h-5 w-32 rounded bg-slate-200"/>
+
+          <div className="mt-2 h-3 w-44 rounded bg-slate-100"/>
 
           <div className="mt-4 flex gap-4 overflow-hidden">
             {Array.from({
               length: 3,
             }).map(
-                (_, index) => (
+                (
+                    _,
+                    index,
+                ) => (
                     <div
-                        key={index}
-                        className="w-40 shrink-0"
+                        key={
+                          index
+                        }
+                        className="w-[158px] shrink-0"
                     >
-                      <div className="aspect-[3/4] rounded-xl bg-slate-200" />
+                      <div className="aspect-[3/4] rounded-xl bg-slate-200"/>
 
-                      <div className="mt-3 h-3 w-14 rounded bg-slate-200" />
+                      <div className="mt-3 h-3 w-14 rounded bg-slate-200"/>
 
-                      <div className="mt-2 h-4 rounded bg-slate-200" />
+                      <div className="mt-2 h-4 rounded bg-slate-200"/>
 
-                      <div className="mt-2 h-3 w-2/3 rounded bg-slate-200" />
+                      <div className="mt-2 h-3 w-2/3 rounded bg-slate-100"/>
                     </div>
                 ),
             )}
           </div>
         </section>
 
-        {/* 곧 시작하는 공연 */}
-        <section className="mt-9 px-5">
-          <div className="h-5 w-32 rounded bg-slate-200" />
+        <section className="mt-10 px-5">
+          <div className="h-5 w-32 rounded bg-slate-200"/>
+
+          <div className="mt-2 h-3 w-48 rounded bg-slate-100"/>
 
           <div className="mt-4 space-y-3">
             {Array.from({
               length: 3,
             }).map(
-                (_, index) => (
+                (
+                    _,
+                    index,
+                ) => (
                     <div
-                        key={index}
+                        key={
+                          index
+                        }
                         className="flex gap-4 rounded-2xl border border-slate-100 p-3"
                     >
-                      <div className="h-28 w-24 shrink-0 rounded-xl bg-slate-200" />
+                      <div className="h-[118px] w-[86px] shrink-0 rounded-xl bg-slate-200"/>
 
                       <div className="flex-1 py-2">
-                        <div className="h-3 w-16 rounded bg-slate-200" />
+                        <div className="h-3 w-16 rounded bg-slate-200"/>
 
-                        <div className="mt-3 h-4 w-full rounded bg-slate-200" />
+                        <div className="mt-3 h-4 w-full rounded bg-slate-200"/>
 
-                        <div className="mt-2 h-4 w-3/4 rounded bg-slate-200" />
+                        <div className="mt-2 h-4 w-3/4 rounded bg-slate-200"/>
 
-                        <div className="mt-4 h-3 w-28 rounded bg-slate-200" />
+                        <div className="mt-4 h-3 w-28 rounded bg-slate-100"/>
 
-                        <div className="mt-2 h-3 w-20 rounded bg-slate-200" />
+                        <div className="mt-2 h-3 w-20 rounded bg-slate-100"/>
                       </div>
                     </div>
                 ),
@@ -603,6 +843,12 @@ function HomeSkeleton() {
       </div>
   );
 }
+
+/*
+ * ============================================================
+ * Helpers
+ * ============================================================
+ */
 
 function getPerformanceStatusLabel(
     status: string,
@@ -625,5 +871,29 @@ function getPerformanceStatusLabel(
 
     default:
       return status;
+  }
+}
+
+function getPerformanceStatusClass(
+    status: string,
+): string {
+  switch (status) {
+    case 'OPEN':
+      return 'text-emerald-600';
+
+    case 'SCHEDULED':
+      return 'text-indigo-500';
+
+    case 'SOLD_OUT':
+      return 'text-red-500';
+
+    case 'COMPLETED':
+      return 'text-slate-400';
+
+    case 'CANCELLED':
+      return 'text-red-400';
+
+    default:
+      return 'text-slate-500';
   }
 }
