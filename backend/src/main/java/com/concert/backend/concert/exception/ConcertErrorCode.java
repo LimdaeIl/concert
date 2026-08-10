@@ -52,7 +52,11 @@ public enum ConcertErrorCode implements ErrorCode {
     CONCERT_NOT_EDITABLE(
             HttpStatus.CONFLICT,
             "현재 상태의 공연은 정보를 수정할 수 없습니다."
-    );
+    ), CONCERT_POSTER_KEY_REQUIRED(HttpStatus.BAD_REQUEST, "포스터 키는 필수입니다."), INVALID_CONCERT_POSTER_KEY(
+            HttpStatus.BAD_REQUEST,
+            "유효하지 않은 포스터 키입니다."
+    ), CONCERT_POSTER_NOT_FOUND(HttpStatus.NOT_FOUND, "포스터를 찾을 수 없습니다.");
+
 
     private final HttpStatus status;
     private final String message;

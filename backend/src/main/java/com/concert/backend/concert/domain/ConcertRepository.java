@@ -17,4 +17,6 @@ public interface ConcertRepository {
     List<Concert> findAllByStatus(
             ConcertStatus status
     );
+
+    boolean existsById(Long concertId);
 }

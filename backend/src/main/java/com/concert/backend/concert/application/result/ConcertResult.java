@@ -17,7 +17,10 @@ public record ConcertResult(
         ConcertStatus status
 ) {
 
-    public static ConcertResult from(Concert concert) {
+    public static ConcertResult from(
+            Concert concert,
+            String posterUrl
+    ) {
         return new ConcertResult(
                 concert.getId(),
                 concert.getTitle(),
@@ -26,7 +29,7 @@ public record ConcertResult(
                 concert.getCategory(),
                 concert.getRunningTime(),
                 concert.getAgeRating(),
-                concert.getPosterUrl(),
+                posterUrl,
                 concert.getStatus()
         );
     }

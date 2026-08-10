@@ -10,10 +10,14 @@ import jakarta.validation.constraints.Size;
 
 public record CreateConcertRequest(
 
-        @NotBlank(message = "공연 제목은 필수입니다.")
+        @NotBlank(
+                message =
+                        "공연 제목은 필수입니다."
+        )
         @Size(
                 max = 200,
-                message = "공연 제목은 최대 200자까지 입력 가능합니다."
+                message =
+                        "공연 제목은 최대 200자까지 입력 가능합니다."
         )
         String title,
 
@@ -22,23 +26,25 @@ public record CreateConcertRequest(
 
         String description,
 
-        @NotNull(message = "공연 카테고리는 필수입니다.")
+        @NotNull(
+                message =
+                        "공연 카테고리는 필수입니다."
+        )
         ConcertCategory category,
 
         @Min(
                 value = 1,
-                message = "공연 시간은 1분 이상이어야 합니다."
+                message =
+                        "공연 시간은 1분 이상이어야 합니다."
         )
         Integer runningTime,
 
-        @NotNull(message = "관람 등급은 필수입니다.")
-        AgeRating ageRating,
-
-        @Size(
-                max = 500,
-                message = "포스터 URL은 최대 500자까지 입력 가능합니다."
+        @NotNull(
+                message =
+                        "관람 등급은 필수입니다."
         )
-        String posterUrl
+        AgeRating ageRating
+
 ) {
 
     public CreateConcertCommand toCommand() {
@@ -48,8 +54,7 @@ public record CreateConcertRequest(
                 description,
                 category,
                 runningTime,
-                ageRating,
-                posterUrl
+                ageRating
         );
     }
 }

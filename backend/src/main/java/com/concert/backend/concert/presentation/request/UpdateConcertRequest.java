@@ -26,10 +26,8 @@ public record UpdateConcertRequest(
         Integer runningTime,
 
         @NotNull
-        AgeRating ageRating,
+        AgeRating ageRating
 
-        @Size(max = 500)
-        String posterUrl
 ) {
 
     public UpdateConcertCommand toCommand() {
@@ -39,8 +37,7 @@ public record UpdateConcertRequest(
                 description,
                 category,
                 runningTime,
-                ageRating,
-                posterUrl
+                ageRating
         );
     }
 }

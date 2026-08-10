@@ -18,7 +18,8 @@ public record AdminConcertResult(
 ) {
 
     public static AdminConcertResult from(
-            AdminConcertQueryRow row
+            AdminConcertQueryRow row,
+            String posterUrl
     ) {
         return new AdminConcertResult(
                 row.concertId(),
@@ -28,7 +29,7 @@ public record AdminConcertResult(
                 row.category(),
                 row.runningTime(),
                 row.ageRating(),
-                row.posterUrl(),
+                posterUrl,
                 row.status()
         );
     }

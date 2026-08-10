@@ -1,5 +1,6 @@
 package com.concert.backend.concert.application;
 
+import com.concert.backend.concert.application.assembler.ConcertResultAssembler;
 import com.concert.backend.concert.application.result.ConcertResult;
 import com.concert.backend.concert.domain.ConcertRepository;
 import com.concert.backend.concert.domain.ConcertStatus;
@@ -12,7 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class GetConcertsService {
 
-    private final ConcertRepository concertRepository;
+    private final ConcertRepository
+            concertRepository;
+
+    private final ConcertResultAssembler
+            concertResultAssembler;
 
     @Transactional(readOnly = true)
     public List<ConcertResult> getConcerts() {
@@ -21,7 +26,9 @@ public class GetConcertsService {
                         ConcertStatus.PUBLISHED
                 )
                 .stream()
-                .map(ConcertResult::from)
+                .map(
+                        concertResultAssembler::toResult
+                )
                 .toList();
     }
 }

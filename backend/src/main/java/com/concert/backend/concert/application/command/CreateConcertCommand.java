@@ -9,7 +9,6 @@ public record CreateConcertCommand(
         String description,
         ConcertCategory category,
         Integer runningTime,
-        AgeRating ageRating,
-        String posterUrl
+        AgeRating ageRating
 ) {
 }

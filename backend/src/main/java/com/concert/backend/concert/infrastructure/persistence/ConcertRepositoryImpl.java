@@ -47,4 +47,9 @@ public class ConcertRepositoryImpl
                 status
         );
     }
+
+    @Override
+    public boolean existsById(Long concertId) {
+        return jpaConcertRepository.existsById(concertId);
+    }
 }
