@@ -9,7 +9,6 @@ public record UpdateConcertCommand(
         String description,
         ConcertCategory category,
         Integer runningTime,
-        AgeRating ageRating,
-        String posterUrl
+        AgeRating ageRating
 ) {
 }

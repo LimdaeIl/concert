@@ -73,17 +73,46 @@ public class Concert extends BaseAuditEntity {
             String description,
             ConcertCategory category,
             Integer runningTime,
-            AgeRating ageRating,
-            String posterUrl
+            AgeRating ageRating
     ) {
-        this.title = requireTitle(title);
-        this.subtitle = normalizeText(subtitle);
-        this.description = normalizeText(description);
-        this.category = requireCategory(category);
-        this.runningTime = validateRunningTime(runningTime);
-        this.ageRating = requireAgeRating(ageRating);
-        this.posterUrl = normalizeText(posterUrl);
-        this.status = ConcertStatus.DRAFT;
+        this.title =
+                requireTitle(
+                        title
+                );
+
+        this.subtitle =
+                normalizeText(
+                        subtitle
+                );
+
+        this.description =
+                normalizeText(
+                        description
+                );
+
+        this.category =
+                requireCategory(
+                        category
+                );
+
+        this.runningTime =
+                validateRunningTime(
+                        runningTime
+                );
+
+        this.ageRating =
+                requireAgeRating(
+                        ageRating
+                );
+
+        /*
+         * 포스터는 공연 생성 이후
+         * 별도 S3 업로드 API를 통해 설정한다.
+         */
+        this.posterUrl = null;
+
+        this.status =
+                ConcertStatus.DRAFT;
     }
 
     public static Concert create(
@@ -92,8 +121,7 @@ public class Concert extends BaseAuditEntity {
             String description,
             ConcertCategory category,
             Integer runningTime,
-            AgeRating ageRating,
-            String posterUrl
+            AgeRating ageRating
     ) {
         return new Concert(
                 title,
@@ -101,8 +129,7 @@ public class Concert extends BaseAuditEntity {
                 description,
                 category,
                 runningTime,
-                ageRating,
-                posterUrl
+                ageRating
         );
     }
 
@@ -112,18 +139,61 @@ public class Concert extends BaseAuditEntity {
             String description,
             ConcertCategory category,
             Integer runningTime,
-            AgeRating ageRating,
-            String posterUrl
+            AgeRating ageRating
     ) {
         validateEditable();
 
-        this.title = requireTitle(title);
-        this.subtitle = normalizeText(subtitle);
-        this.description = normalizeText(description);
-        this.category = requireCategory(category);
-        this.runningTime = validateRunningTime(runningTime);
-        this.ageRating = requireAgeRating(ageRating);
-        this.posterUrl = normalizeText(posterUrl);
+        this.title =
+                requireTitle(
+                        title
+                );
+
+        this.subtitle =
+                normalizeText(
+                        subtitle
+                );
+
+        this.description =
+                normalizeText(
+                        description
+                );
+
+        this.category =
+                requireCategory(
+                        category
+                );
+
+        this.runningTime =
+                validateRunningTime(
+                        runningTime
+                );
+
+        this.ageRating =
+                requireAgeRating(
+                        ageRating
+                );
+    }
+    public void updatePoster(
+            String posterObjectKey
+    ) {
+        validateEditable();
+
+        if (posterObjectKey == null
+                || posterObjectKey.isBlank()) {
+
+            throw new ConcertException(
+                    ConcertErrorCode.CONCERT_POSTER_KEY_REQUIRED
+            );
+        }
+
+        this.posterUrl =
+                posterObjectKey.trim();
+    }
+
+    public void removePoster() {
+        validateEditable();
+
+        this.posterUrl = null;
     }
 
     public void changeStatus(ConcertStatus newStatus) {

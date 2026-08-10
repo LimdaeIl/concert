@@ -1,5 +1,6 @@
 package com.concert.backend.concert.application;
 
+import com.concert.backend.common.storage.s3.S3PresignedUploadService;
 import com.concert.backend.concert.application.result.AdminConcertPageResult;
 import com.concert.backend.concert.application.result.AdminConcertResult;
 import com.concert.backend.concert.domain.ConcertCategory;
@@ -16,7 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class GetAdminConcertsService {
 
-    private final AdminConcertQueryMapper adminConcertQueryMapper;
+    private final AdminConcertQueryMapper
+            adminConcertQueryMapper;
+
+    private final S3PresignedUploadService
+            s3PresignedUploadService;
 
     @Transactional(readOnly = true)
     public AdminConcertPageResult getConcerts(
@@ -27,7 +32,9 @@ public class GetAdminConcertsService {
             int size
     ) {
         String normalizedKeyword =
-                normalizeKeyword(keyword);
+                normalizeKeyword(
+                        keyword
+                );
 
         long offset =
                 (long) page * size;
@@ -42,24 +49,30 @@ public class GetAdminConcertsService {
                 );
 
         long totalElements =
-                adminConcertQueryMapper.count(condition);
+                adminConcertQueryMapper.count(
+                        condition
+                );
 
         List<AdminConcertResult> concerts;
 
         if (totalElements == 0
                 || offset >= totalElements) {
 
-            concerts = List.of();
+            concerts =
+                    List.of();
 
         } else {
             List<AdminConcertQueryRow> rows =
-                    adminConcertQueryMapper.findAll(
-                            condition
-                    );
+                    adminConcertQueryMapper
+                            .findAll(
+                                    condition
+                            );
 
             concerts =
                     rows.stream()
-                            .map(AdminConcertResult::from)
+                            .map(
+                                    this::toResult
+                            )
                             .toList();
         }
 
@@ -68,6 +81,21 @@ public class GetAdminConcertsService {
                 page,
                 size,
                 totalElements
+        );
+    }
+
+    private AdminConcertResult toResult(
+            AdminConcertQueryRow row
+    ) {
+        String posterUrl =
+                s3PresignedUploadService
+                        .createReadUrl(
+                                row.posterUrl()
+                        );
+
+        return AdminConcertResult.from(
+                row,
+                posterUrl
         );
     }
 

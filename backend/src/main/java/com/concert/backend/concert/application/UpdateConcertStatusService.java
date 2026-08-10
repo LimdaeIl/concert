@@ -1,5 +1,6 @@
 package com.concert.backend.concert.application;
 
+import com.concert.backend.concert.application.assembler.ConcertResultAssembler;
 import com.concert.backend.concert.application.command.UpdateConcertStatusCommand;
 import com.concert.backend.concert.application.result.ConcertResult;
 import com.concert.backend.concert.domain.Concert;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UpdateConcertStatusService {
 
     private final ConcertRepository concertRepository;
+    private final ConcertResultAssembler concertResultAssembler;
 
     @Transactional
     public ConcertResult updateStatus(
@@ -31,6 +33,9 @@ public class UpdateConcertStatusService {
 
         concert.changeStatus(command.status());
 
-        return ConcertResult.from(concert);
+        return concertResultAssembler
+                .toResult(
+                        concert
+                );
     }
 }

@@ -3,9 +3,12 @@ package com.concert.backend.concert.presentation;
 import com.concert.backend.common.response.ErrorResponse;
 import com.concert.backend.concert.domain.ConcertCategory;
 import com.concert.backend.concert.domain.ConcertStatus;
+import com.concert.backend.concert.presentation.request.CreateConcertPosterUploadUrlRequest;
 import com.concert.backend.concert.presentation.request.CreateConcertRequest;
+import com.concert.backend.concert.presentation.request.UpdateConcertPosterRequest;
 import com.concert.backend.concert.presentation.request.UpdateConcertRequest;
 import com.concert.backend.concert.presentation.request.UpdateConcertStatusRequest;
+import com.concert.backend.concert.presentation.response.ConcertPosterUploadUrlResponse;
 import com.concert.backend.concert.presentation.response.ConcertResponse;
 import com.concert.backend.concert.presentation.response.GetAdminConcertsResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -209,4 +212,93 @@ public interface AdminConcertControllerDocs {
             @Max(100)
             int size
     );
+
+    @Operation(
+            summary = "공연 포스터 업로드 URL 발급",
+            description = """
+                공연 포스터 이미지를 S3에 직접 업로드할 수 있는
+                Presigned PUT URL을 발급합니다.
+
+                지원 이미지 형식:
+                JPEG, PNG, WEBP
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Presigned Upload URL 발급 성공"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "공연을 찾을 수 없음"
+    )
+    ResponseEntity<ConcertPosterUploadUrlResponse>
+    createPosterUploadUrl(
+            @PathVariable
+            Long concertId,
+
+            @Valid
+            @RequestBody
+            CreateConcertPosterUploadUrlRequest request
+    );
+
+
+    @Operation(
+            summary = "공연 포스터 적용",
+            description = """
+                S3 업로드가 완료된 Object Key를
+                공연 포스터로 적용합니다.
+
+                기존 포스터가 존재하면
+                DB 트랜잭션 커밋 이후 기존 S3 Object를 삭제합니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "공연 포스터 적용 성공"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "공연 또는 업로드된 이미지가 존재하지 않음"
+    )
+    ResponseEntity<Void> updatePoster(
+            @PathVariable
+            Long concertId,
+
+            @Valid
+            @RequestBody
+            UpdateConcertPosterRequest request
+    );
+
+
+    @Operation(
+            summary = "공연 포스터 삭제",
+            description = """
+                공연에 연결된 포스터를 제거합니다.
+
+                DB 트랜잭션 커밋 이후
+                실제 S3 Object도 삭제합니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "공연 포스터 삭제 성공"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "공연을 찾을 수 없음"
+    )
+    ResponseEntity<Void> deletePoster(
+            @PathVariable
+            Long concertId
+    );
+
 }
