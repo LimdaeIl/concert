@@ -2,7 +2,6 @@ package com.concert.backend.performance.infrastructure.persistence;
 
 import com.concert.backend.performance.domain.PerformanceSeat;
 import com.concert.backend.performance.domain.PerformanceSeatRepository;
-import com.concert.backend.performance.domain.PerformanceSeatStatus;
 import com.concert.backend.performance.infrastructure.jpa.JpaPerformanceSeatRepository;
 import java.util.Collection;
 import java.util.List;
@@ -41,19 +40,6 @@ public class PerformanceSeatRepositoryImpl implements PerformanceSeatRepository 
         return jpaPerformanceSeatRepository
                 .findAllByPerformance_IdOrderBySeat_IdAsc(
                         performanceId
-                );
-    }
-
-    @Override
-    public List<PerformanceSeat>
-    findAllByPerformanceIdAndStatus(
-            Long performanceId,
-            PerformanceSeatStatus status
-    ) {
-        return jpaPerformanceSeatRepository
-                .findAllByPerformance_IdAndStatusOrderBySeat_IdAsc(
-                        performanceId,
-                        status
                 );
     }
 

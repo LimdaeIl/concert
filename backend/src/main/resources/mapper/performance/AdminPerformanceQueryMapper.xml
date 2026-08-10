@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.concert.backend.performance.query.AdminPerformanceQueryMapper">
+
+  <sql id="searchConditions">
+
+    WHERE p.concert_id = #{condition.concertId}
+
+    <if test="condition.status != null">
+      AND p.status = #{condition.status}
+    </if>
+
+    <if test="condition.from != null">
+      AND p.starts_at >= #{condition.from}
+    </if>
+
+    <if test="condition.to != null">
+      AND p.starts_at &lt;= #{condition.to}
+    </if>
+
+  </sql>
+
+
+  <select
+    id="findAll"
+    resultType="com.concert.backend.performance.query.AdminPerformanceQueryRow"
+  >
+
+    SELECT
+    p.id AS performanceId,
+    p.concert_id AS concertId,
+    p.venue_hall_id AS venueHallId,
+
+    v.name AS venueName,
+    vh.name AS venueHallName,
+
+    p.starts_at AS startsAt,
+    p.ends_at AS endsAt,
+
+    p.reservation_opens_at AS reservationOpensAt,
+    p.reservation_closes_at AS reservationClosesAt,
+
+    p.max_tickets_per_member AS maxTicketsPerMember,
+
+    p.status AS status
+
+    FROM v1_performances p
+
+    INNER JOIN v1_venue_halls vh
+    ON vh.id = p.venue_hall_id
+
+    INNER JOIN v1_venues v
+    ON v.id = vh.venue_id
+
+    <include refid="searchConditions"/>
+
+    ORDER BY
+    p.starts_at DESC,
+    p.id DESC
+
+    LIMIT #{condition.size}
+    OFFSET #{condition.offset}
+
+  </select>
+
+
+  <select
+    id="count"
+    resultType="long"
+  >
+
+    SELECT COUNT(*)
+
+    FROM v1_performances p
+
+    <include refid="searchConditions"/>
+
+  </select>
+
+</mapper>

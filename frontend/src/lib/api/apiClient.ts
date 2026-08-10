@@ -185,18 +185,18 @@ async function getRefreshedAccessToken(): Promise<string> {
     refreshPromise = null;
   }
 }
-
-async function reissueAccessToken(): Promise<string> {
-  /*
-   * 중요:
-   *
-   * 여기서는 apiClient가 아니라
-   * publicApiClient를 사용한다.
-   *
-   * apiClient를 사용하면 reissue 자체가
-   * 401일 때 interceptor로 다시 들어가
-   * 무한 재발급이 발생할 수 있다.
-   */
+/*
+ * 중요:
+ *
+ * 여기서는 apiClient가 아니라
+ * publicApiClient를 사용한다.
+ *
+ * apiClient를 사용하면 reissue 자체가
+ * 401일 때 interceptor로 다시 들어가
+ * 무한 재발급이 발생할 수 있다.
+ */
+async function reissueAccessToken():
+    Promise<string> {
   const { data } =
       await publicApiClient.post<ReissueResponse>(
           '/api/v1/auth/reissue',

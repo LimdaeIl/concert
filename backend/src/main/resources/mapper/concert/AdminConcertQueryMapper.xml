@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.concert.backend.concert.query.AdminConcertQueryMapper">
+
+  <sql id="searchConditions">
+
+    WHERE 1 = 1
+
+    <if test="condition.keyword != null and condition.keyword != ''">
+      AND (
+      c.title LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+      OR c.subtitle LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+      )
+    </if>
+
+    <if test="condition.category != null">
+      AND c.category = #{condition.category}
+    </if>
+
+    <if test="condition.status != null">
+      AND c.status = #{condition.status}
+    </if>
+
+  </sql>
+
+
+  <select
+    id="findAll"
+    resultType="com.concert.backend.concert.query.AdminConcertQueryRow"
+  >
+
+    SELECT
+    c.id AS concertId,
+    c.title AS title,
+    c.subtitle AS subtitle,
+    c.description AS description,
+    c.category AS category,
+    c.running_time AS runningTime,
+    c.age_rating AS ageRating,
+    c.poster_url AS posterUrl,
+    c.status AS status
+
+    FROM v1_concerts c
+
+    <include refid="searchConditions"/>
+
+    ORDER BY
+    c.id DESC
+
+    LIMIT #{condition.size}
+    OFFSET #{condition.offset}
+
+  </select>
+
+
+  <select
+    id="count"
+    resultType="long"
+  >
+
+    SELECT COUNT(*)
+
+    FROM v1_concerts c
+
+    <include refid="searchConditions"/>
+
+  </select>
+
+</mapper>

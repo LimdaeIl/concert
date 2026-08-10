@@ -1,9 +1,11 @@
 package com.concert.backend.venuehall.presentation;
 
 import com.concert.backend.common.response.ErrorResponse;
+import com.concert.backend.venuehall.domain.VenueHallStatus;
 import com.concert.backend.venuehall.presentation.request.CreateVenueHallRequest;
 import com.concert.backend.venuehall.presentation.request.UpdateVenueHallRequest;
 import com.concert.backend.venuehall.presentation.request.UpdateVenueHallStatusRequest;
+import com.concert.backend.venuehall.presentation.response.GetAdminVenueHallsResponse;
 import com.concert.backend.venuehall.presentation.response.VenueHallResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +18,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(
         name = "Admin Venue Hall",
@@ -221,5 +224,86 @@ public interface AdminVenueHallControllerDocs {
             @Valid
             @RequestBody
             UpdateVenueHallStatusRequest request
+    );
+    @Operation(
+            summary = "관리자 공연홀 목록 조회",
+            description = """
+                관리자가 특정 공연장에 속한 공연홀을
+                페이지 단위로 조회합니다.
+
+                공연홀명 검색 및 상태 필터링을 지원합니다.
+                ACTIVE, INACTIVE, MAINTENANCE 상태를 모두 조회할 수 있습니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "공연홀 목록 조회 성공",
+            content = @Content(
+                    schema = @Schema(
+                            implementation =
+                                    GetAdminVenueHallsResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "403",
+            description = "관리자 권한 없음",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation =
+                                    ErrorResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "공연장을 찾을 수 없음",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation =
+                                    ErrorResponse.class
+                    )
+            )
+    )
+    ResponseEntity<GetAdminVenueHallsResponse>
+    getVenueHalls(
+            @Parameter(
+                    description = "공연장 ID",
+                    example = "1"
+            )
+            @PathVariable
+            Long venueId,
+
+            @Parameter(
+                    description = "공연홀 이름 검색어",
+                    example = "올림픽"
+            )
+            @RequestParam(required = false)
+            String keyword,
+
+            @Parameter(
+                    description = "공연홀 상태"
+            )
+            @RequestParam(required = false)
+            VenueHallStatus status,
+
+            @Parameter(
+                    description = "페이지 번호 (0부터 시작)",
+                    example = "0"
+            )
+            @RequestParam(defaultValue = "0")
+            int page,
+
+            @Parameter(
+                    description = "페이지 크기",
+                    example = "20"
+            )
+            @RequestParam(defaultValue = "20")
+            int size
     );
 }

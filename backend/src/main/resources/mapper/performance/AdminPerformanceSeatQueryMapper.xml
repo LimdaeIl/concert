@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.concert.backend.performance.query.AdminPerformanceSeatQueryMapper">
+
+  <sql id="searchConditions">
+
+    WHERE ps.performance_id = #{condition.performanceId}
+
+    <if test="condition.keyword != null and condition.keyword != ''">
+      AND (
+      s.section_name LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+      OR s.row_name LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+      OR s.seat_number LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+      )
+    </if>
+
+    <if test="condition.floor != null">
+      AND s.floor = #{condition.floor}
+    </if>
+
+    <if test="condition.grade != null">
+      AND ps.grade = #{condition.grade}
+    </if>
+
+    <if test="condition.seatType != null">
+      AND s.seat_type = #{condition.seatType}
+    </if>
+
+    <if test="condition.status != null">
+      AND ps.status = #{condition.status}
+    </if>
+
+  </sql>
+
+
+  <select
+    id="findAll"
+    resultType="com.concert.backend.performance.query.AdminPerformanceSeatQueryRow"
+  >
+
+    SELECT
+    ps.id AS performanceSeatId,
+    ps.performance_id AS performanceId,
+    ps.seat_id AS seatId,
+
+    s.section_name AS sectionName,
+    s.floor AS floor,
+    s.row_name AS rowName,
+    s.seat_number AS seatNumber,
+    s.seat_type AS seatType,
+
+    ps.grade AS grade,
+    ps.price AS price,
+    ps.status AS status,
+
+    ps.held_by AS heldBy,
+    ps.held_until AS heldUntil
+
+    FROM v1_performance_seats ps
+
+    INNER JOIN v1_seats s
+    ON s.id = ps.seat_id
+
+    <include refid="searchConditions"/>
+
+    ORDER BY
+    s.floor ASC,
+    s.section_name ASC,
+    s.row_name ASC,
+    s.seat_number ASC,
+    ps.id ASC
+
+    LIMIT #{condition.size}
+    OFFSET #{condition.offset}
+
+  </select>
+
+
+  <select
+    id="count"
+    resultType="long"
+  >
+
+    SELECT COUNT(*)
+
+    FROM v1_performance_seats ps
+
+    INNER JOIN v1_seats s
+    ON s.id = ps.seat_id
+
+    <include refid="searchConditions"/>
+
+  </select>
+
+</mapper>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.concert.backend.venuehall.query.AdminVenueHallQueryMapper">
+
+  <sql id="searchConditions">
+
+    WHERE vh.venue_id = #{condition.venueId}
+
+    <if test="condition.keyword != null and condition.keyword != ''">
+      AND vh.name LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+    </if>
+
+    <if test="condition.status != null">
+      AND vh.status = #{condition.status}
+    </if>
+
+  </sql>
+
+
+  <select
+    id="findAll"
+    resultType="com.concert.backend.venuehall.query.AdminVenueHallQueryRow"
+  >
+
+    SELECT
+    vh.id AS venueHallId,
+    vh.venue_id AS venueId,
+    vh.name AS name,
+    vh.floor AS floor,
+    vh.capacity AS capacity,
+    vh.status AS status
+
+    FROM v1_venue_halls vh
+
+    <include refid="searchConditions"/>
+
+    ORDER BY
+    vh.id DESC
+
+    LIMIT #{condition.size}
+    OFFSET #{condition.offset}
+
+  </select>
+
+
+  <select
+    id="count"
+    resultType="long"
+  >
+
+    SELECT COUNT(*)
+
+    FROM v1_venue_halls vh
+
+    <include refid="searchConditions"/>
+
+  </select>
+
+</mapper>

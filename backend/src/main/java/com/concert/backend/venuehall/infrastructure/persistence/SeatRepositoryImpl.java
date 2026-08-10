@@ -100,7 +100,7 @@ public class SeatRepositoryImpl implements SeatRepository {
 
     @Override
     public List<Seat> findAllById(List<Long> seatIds) {
-        return List.of();
+        return jpaSeatRepository.findAllById(seatIds);
     }
 
 }
