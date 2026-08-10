@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import {createBrowserRouter} from 'react-router-dom';
 
 import HomePage from '@/app/HomePage';
 import NotFoundPage from '@/app/NotFoundPage';
@@ -7,8 +7,13 @@ import RouteErrorPage from '@/app/RouteErrorPage';
 import AppLayout from '@/components/layout/AppLayout';
 import PlainLayout from '@/components/layout/PlainLayout';
 
-import { LoginPage } from '@/features/auth/pages/LoginPage';
-import { SignUpPage } from '@/features/auth/pages/SignUpPage';
+import AdminLayout from '@/features/admin/layouts/AdminLayout';
+import AdminDashboardPage from '@/features/admin/pages/AdminDashboardPage';
+import AdminRouteGuard from '@/features/admin/routes/AdminRouteGuard';
+import AdminVenuePage from '@/features/admin/venue/pages/AdminVenuePage';
+
+import {LoginPage} from '@/features/auth/pages/LoginPage';
+import {SignUpPage} from '@/features/auth/pages/SignUpPage';
 
 import ConcertDetailPage from '@/features/concert/pages/ConcertDetailPage';
 import ConcertListPage from '@/features/concert/pages/ConcertListPage';
@@ -32,36 +37,55 @@ import ReservationListPage from '@/features/reservation/pages/ReservationListPag
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import PublicOnlyRoute from '@/routes/PublicOnlyRoute';
 
+import AdminVenueHallPage from '@/features/admin/venuehall/pages/AdminVenueHallPage';
+import AdminSeatPage from '@/features/admin/seat/pages/AdminSeatPage';
+
+import AdminConcertPage from '@/features/admin/concert/pages/AdminConcertPage';
+
+import AdminPerformancePage from '@/features/admin/performance/pages/AdminPerformancePage';
+
+import AdminPerformanceSeatPage from '@/features/admin/performanceSeat/pages/AdminPerformanceSeatPage';
+
 export const router = createBrowserRouter([
   /*
-   * 공통 Header + Bottom Navigation을 사용하는 화면
+   * ============================================================
+   * 일반 사용자 영역
+   * 공통 Header + Bottom Navigation 사용
+   * ============================================================
    */
   {
-    element: <AppLayout />,
-    errorElement: <RouteErrorPage />,
+    element: <AppLayout/>,
+    errorElement: <RouteErrorPage/>,
+
     children: [
+      /*
+       * 공개 화면
+       */
       {
         path: '/',
-        element: <HomePage />,
+        element: <HomePage/>,
       },
+
       {
         path: '/concerts',
-        element: <ConcertListPage />,
+        element: <ConcertListPage/>,
       },
 
       /*
-       * 로그인 후 메인 네비게이션에서 접근하는 화면
+       * 로그인 사용자만 접근
        */
       {
-        element: <ProtectedRoute />,
+        element: <ProtectedRoute/>,
+
         children: [
           {
             path: '/reservations',
-            element: <ReservationListPage />,
+            element: <ReservationListPage/>,
           },
+
           {
             path: '/me',
-            element: <MyPage />,
+            element: <MyPage/>,
           },
         ],
       },
@@ -69,38 +93,44 @@ export const router = createBrowserRouter([
   },
 
   /*
-   * 공통 Header / Bottom Navigation이 없는
-   * 상세 화면, 인증 화면, 결제 화면
+   * ============================================================
+   * 상세 / 인증 / 결제 영역
+   * Header / Bottom Navigation 없음
+   * ============================================================
    */
   {
-    element: <PlainLayout />,
-    errorElement: <RouteErrorPage />,
+    element: <PlainLayout/>,
+    errorElement: <RouteErrorPage/>,
+
     children: [
       /*
-       * 로그인 없이 조회 가능한 화면
+       * 로그인 없이 접근 가능
        */
       {
         path: '/concerts/:concertId',
-        element: <ConcertDetailPage />,
+        element: <ConcertDetailPage/>,
       },
+
       {
         path: '/performances/:performanceId/seats',
-        element: <SeatSelectionPage />,
+        element: <SeatSelectionPage/>,
       },
 
       /*
        * 비로그인 사용자만 접근
        */
       {
-        element: <PublicOnlyRoute />,
+        element: <PublicOnlyRoute/>,
+
         children: [
           {
             path: '/login',
-            element: <LoginPage />,
+            element: <LoginPage/>,
           },
+
           {
             path: '/sign-up',
-            element: <SignUpPage />,
+            element: <SignUpPage/>,
           },
         ],
       },
@@ -109,55 +139,152 @@ export const router = createBrowserRouter([
        * 로그인 사용자만 접근
        */
       {
-        element: <ProtectedRoute />,
+        element: <ProtectedRoute/>,
+
         children: [
           {
             path: '/reservations/:reservationId',
-            element: <ReservationDetailPage />,
+            element: <ReservationDetailPage/>,
           },
+
           {
             path: '/reservations/:reservationId/payment',
-            element: <PaymentPage />,
+            element: <PaymentPage/>,
           },
 
           {
             path: '/payments/:paymentId/success',
-            element: <PaymentSuccessPage />,
+            element: <PaymentSuccessPage/>,
           },
+
           {
             path: '/payments/:paymentId/fail',
-            element: <PaymentFailPage />,
+            element: <PaymentFailPage/>,
           },
 
           {
             path: '/me/profile',
-            element: <ProfileEditPage />,
+            element: <ProfileEditPage/>,
           },
+
           {
             path: '/me/settings',
-            element: <AccountSettingsPage />,
+            element: <AccountSettingsPage/>,
           },
+
           {
             path: '/me/settings/email',
-            element: <ChangeEmailPage />,
+            element: <ChangeEmailPage/>,
           },
+
           {
             path: '/me/settings/phone',
-            element: <ChangePhonePage />,
+            element: <ChangePhonePage/>,
           },
+
           {
             path: '/me/settings/delete',
-            element: <DeleteAccountPage />,
+            element: <DeleteAccountPage/>,
           },
         ],
       },
 
       /*
-       * 반드시 마지막 fallback
+       * 일반 사용자 영역 fallback
        */
       {
         path: '*',
-        element: <NotFoundPage />,
+        element: <NotFoundPage/>,
+      },
+    ],
+  },
+
+  /*
+   * ============================================================
+   * 관리자 영역
+   *
+   * AppLayout / PlainLayout과 분리
+   *
+   * AdminRouteGuard
+   *      ↓
+   * AdminLayout
+   *      ↓
+   * 각 관리자 페이지
+   * ============================================================
+   */
+  {
+    element: <AdminRouteGuard/>,
+    errorElement: <RouteErrorPage/>,
+
+    children: [
+      {
+        path: '/admin',
+        element: <AdminLayout/>,
+
+        children: [
+          /*
+           * /admin
+           */
+          {
+            index: true,
+            element: <AdminDashboardPage/>,
+          },
+
+          /*
+           * /admin/venues
+           */
+          {
+            path: 'venues',
+            element: <AdminVenuePage/>,
+          },
+          {
+            path: 'venues/:venueId/halls',
+            element: <AdminVenueHallPage/>,
+          },
+          {
+            path: 'venues',
+            element: <AdminVenuePage/>,
+          },
+
+          {
+            path: 'venues/:venueId/halls',
+            element: <AdminVenueHallPage/>,
+          },
+
+          {
+            path: 'halls/:venueHallId/seats',
+            element: <AdminSeatPage/>,
+          },
+          {
+            path: 'concerts',
+            element: <AdminConcertPage/>,
+          },
+
+          {
+            path: 'concerts/:concertId/performances',
+            element: <AdminPerformancePage/>,
+          },
+
+          {
+            path: 'performances/:performanceId/seats',
+            element: <AdminPerformanceSeatPage/>,
+          },
+
+          /*
+           * 이후 추가 예정
+
+           *
+           * {
+           *   path: 'payments',
+           *   element: <AdminPaymentPage />,
+           * },
+           *
+           * {
+           *   path: 'members',
+           *   element: <AdminMemberPage />,
+           * },
+           */
+        ],
       },
     ],
   },

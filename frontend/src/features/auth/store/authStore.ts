@@ -5,10 +5,11 @@ import {
   markAuthSession,
 } from '@/features/auth/lib/authSession';
 
-interface AuthMember {
+export interface AuthMember {
   id: number;
   name: string;
   email: string;
+  role: 'MEMBER' | 'ADMIN';
 }
 
 interface AuthState {

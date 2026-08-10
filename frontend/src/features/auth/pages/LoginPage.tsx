@@ -102,6 +102,7 @@ export function LoginPage() {
         id: member.id,
         name: member.name,
         email: member.email,
+        role: member.role,
       });
 
       const state =

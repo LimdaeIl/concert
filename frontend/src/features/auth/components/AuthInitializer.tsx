@@ -77,12 +77,10 @@ export function AuthInitializer({
         }
 
         setMember({
-          id:
-          member.id,
-          name:
-          member.name,
-          email:
-          member.email,
+          id: member.id,
+          name: member.name,
+          email: member.email,
+          role: member.role,
         });
       } catch {
         if (active) {
