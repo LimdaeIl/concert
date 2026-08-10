@@ -3,7 +3,10 @@ package com.concert.backend.member.presentation;
 import com.concert.backend.auth.infrastructure.jwt.RefreshTokenCookieProvider;
 import com.concert.backend.auth.infrastructure.security.LoginMember;
 import com.concert.backend.auth.presentation.response.SignInResponse;
+import com.concert.backend.common.storage.result.PresignedUploadResult;
+import com.concert.backend.member.application.CreateProfileImageUploadUrlService;
 import com.concert.backend.member.application.DeleteMeService;
+import com.concert.backend.member.application.DeleteProfileImageService;
 import com.concert.backend.member.application.GetMeService;
 import com.concert.backend.member.application.SignUpService;
 import com.concert.backend.member.application.SocialSignUpService;
@@ -11,22 +14,27 @@ import com.concert.backend.member.application.UpdateEmailService;
 import com.concert.backend.member.application.UpdateMeService;
 import com.concert.backend.member.application.UpdatePasswordService;
 import com.concert.backend.member.application.UpdatePhoneService;
+import com.concert.backend.member.application.UpdateProfileImageService;
 import com.concert.backend.member.application.result.GetMeResult;
 import com.concert.backend.member.application.result.SignUpResult;
 import com.concert.backend.member.application.result.SocialSignUpResult;
 import com.concert.backend.member.application.result.UpdatePhoneRequest;
+import com.concert.backend.member.presentation.request.CreateProfileImageUploadUrlRequest;
 import com.concert.backend.member.presentation.request.SignUpRequest;
 import com.concert.backend.member.presentation.request.SocialSignUpRequest;
 import com.concert.backend.member.presentation.request.UpdateEmailRequest;
 import com.concert.backend.member.presentation.request.UpdateMeRequest;
 import com.concert.backend.member.presentation.request.UpdatePasswordRequest;
+import com.concert.backend.member.presentation.request.UpdateProfileImageRequest;
 import com.concert.backend.member.presentation.response.GetMeResponse;
+import com.concert.backend.member.presentation.response.ProfileImageUploadUrlResponse;
 import com.concert.backend.member.presentation.response.SignUpResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,6 +59,9 @@ public class MemberController implements MemberControllerDocs {
     private final UpdatePasswordService updatePasswordService;
     private final UpdateEmailService updateEmailService;
     private final UpdatePhoneService updatePhoneService;
+    private final CreateProfileImageUploadUrlService createProfileImageUploadUrlService;
+    private final UpdateProfileImageService updateProfileImageService;
+    private final DeleteProfileImageService deleteProfileImageService;
 
     @PostMapping("/sign-up")
     public ResponseEntity<SignUpResponse> signUp(
@@ -142,13 +153,9 @@ public class MemberController implements MemberControllerDocs {
             @RequestBody @Valid UpdateEmailRequest request,
             HttpServletResponse response
     ) {
-        updateEmailService.updateEmail(
-                loginMember.memberId(),
-                request.toCommand()
-        );
+        updateEmailService.updateEmail(loginMember.memberId(), request.toCommand());
 
         refreshTokenCookieProvider.removeRefreshTokenCookie(response);
-
         return ResponseEntity.noContent().build();
     }
 
@@ -160,12 +167,71 @@ public class MemberController implements MemberControllerDocs {
     ) {
 
         updatePhoneService.updatePhone(loginMember.memberId(), request.toCommand());
-
-        refreshTokenCookieProvider.removeRefreshTokenCookie(
-                response
-        );
+        refreshTokenCookieProvider.removeRefreshTokenCookie(response);
 
         return ResponseEntity.noContent().build();
     }
+
+    @Override
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/profile-image/upload-url")
+    public ResponseEntity<ProfileImageUploadUrlResponse>
+    createProfileImageUploadUrl(
+            @AuthenticationPrincipal
+            LoginMember loginMember,
+
+            @Valid
+            @RequestBody
+            CreateProfileImageUploadUrlRequest request
+    ) {
+        PresignedUploadResult result =
+                createProfileImageUploadUrlService.create(
+                        loginMember.memberId(),
+                        request.contentType()
+                );
+
+        return ResponseEntity.ok(
+                ProfileImageUploadUrlResponse.from(
+                        result
+                )
+        );
+    }
+
+    @Override
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/me/profile-image")
+    public ResponseEntity<Void> updateProfileImage(
+            @AuthenticationPrincipal
+            LoginMember loginMember,
+
+            @Valid
+            @RequestBody
+            UpdateProfileImageRequest request
+    ) {
+        updateProfileImageService.update(
+                loginMember.memberId(),
+                request.objectKey()
+        );
+
+        return ResponseEntity.noContent()
+                .build();
+    }
+
+    @Override
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/me/profile-image")
+    public ResponseEntity<Void> deleteProfileImage(
+            @AuthenticationPrincipal
+            LoginMember loginMember
+    ) {
+        deleteProfileImageService.delete(
+                loginMember.memberId()
+        );
+
+        return ResponseEntity.noContent()
+                .build();
+    }
+
+
 }
 

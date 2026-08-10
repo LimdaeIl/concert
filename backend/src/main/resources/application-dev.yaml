@@ -131,6 +131,12 @@ app:
       secret-key: ${TOSS_PAYMENTS_SECRET_KEY}
       api-url: https://api.tosspayments.com
 
+  storage:
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+      region: ${AWS_S3_REGION}
+      upload-url-expiration: 5m
+      read-url-expiration: 30m
 solapi:
   api-key: ${SOLAPI_API_KEY}
   api-secret: ${SOLAPI_API_SECRET}

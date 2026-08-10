@@ -1,5 +1,6 @@
 package com.concert.backend.member.application;
 
+import com.concert.backend.common.storage.s3.S3PresignedUploadService;
 import com.concert.backend.member.application.result.GetMeResult;
 import com.concert.backend.member.domain.Member;
 import com.concert.backend.member.domain.MemberRepository;
@@ -15,6 +16,8 @@ public class GetMeService {
 
     private final MemberRepository memberRepository;
 
+    private final S3PresignedUploadService s3PresignedUploadService;
+
     @Transactional(readOnly = true)
     public GetMeResult getMe(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -25,6 +28,8 @@ public class GetMeService {
             throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE);
         }
 
-        return GetMeResult.from(member);
+        String profileImageUrl = s3PresignedUploadService.createReadUrl(member.getProfileImageKey());
+
+        return GetMeResult.from(member, profileImageUrl);
     }
 }

@@ -4,12 +4,15 @@ import com.concert.backend.auth.infrastructure.security.LoginMember;
 import com.concert.backend.auth.presentation.response.SignInResponse;
 import com.concert.backend.common.response.ErrorResponse;
 import com.concert.backend.member.application.result.UpdatePhoneRequest;
+import com.concert.backend.member.presentation.request.CreateProfileImageUploadUrlRequest;
 import com.concert.backend.member.presentation.request.SignUpRequest;
 import com.concert.backend.member.presentation.request.SocialSignUpRequest;
 import com.concert.backend.member.presentation.request.UpdateEmailRequest;
 import com.concert.backend.member.presentation.request.UpdateMeRequest;
 import com.concert.backend.member.presentation.request.UpdatePasswordRequest;
+import com.concert.backend.member.presentation.request.UpdateProfileImageRequest;
 import com.concert.backend.member.presentation.response.GetMeResponse;
+import com.concert.backend.member.presentation.response.ProfileImageUploadUrlResponse;
 import com.concert.backend.member.presentation.response.SignUpResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -339,6 +342,115 @@ public interface MemberControllerDocs {
 
             @Parameter(hidden = true)
             HttpServletResponse response
+    );
+
+    @Operation(
+            summary = "프로필 이미지 업로드 URL 발급",
+            description = """
+                현재 로그인한 회원이 프로필 이미지를
+                S3에 직접 업로드할 수 있도록
+                일정 시간 동안 유효한 Presigned PUT URL을 발급합니다.
+
+                지원하는 이미지 형식은
+                JPEG, PNG, WEBP입니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "프로필 이미지 업로드 URL 발급 성공",
+            content = @Content(
+                    schema = @Schema(
+                            implementation =
+                                    ProfileImageUploadUrlResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "지원하지 않는 이미지 형식 또는 잘못된 요청",
+            content = @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(
+                            implementation =
+                                    ErrorResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "인증 정보가 없거나 Access Token이 유효하지 않음"
+    )
+    ResponseEntity<ProfileImageUploadUrlResponse>
+    createProfileImageUploadUrl(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal
+            LoginMember loginMember,
+
+            @Valid
+            @RequestBody
+            CreateProfileImageUploadUrlRequest request
+    );
+
+    @Operation(
+            summary = "프로필 이미지 변경",
+            description = """
+                S3 업로드가 완료된 프로필 이미지의
+                Object Key를 현재 회원의 프로필 이미지로 등록합니다.
+
+                본인에게 발급된 members/{memberId}/profile/
+                경로의 Object Key만 등록할 수 있습니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "프로필 이미지 변경 성공"
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "잘못된 이미지 Object Key"
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "인증 정보가 없거나 Access Token이 유효하지 않음"
+    )
+    ResponseEntity<Void> updateProfileImage(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal
+            LoginMember loginMember,
+
+            @Valid
+            @RequestBody
+            UpdateProfileImageRequest request
+    );
+
+    @Operation(
+            summary = "프로필 이미지 삭제",
+            description = """
+                현재 회원의 프로필 이미지 연결을 제거합니다.
+                프로필 이미지를 등록하지 않은 회원도 호출할 수 있습니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "프로필 이미지 삭제 성공"
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "인증 정보가 없거나 Access Token이 유효하지 않음"
+    )
+    ResponseEntity<Void> deleteProfileImage(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal
+            LoginMember loginMember
     );
 
 }
