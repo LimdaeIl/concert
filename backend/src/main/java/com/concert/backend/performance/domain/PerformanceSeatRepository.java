@@ -18,12 +18,6 @@ public interface PerformanceSeatRepository {
             Long performanceId
     );
 
-    List<PerformanceSeat>
-    findAllByPerformanceIdAndStatus(
-            Long performanceId,
-            PerformanceSeatStatus status
-    );
-
     boolean existsByPerformanceIdAndSeatId(
             Long performanceId,
             Long seatId

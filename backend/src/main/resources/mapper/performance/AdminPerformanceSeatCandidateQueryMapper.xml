@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.concert.backend.performance.query.AdminPerformanceSeatCandidateQueryMapper">
+
+  <sql id="searchConditions">
+
+    WHERE s.venue_hall_id = #{condition.venueHallId}
+
+    AND s.status = 'ACTIVE'
+
+    AND NOT EXISTS (
+    SELECT 1
+
+    FROM v1_performance_seats ps
+
+    WHERE ps.performance_id =
+    #{condition.performanceId}
+
+    AND ps.seat_id = s.id
+    )
+
+    <if test="condition.keyword != null and condition.keyword != ''">
+      AND (
+      s.section_name LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+
+      OR s.row_name LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+
+      OR s.seat_number LIKE CONCAT(
+      '%',
+      #{condition.keyword},
+      '%'
+      )
+      )
+    </if>
+
+    <if test="condition.floor != null">
+      AND s.floor = #{condition.floor}
+    </if>
+
+    <if test="condition.seatType != null">
+      AND s.seat_type = #{condition.seatType}
+    </if>
+
+  </sql>
+
+
+  <select
+    id="findAll"
+    resultType="com.concert.backend.performance.query.AdminPerformanceSeatCandidateRow"
+  >
+
+    SELECT
+    s.id AS seatId,
+    s.venue_hall_id AS venueHallId,
+    s.section_name AS sectionName,
+    s.floor AS floor,
+    s.row_name AS rowName,
+    s.seat_number AS seatNumber,
+    s.seat_type AS seatType
+
+    FROM v1_seats s
+
+    <include refid="searchConditions"/>
+
+    ORDER BY
+    s.floor ASC,
+    s.section_name ASC,
+    s.row_name ASC,
+    s.seat_number ASC,
+    s.id ASC
+
+    LIMIT #{condition.size}
+    OFFSET #{condition.offset}
+
+  </select>
+
+
+  <select
+    id="count"
+    resultType="long"
+  >
+
+    SELECT COUNT(*)
+
+    FROM v1_seats s
+
+    <include refid="searchConditions"/>
+
+  </select>
+
+</mapper>
