@@ -12,11 +12,14 @@ public record GetMeResponse(
         String phone,
         String role,
         String status,
+        String profileImageUrl,
         AddressResponse address,
         List<String> socialProviders
 ) {
 
-    public static GetMeResponse from(GetMeResult result) {
+    public static GetMeResponse from(
+            GetMeResult result
+    ) {
         return new GetMeResponse(
                 result.memberId(),
                 result.email(),
@@ -24,7 +27,10 @@ public record GetMeResponse(
                 result.phone(),
                 result.role().name(),
                 result.status().name(),
-                AddressResponse.from(result.address()),
+                result.profileImageUrl(),
+                AddressResponse.from(
+                        result.address()
+                ),
                 result.socialProviders()
                         .stream()
                         .map(Enum::name)
@@ -41,7 +47,9 @@ public record GetMeResponse(
             BigDecimal longitude
     ) {
 
-        public static AddressResponse from(Address address) {
+        public static AddressResponse from(
+                Address address
+        ) {
             return new AddressResponse(
                     address.getRoadAddress(),
                     address.getJibunAddress(),

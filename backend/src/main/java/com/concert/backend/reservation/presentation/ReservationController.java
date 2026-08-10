@@ -27,109 +27,60 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
 @RestController
-public class ReservationController
-        implements ReservationControllerDocs {
+public class ReservationController implements ReservationControllerDocs {
 
-    private final CreateReservationService
-            createReservationService;
-    private final GetMyReservationsService
-            getMyReservationsService;
-    private final GetReservationService
-            getReservationService;
-    private final CancelReservationService
-            cancelReservationService;
+    private final CreateReservationService createReservationService;
+    private final GetMyReservationsService getMyReservationsService;
+    private final GetReservationService getReservationService;
+    private final CancelReservationService cancelReservationService;
 
     @Override
-    @PostMapping(
-            "/performances/{performanceId}/reservations"
-    )
+    @PostMapping("/performances/{performanceId}/reservations")
     public ResponseEntity<ReservationResponse> create(
-            @AuthenticationPrincipal
-            LoginMember loginMember,
-
-            @PathVariable
-            Long performanceId,
-
-            @Valid
-            @RequestBody
-            CreateReservationRequest request
+            @AuthenticationPrincipal LoginMember loginMember,
+            @PathVariable Long performanceId,
+            @Valid @RequestBody CreateReservationRequest request
     ) {
         ReservationResult result =
-                createReservationService.create(
-                        loginMember.memberId(),
-                        performanceId,
-                        request.toCommand()
-                );
+                createReservationService.create(loginMember.memberId(), performanceId, request.toCommand());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(
-                        ReservationResponse.from(result)
-                );
+                .body(ReservationResponse.from(result));
     }
 
     @Override
     @GetMapping("/reservations/my")
     public ResponseEntity<GetReservationsResponse>
-    getMyReservations(
-            @AuthenticationPrincipal
-            LoginMember loginMember
-    ) {
-        List<ReservationResult> results =
-                getMyReservationsService
-                        .getReservations(
-                                loginMember.memberId()
-                        );
+    getMyReservations(@AuthenticationPrincipal LoginMember loginMember) {
+        List<ReservationResult> results = getMyReservationsService.getReservations(loginMember.memberId());
 
-        return ResponseEntity.ok(
-                GetReservationsResponse.from(results)
-        );
+        return ResponseEntity.ok(GetReservationsResponse.from(results));
     }
 
     @Override
-    @GetMapping(
-            "/reservations/{reservationId}"
-    )
+    @GetMapping("/reservations/{reservationId}")
     public ResponseEntity<ReservationResponse>
     getReservation(
-            @AuthenticationPrincipal
-            LoginMember loginMember,
-
-            @PathVariable
-            Long reservationId
+            @AuthenticationPrincipal LoginMember loginMember,
+            @PathVariable Long reservationId
     ) {
         ReservationResult result =
-                getReservationService.getReservation(
-                        loginMember.memberId(),
-                        reservationId
-                );
+                getReservationService.getReservation(loginMember.memberId(), reservationId);
 
-        return ResponseEntity.ok(
-                ReservationResponse.from(result)
-        );
+        return ResponseEntity.ok(ReservationResponse.from(result));
     }
 
     @Override
-    @DeleteMapping(
-            "/reservations/{reservationId}"
-    )
+    @DeleteMapping("/reservations/{reservationId}")
     public ResponseEntity<Void>
     cancelPendingReservation(
-            @AuthenticationPrincipal
-            LoginMember loginMember,
-
-            @PathVariable
-            Long reservationId
+            @AuthenticationPrincipal LoginMember loginMember,
+            @PathVariable Long reservationId
     ) {
         cancelReservationService
-                .cancelPendingReservation(
-                        loginMember.memberId(),
-                        reservationId,
-                        LocalDateTime.now()
-                );
+                .cancelPendingReservation(loginMember.memberId(), reservationId, LocalDateTime.now());
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
-
 }

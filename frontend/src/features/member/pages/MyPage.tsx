@@ -9,31 +9,70 @@ import {
   Ticket,
   UserRound,
 } from 'lucide-react';
-import {useEffect, useState,} from 'react';
-import {useNavigate} from 'react-router-dom';
 
-import {signOut} from '@/features/auth/api/authApi';
-import {useAuthStore} from '@/features/auth/store/authStore';
-import {getMe,} from '@/features/member/api/memberApi';
-import type {MemberMeResponse,} from '@/features/member/types/member';
-import {getApiErrorMessage} from '@/lib/api/getApiErrorMessage';
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  useNavigate,
+} from 'react-router-dom';
+
+import {
+  signOut,
+} from '@/features/auth/api/authApi';
+
+import {
+  useAuthStore,
+} from '@/features/auth/store/authStore';
+
+import {
+  getMe,
+} from '@/features/member/api/memberApi';
+
+import type {
+  MemberMeResponse,
+} from '@/features/member/types/member';
+
+import {
+  getApiErrorMessage,
+} from '@/lib/api/getApiErrorMessage';
 
 export default function MyPage() {
-  const navigate = useNavigate();
+  const navigate =
+      useNavigate();
 
-  const clearAuthentication = useAuthStore(
-      (state) => state.clearAuthentication,
-  );
+  const clearAuthentication =
+      useAuthStore(
+          (state) =>
+              state.clearAuthentication,
+      );
 
   const [
     member,
     setMember,
-  ] = useState<MemberMeResponse | null>(null);
+  ] =
+      useState<MemberMeResponse | null>(
+          null,
+      );
 
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] =
+  const [
+    loading,
+    setLoading,
+  ] =
+      useState(true);
+
+  const [
+    errorMessage,
+    setErrorMessage,
+  ] =
       useState('');
-  const [signingOut, setSigningOut] =
+
+  const [
+    signingOut,
+    setSigningOut,
+  ] =
       useState(false);
 
   useEffect(() => {
@@ -41,13 +80,16 @@ export default function MyPage() {
 
     async function loadMember() {
       try {
-        const response = await getMe();
+        const response =
+            await getMe();
 
         if (!active) {
           return;
         }
 
-        setMember(response);
+        setMember(
+            response,
+        );
       } catch (error) {
         if (!active) {
           return;
@@ -81,9 +123,12 @@ export default function MyPage() {
     } finally {
       clearAuthentication();
 
-      navigate('/', {
-        replace: true,
-      });
+      navigate(
+          '/',
+          {
+            replace: true,
+          },
+      );
     }
   }
 
@@ -91,8 +136,7 @@ export default function MyPage() {
     return (
         <div className="flex min-h-[500px] items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <div
-                className="size-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600"/>
+            <div className="size-8 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600"/>
 
             <p className="text-sm text-slate-500">
               회원 정보를 불러오고 있습니다.
@@ -102,7 +146,10 @@ export default function MyPage() {
     );
   }
 
-  if (errorMessage || !member) {
+  if (
+      errorMessage ||
+      !member
+  ) {
     return (
         <div className="px-5 py-6">
           <h2 className="text-2xl font-bold text-slate-950">
@@ -119,12 +166,13 @@ export default function MyPage() {
     );
   }
 
-  const addressText = [
-    member.address.roadAddress,
-    member.address.detailAddress,
-  ]
-  .filter(Boolean)
-  .join(' ');
+  const addressText =
+      [
+        member.address.roadAddress,
+        member.address.detailAddress,
+      ]
+      .filter(Boolean)
+      .join(' ');
 
   return (
       <div className="pb-10">
@@ -138,16 +186,39 @@ export default function MyPage() {
           </p>
         </section>
 
+        {/*
+         * =====================================================
+         * Profile Card
+         * =====================================================
+         */}
         <section className="mt-6 px-5">
           <div className="rounded-2xl bg-slate-50 p-5">
             <div className="flex items-center gap-4">
-              <div
-                  className="flex size-16 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm">
-                <UserRound
-                    size={29}
-                    strokeWidth={1.8}
-                />
-              </div>
+              <button
+                  type="button"
+                  onClick={() =>
+                      navigate(
+                          '/me/profile',
+                      )
+                  }
+                  className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-slate-500 shadow-sm outline-none ring-indigo-200 transition hover:ring-4"
+                  aria-label="프로필 수정"
+              >
+                {member.profileImageUrl ? (
+                    <img
+                        src={
+                          member.profileImageUrl
+                        }
+                        alt={`${member.name} 프로필`}
+                        className="size-full object-cover"
+                    />
+                ) : (
+                    <UserRound
+                        size={29}
+                        strokeWidth={1.8}
+                    />
+                )}
+              </button>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -155,10 +226,9 @@ export default function MyPage() {
                     {member.name}
                   </h3>
 
-                  <span
-                      className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-600">
-                  {member.role}
-                </span>
+                  <span className="rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-600">
+                    {member.role}
+                  </span>
                 </div>
 
                 <p className="mt-1 text-sm text-slate-500">
@@ -197,28 +267,37 @@ export default function MyPage() {
                 />
 
                 <p className="text-sm leading-5 text-slate-600">
-                  {addressText || '등록된 주소가 없습니다.'}
+                  {addressText ||
+                      '등록된 주소가 없습니다.'}
                 </p>
               </div>
             </div>
 
-            {member.socialProviders.length > 0 && (
-                <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-200 pt-5">
-                  {member.socialProviders.map(
-                      (provider) => (
-                          <span
-                              key={provider}
-                              className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm"
-                          >
-                    {provider}
-                  </span>
-                      ),
-                  )}
-                </div>
-            )}
+            {member.socialProviders.length >
+                0 && (
+                    <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-200 pt-5">
+                      {member.socialProviders.map(
+                          (provider) => (
+                              <span
+                                  key={
+                                    provider
+                                  }
+                                  className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 shadow-sm"
+                              >
+                            {provider}
+                          </span>
+                          ),
+                      )}
+                    </div>
+                )}
           </div>
         </section>
 
+        {/*
+         * =====================================================
+         * Reservation
+         * =====================================================
+         */}
         <section className="mt-8 px-5">
           <h3 className="text-sm font-semibold text-slate-500">
             예매
@@ -228,7 +307,9 @@ export default function MyPage() {
             <button
                 type="button"
                 onClick={() =>
-                    navigate('/reservations')
+                    navigate(
+                        '/reservations',
+                    )
                 }
                 className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-slate-50"
             >
@@ -238,8 +319,8 @@ export default function MyPage() {
               />
 
               <span className="flex-1 text-sm font-medium text-slate-800">
-              내 예매 내역
-            </span>
+                내 예매 내역
+              </span>
 
               <ChevronRight
                   size={18}
@@ -249,6 +330,11 @@ export default function MyPage() {
           </div>
         </section>
 
+        {/*
+         * =====================================================
+         * Member
+         * =====================================================
+         */}
         <section className="mt-7 px-5">
           <h3 className="text-sm font-semibold text-slate-500">
             회원 정보
@@ -258,7 +344,9 @@ export default function MyPage() {
             <button
                 type="button"
                 onClick={() =>
-                    navigate('/me/profile')
+                    navigate(
+                        '/me/profile',
+                    )
                 }
                 className="flex w-full items-center gap-3 border-b border-slate-200 px-4 py-4 text-left transition-colors hover:bg-slate-50"
             >
@@ -268,18 +356,21 @@ export default function MyPage() {
               />
 
               <span className="flex-1 text-sm font-medium text-slate-800">
-              프로필 수정
-            </span>
+                프로필 수정
+              </span>
 
               <ChevronRight
                   size={18}
                   className="text-slate-300"
               />
             </button>
+
             <button
                 type="button"
                 onClick={() =>
-                    navigate('/me/settings')
+                    navigate(
+                        '/me/settings',
+                    )
                 }
                 className="flex w-full items-center gap-3 border-b border-slate-200 px-4 py-4 text-left transition-colors hover:bg-slate-50"
             >
@@ -291,6 +382,7 @@ export default function MyPage() {
               <span className="flex-1 text-sm font-medium text-slate-800">
                 계정 설정
               </span>
+
               <ChevronRight
                   size={18}
                   className="text-slate-300"
@@ -302,7 +394,9 @@ export default function MyPage() {
                 onClick={() =>
                     void handleSignOut()
                 }
-                disabled={signingOut}
+                disabled={
+                  signingOut
+                }
                 className="flex w-full items-center gap-3 px-4 py-4 text-left transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <LogOut
@@ -311,10 +405,10 @@ export default function MyPage() {
               />
 
               <span className="flex-1 text-sm font-medium text-red-600">
-              {signingOut
-                  ? '로그아웃 중...'
-                  : '로그아웃'}
-            </span>
+                {signingOut
+                    ? '로그아웃 중...'
+                    : '로그아웃'}
+              </span>
             </button>
           </div>
         </section>

@@ -41,6 +41,15 @@ export interface MemberMeResponse {
 
   role: MemberRole;
 
+  /*
+   * 프로필 이미지가 등록되지 않은 회원은 null.
+   *
+   * 현재 백엔드에서는
+   * Private S3 Object에 대한
+   * Presigned GET URL을 반환한다.
+   */
+  profileImageUrl: string | null;
+
   address: MemberAddress;
 
   socialProviders: SocialProvider[];
@@ -63,4 +72,14 @@ export interface ChangeEmailRequest {
 export interface ChangePhoneRequest {
   phone: string;
   verificationToken: string;
+}
+
+export interface ProfileImageUploadUrlResponse {
+  objectKey: string;
+  uploadUrl: string;
+  expiresAt: string;
+}
+
+export interface UpdateProfileImageRequest {
+  objectKey: string;
 }

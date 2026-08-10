@@ -72,6 +72,12 @@ public class Member extends BaseTimeEntity {
     @Column(name = "withdrawn_at")
     private LocalDateTime withdrawnAt;
 
+    @Column(
+            name = "profile_image_key",
+            length = 500
+    )
+    private String profileImageKey;
+
     @OneToMany(
             mappedBy = "member",
             cascade = CascadeType.ALL,
@@ -154,12 +160,23 @@ public class Member extends BaseTimeEntity {
         this.name = "탈퇴회원";
 
         /*
-         * 로컬 회원 비밀번호도 더 이상 의미가 없도록 제거한다.
-         * password 컬럼은 nullable이므로 null 사용 가능하다.
+         * 로컬 회원 비밀번호 제거
          */
         this.password = null;
 
+        /*
+         * 개인정보 제거
+         */
         this.address = Address.anonymized();
+
+        /*
+         * 프로필 이미지 연결 제거.
+         *
+         * 실제 S3 Object 삭제는
+         * DeleteMeService에서 기존 key를 먼저 확보한 뒤
+         * AFTER_COMMIT 이벤트로 처리한다.
+         */
+        this.profileImageKey = null;
 
         /*
          * orphanRemoval=true이므로 transaction commit 시
@@ -262,6 +279,31 @@ public class Member extends BaseTimeEntity {
         }
 
         this.phone = phone;
+    }
+
+    public void updateProfileImage(
+            String profileImageKey
+    ) {
+        if (!isSignInAllowed()) {
+            throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE
+            );
+        }
+
+        if (profileImageKey == null
+                || profileImageKey.isBlank()) {
+            throw new MemberException(MemberErrorCode.PROFILE_IMAGE_KEY_REQUIRED);
+        }
+
+        this.profileImageKey = profileImageKey.trim();
+    }
+
+
+    public void removeProfileImage() {
+        if (!isSignInAllowed()) {
+            throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE);
+        }
+
+        this.profileImageKey = null;
     }
 
 }
