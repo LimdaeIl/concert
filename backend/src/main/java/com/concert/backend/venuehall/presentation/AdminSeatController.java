@@ -1,6 +1,7 @@
 package com.concert.backend.venuehall.presentation;
 
 import com.concert.backend.venuehall.application.BulkCreateSeatService;
+import com.concert.backend.venuehall.application.BulkUpdateSeatService;
 import com.concert.backend.venuehall.application.GetAdminSeatsService;
 import com.concert.backend.venuehall.application.UpdateSeatService;
 import com.concert.backend.venuehall.application.UpdateSeatStatusService;
@@ -9,6 +10,7 @@ import com.concert.backend.venuehall.application.result.SeatResult;
 import com.concert.backend.venuehall.domain.SeatStatus;
 import com.concert.backend.venuehall.domain.SeatType;
 import com.concert.backend.venuehall.presentation.request.BulkCreateSeatRequest;
+import com.concert.backend.venuehall.presentation.request.BulkUpdateSeatRequest;
 import com.concert.backend.venuehall.presentation.request.UpdateSeatRequest;
 import com.concert.backend.venuehall.presentation.request.UpdateSeatStatusRequest;
 import com.concert.backend.venuehall.presentation.response.GetAdminSeatsResponse;
@@ -38,6 +40,7 @@ public class AdminSeatController implements AdminSeatControllerDocs {
     private final UpdateSeatService updateSeatService;
     private final UpdateSeatStatusService updateSeatStatusService;
     private final GetAdminSeatsService getAdminSeatsService;
+    private final BulkUpdateSeatService bulkUpdateSeatService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(
@@ -141,6 +144,33 @@ public class AdminSeatController implements AdminSeatControllerDocs {
         return ResponseEntity.ok(
                 GetAdminSeatsResponse.from(
                         result
+                )
+        );
+    }
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping(
+            "/api/v1/admin/halls/{venueHallId}/seats/bulk"
+    )
+    public ResponseEntity<GetSeatsResponse> bulkUpdate(
+            @PathVariable
+            Long venueHallId,
+
+            @Valid
+            @RequestBody
+            BulkUpdateSeatRequest request
+    ) {
+        List<SeatResult> results =
+                bulkUpdateSeatService.update(
+                        venueHallId,
+                        request.seatIds(),
+                        request.seatType(),
+                        request.status()
+                );
+
+        return ResponseEntity.ok(
+                GetSeatsResponse.from(
+                        results
                 )
         );
     }

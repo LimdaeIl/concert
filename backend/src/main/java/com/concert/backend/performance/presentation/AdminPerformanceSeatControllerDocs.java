@@ -16,6 +16,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -159,6 +161,7 @@ public interface AdminPerformanceSeatControllerDocs {
                     example = "0"
             )
             @RequestParam(defaultValue = "0")
+            @Min(0)
             int page,
 
             @Parameter(
@@ -166,6 +169,8 @@ public interface AdminPerformanceSeatControllerDocs {
                     example = "20"
             )
             @RequestParam(defaultValue = "20")
+            @Min(1)
+            @Max(100)
             int size
     );
 
@@ -242,6 +247,7 @@ public interface AdminPerformanceSeatControllerDocs {
                     example = "0"
             )
             @RequestParam(defaultValue = "0")
+            @Min(0)
             int page,
 
             @Parameter(
@@ -249,6 +255,8 @@ public interface AdminPerformanceSeatControllerDocs {
                     example = "50"
             )
             @RequestParam(defaultValue = "50")
+            @Min(1)
+            @Max(100)
             int size
     );
 

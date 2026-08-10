@@ -6,7 +6,18 @@ import type {
   GetAdminSeatsResponse,
   UpdateSeatRequest,
   UpdateSeatStatusRequest,
+  BulkUpdateSeatRequest
 } from '../types/adminSeat';
+
+export async function bulkUpdateSeats(
+    venueHallId: number,
+    request: BulkUpdateSeatRequest,
+): Promise<void> {
+  await apiClient.patch(
+      `/api/v1/admin/halls/${venueHallId}/seats/bulk`,
+      request,
+  );
+}
 
 export async function getAdminSeats(
     venueHallId: number,
@@ -74,3 +85,4 @@ export async function updateSeatStatus(
       request,
   );
 }
+

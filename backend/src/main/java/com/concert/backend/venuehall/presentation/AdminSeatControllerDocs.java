@@ -4,6 +4,7 @@ import com.concert.backend.common.response.ErrorResponse;
 import com.concert.backend.venuehall.domain.SeatStatus;
 import com.concert.backend.venuehall.domain.SeatType;
 import com.concert.backend.venuehall.presentation.request.BulkCreateSeatRequest;
+import com.concert.backend.venuehall.presentation.request.BulkUpdateSeatRequest;
 import com.concert.backend.venuehall.presentation.request.UpdateSeatRequest;
 import com.concert.backend.venuehall.presentation.request.UpdateSeatStatusRequest;
 import com.concert.backend.venuehall.presentation.response.GetAdminSeatsResponse;
@@ -17,6 +18,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -333,6 +336,7 @@ public interface AdminSeatControllerDocs {
                     example = "0"
             )
             @RequestParam(defaultValue = "0")
+            @Min(0)
             int page,
 
             @Parameter(
@@ -340,6 +344,56 @@ public interface AdminSeatControllerDocs {
                     example = "20"
             )
             @RequestParam(defaultValue = "20")
+            @Min(1)
+            @Max(100)
             int size
+    );
+    @Operation(
+            summary = "좌석 일괄 수정",
+            description = """
+                관리자가 특정 공연홀의 여러 좌석을
+                한 번에 수정합니다.
+
+                선택된 좌석들의 좌석 유형 또는 상태를
+                일괄 변경할 수 있습니다.
+
+                sectionName, floor, rowName,
+                seatNumber 같은 좌석 위치 정보는
+                개별 좌석 수정 API를 사용합니다.
+
+                seatType과 status 중
+                최소 하나 이상의 변경값이 필요합니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "좌석 일괄 수정 성공"
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "잘못된 요청"
+    )
+    @ApiResponse(
+            responseCode = "403",
+            description = "관리자 권한 없음"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "좌석을 찾을 수 없음"
+    )
+    ResponseEntity<GetSeatsResponse> bulkUpdate(
+            @Parameter(
+                    description = "공연홀 ID",
+                    example = "1"
+            )
+            @PathVariable
+            Long venueHallId,
+
+            @Valid
+            @RequestBody
+            BulkUpdateSeatRequest request
     );
 }

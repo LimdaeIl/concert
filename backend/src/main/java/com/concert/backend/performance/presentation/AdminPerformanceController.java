@@ -12,6 +12,7 @@ import com.concert.backend.performance.presentation.request.UpdatePerformanceReq
 import com.concert.backend.performance.presentation.request.UpdatePerformanceStatusRequest;
 import com.concert.backend.performance.presentation.response.GetAdminPerformancesResponse;
 import com.concert.backend.performance.presentation.response.PerformanceResponse;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -128,10 +129,18 @@ public class AdminPerformanceController
             )
             LocalDateTime to,
 
+            @Parameter(
+                    description = "페이지 번호 (0부터 시작)",
+                    example = "0"
+            )
             @RequestParam(defaultValue = "0")
             @Min(0)
             int page,
 
+            @Parameter(
+                    description = "페이지 크기",
+                    example = "20"
+            )
             @RequestParam(defaultValue = "20")
             @Min(1)
             @Max(100)

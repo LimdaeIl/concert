@@ -68,3 +68,10 @@ export interface UpdateSeatRequest {
 export interface UpdateSeatStatusRequest {
   status: SeatStatus;
 }
+
+export interface BulkUpdateSeatRequest {
+  seatIds: number[];
+
+  seatType?: SeatType | null;
+  status?: SeatStatus | null;
+}

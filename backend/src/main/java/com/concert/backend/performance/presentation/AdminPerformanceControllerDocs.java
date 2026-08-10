@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -161,6 +163,7 @@ public interface AdminPerformanceControllerDocs {
             @RequestBody
             UpdatePerformanceStatusRequest request
     );
+
     @Operation(
             summary = "관리자 공연 회차 목록 조회",
             description = """
@@ -236,6 +239,7 @@ public interface AdminPerformanceControllerDocs {
                     example = "0"
             )
             @RequestParam(defaultValue = "0")
+            @Min(0)
             int page,
 
             @Parameter(
@@ -243,6 +247,8 @@ public interface AdminPerformanceControllerDocs {
                     example = "20"
             )
             @RequestParam(defaultValue = "20")
+            @Min(1)
+            @Max(100)
             int size
     );
 }

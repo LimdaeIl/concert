@@ -39,6 +39,7 @@ public class AdminConcertController implements AdminConcertControllerDocs {
     private final UpdateConcertStatusService updateConcertStatusService;
     private final GetAdminConcertsService getAdminConcertsService;
 
+    @Override
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ConcertResponse> create(
@@ -54,6 +55,7 @@ public class AdminConcertController implements AdminConcertControllerDocs {
                 .body(ConcertResponse.from(result));
     }
 
+    @Override
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{concertId}")
     public ResponseEntity<ConcertResponse> update(
@@ -71,6 +73,7 @@ public class AdminConcertController implements AdminConcertControllerDocs {
         );
     }
 
+    @Override
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{concertId}/status")
     public ResponseEntity<ConcertResponse> updateStatus(
