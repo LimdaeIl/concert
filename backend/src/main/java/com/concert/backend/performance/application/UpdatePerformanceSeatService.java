@@ -17,33 +17,18 @@ public class UpdatePerformanceSeatService {
     private final PerformanceSeatRepository performanceSeatRepository;
 
     @Transactional
-    public PerformanceSeatResult update(
-            Long performanceSeatId,
-            UpdatePerformanceSeatCommand command
-    ) {
-        PerformanceSeat performanceSeat =
-                findPerformanceSeat(performanceSeatId);
+    public PerformanceSeatResult update(Long performanceSeatId,
+            UpdatePerformanceSeatCommand command) {
+        PerformanceSeat performanceSeat = findPerformanceSeat(performanceSeatId);
+        performanceSeat.updateInformation(command.grade(), command.price());
 
-        performanceSeat.updateInformation(
-                command.grade(),
-                command.price()
-        );
-
-        return PerformanceSeatResult.from(
-                performanceSeat
-        );
+        return PerformanceSeatResult.from(performanceSeat);
     }
 
-    private PerformanceSeat findPerformanceSeat(
-            Long performanceSeatId
-    ) {
-        return performanceSeatRepository
-                .findById(performanceSeatId)
-                .orElseThrow(() ->
-                        new PerformanceException(
-                                PerformanceErrorCode.PERFORMANCE_SEAT_NOT_FOUND
-                        )
-                );
+    private PerformanceSeat findPerformanceSeat(Long performanceSeatId) {
+        return performanceSeatRepository.findById(performanceSeatId)
+                .orElseThrow(() -> new PerformanceException(
+                        PerformanceErrorCode.PERFORMANCE_SEAT_NOT_FOUND));
     }
 }
 

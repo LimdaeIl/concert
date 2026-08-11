@@ -3,6 +3,7 @@ package com.concert.backend.concert.presentation;
 import com.concert.backend.common.response.ErrorResponse;
 import com.concert.backend.concert.presentation.response.ConcertResponse;
 import com.concert.backend.concert.presentation.response.GetConcertsResponse;
+import com.concert.backend.concert.presentation.response.GetPopularConcertsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -63,4 +64,25 @@ public interface ConcertControllerDocs {
             )
             @PathVariable Long concertId
     );
+
+    @Operation(
+            summary = "인기 공연 조회",
+            description = """
+                결제가 완료된 예약 좌석 수를 기준으로
+                인기 공연 TOP 10을 조회합니다.
+
+                PENDING_PAYMENT, CANCELLED, EXPIRED 예약은
+                인기 순위 집계에서 제외됩니다.
+                """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "인기 공연 조회 성공",
+            content = @Content(
+                    schema = @Schema(
+                            implementation = GetPopularConcertsResponse.class
+                    )
+            )
+    )
+    ResponseEntity<GetPopularConcertsResponse> getPopularConcerts();
 }

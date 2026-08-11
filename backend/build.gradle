@@ -45,7 +45,6 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-mail-test'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     testImplementation 'org.springframework.boot:spring-boot-starter-thymeleaf-test'
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-redis-test'
 
     implementation 'com.solapi:sdk:1.1.0'
@@ -70,6 +69,14 @@ dependencies {
 
     implementation platform('software.amazon.awssdk:bom:2.42.35')
     implementation 'software.amazon.awssdk:s3'
+
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
 }
 

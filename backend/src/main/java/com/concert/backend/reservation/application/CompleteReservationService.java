@@ -1,5 +1,6 @@
 package com.concert.backend.reservation.application;
 
+import com.concert.backend.concert.application.event.PopularConcertCacheEvictEvent;
 import com.concert.backend.performance.domain.PerformanceSeat;
 import com.concert.backend.performance.domain.PerformanceSeatRepository;
 import com.concert.backend.reservation.domain.Reservation;
@@ -10,6 +11,7 @@ import com.concert.backend.reservation.exception.ReservationException;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,9 @@ public class CompleteReservationService {
     private final PerformanceSeatRepository
             performanceSeatRepository;
 
+    private final ApplicationEventPublisher
+            eventPublisher;
+
     @Transactional
     public void complete(
             Long reservationId,
@@ -33,18 +38,21 @@ public class CompleteReservationService {
                         .findById(reservationId)
                         .orElseThrow(() ->
                                 new ReservationException(
-                                        ReservationErrorCode.RESERVATION_NOT_FOUND
+                                        ReservationErrorCode
+                                                .RESERVATION_NOT_FOUND
                                 )
                         );
 
         if (reservation.isExpired(completedAt)) {
             throw new ReservationException(
-                    ReservationErrorCode.RESERVATION_EXPIRED
+                    ReservationErrorCode
+                            .RESERVATION_EXPIRED
             );
         }
 
         List<Long> performanceSeatIds =
-                reservation.getReservationSeats()
+                reservation
+                        .getReservationSeats()
                         .stream()
                         .map(
                                 ReservationSeat
@@ -61,7 +69,8 @@ public class CompleteReservationService {
         if (seats.size()
                 != performanceSeatIds.size()) {
             throw new ReservationException(
-                    ReservationErrorCode.RESERVATION_SEAT_REQUIRED
+                    ReservationErrorCode
+                            .RESERVATION_SEAT_REQUIRED
             );
         }
 
@@ -72,6 +81,24 @@ public class CompleteReservationService {
             );
         }
 
-        reservation.complete(completedAt);
+        /*
+         * PENDING_PAYMENT -> COMPLETED
+         *
+         * 이 시점부터 해당 예약 좌석이
+         * 인기 공연 집계 대상에 포함된다.
+         */
+        reservation.complete(
+                completedAt
+        );
+
+        /*
+         * 인기 공연 캐시 무효화 이벤트 발행.
+         *
+         * 실제 Redis 삭제는
+         * AFTER_COMMIT Listener에서 수행한다.
+         */
+        eventPublisher.publishEvent(
+                new PopularConcertCacheEvictEvent()
+        );
     }
 }

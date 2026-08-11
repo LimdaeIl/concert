@@ -2,9 +2,12 @@ package com.concert.backend.concert.presentation;
 
 import com.concert.backend.concert.application.GetConcertService;
 import com.concert.backend.concert.application.GetConcertsService;
+import com.concert.backend.concert.application.GetPopularConcertsService;
 import com.concert.backend.concert.application.result.ConcertResult;
+import com.concert.backend.concert.application.result.PopularConcertResult;
 import com.concert.backend.concert.presentation.response.ConcertResponse;
 import com.concert.backend.concert.presentation.response.GetConcertsResponse;
+import com.concert.backend.concert.presentation.response.GetPopularConcertsResponse;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,7 @@ public class ConcertController implements ConcertControllerDocs {
 
     private final GetConcertsService getConcertsService;
     private final GetConcertService getConcertService;
+    private final GetPopularConcertsService getPopularConcertsService;
 
     @GetMapping
     public ResponseEntity<GetConcertsResponse> getConcerts() {
@@ -40,6 +44,17 @@ public class ConcertController implements ConcertControllerDocs {
 
         return ResponseEntity.ok(
                 ConcertResponse.from(result)
+        );
+    }
+    @GetMapping("/popular")
+    public ResponseEntity<GetPopularConcertsResponse> getPopularConcerts() {
+
+        List<PopularConcertResult> results = getPopularConcertsService.getPopularConcerts();
+
+        return ResponseEntity.ok(
+                GetPopularConcertsResponse.from(
+                        results
+                )
         );
     }
 }

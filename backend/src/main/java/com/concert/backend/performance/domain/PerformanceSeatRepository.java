@@ -10,9 +10,7 @@ public interface PerformanceSeatRepository {
             List<PerformanceSeat> performanceSeats
     );
 
-    Optional<PerformanceSeat> findById(
-            Long performanceSeatId
-    );
+    Optional<PerformanceSeat> findById(Long performanceSeatId);
 
     List<PerformanceSeat> findAllByPerformanceId(
             Long performanceId
@@ -23,6 +21,9 @@ public interface PerformanceSeatRepository {
             Long seatId
     );
 
-    List<PerformanceSeat> findAllById(Collection<Long> performanceSeatIds
+    List<PerformanceSeat> findAllById(Collection<Long> performanceSeatIds);
+
+    List<PerformanceSeat> findAllByIdForUpdate(
+            Collection<Long> performanceSeatIds
     );
 }

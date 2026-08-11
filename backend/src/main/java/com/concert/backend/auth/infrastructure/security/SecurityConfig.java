@@ -102,8 +102,6 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/v1/venues",
-                                "/api/v1/venues/**",
                                 "/api/v1/halls/**",
                                 "/api/v1/seats/*"
                         ).permitAll()
@@ -116,15 +114,8 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 HttpMethod.GET,
-                                "/api/v1/concerts/**",
                                 "/api/v1/performances/**"
                         ).permitAll()
-
-                        .requestMatchers(
-                                HttpMethod.GET,
-                                "/api/v1/performances/**"
-                        ).permitAll()
-
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -133,6 +124,10 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/actuator/health",
+                                "/actuator/info",
+                                "/actuator/metrics",
+                                "/actuator/metrics/**",
+                                "/actuator/prometheus",
                                 "/error"
                         ).permitAll()
 

@@ -13,4 +13,175 @@ spring:
     import: optional:file:./.env[.properties]
 
   profiles:
-    active: dev
+    default: dev
+
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT:3306}/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&connectionTimeZone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    hikari:
+      pool-name: concertHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      validation-timeout: 5000
+      auto-commit: false
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+    open-in-view: false
+
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    encoding: UTF-8
+    validate-on-migrate: true
+    clean-disabled: true
+
+  cache:
+    type: redis
+    cache-names:
+      - popularConcerts
+
+    redis:
+      time-to-live: 30s
+      cache-null-values: false
+      use-key-prefix: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
+
+      repositories:
+        enabled: false
+
+  mail:
+    host: smtp.naver.com
+    port: 465
+    username: ${NAVER_MAIL_USERNAME}
+    password: ${NAVER_MAIL_PASSWORD}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - openid
+              - profile
+              - email
+            client-name: Google
+
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - read:user
+              - user:email
+            client-name: GitHub
+
+          kakao:
+            provider: kakao
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            client-authentication-method: client_secret_post
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - profile
+              - account_email
+            client-name: Kakao
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+
+  api-docs:
+    path: /v3/api-docs
+
+app:
+  cache:
+    popular-concert:
+      time-to-live: 30s
+
+  mail:
+    sender: ${NAVER_MAIL_ADDRESS}
+
+  auth:
+    phone-verification:
+      code-expiration-seconds: ${PHONE_EXPIRATION_SECONDS}
+      token-expiration-seconds: ${PHONE_TOKEN_EXPIRATION_SECONDS}
+      max-failed-attempts: ${PHONE_MAX_FAILED_ATTEMPTS}
+
+  jwt:
+    base64Secret: ${JWT_SECRET}
+    issuer: ${JWT_ISSUER}
+    accessTokenExpiration: ${JWT_ACCESS_TOKEN_EXPIRE}
+    refreshTokenExpiration: ${JWT_REFRESH_TOKEN_EXPIRE}
+
+  oauth2:
+    authorization-request-cookie:
+      name: oauth2_authorization_request
+      encryption-key: ${OAUTH2_COOKIE_ENCRYPTION_KEY}
+      expiration: 3m
+
+    flow:
+      login-code-expiration: 1m
+      signup-ticket-expiration: 5m
+
+  reservation:
+    payment-timeout: 10m
+    expiration-scan-delay: 10000
+
+  toss:
+    payments:
+      secret-key: ${TOSS_PAYMENTS_SECRET_KEY}
+      api-url: https://api.tosspayments.com
+
+  solapi:
+    api-key: ${SOLAPI_API_KEY}
+    api-secret: ${SOLAPI_API_SECRET}
+    sender: ${SOLAPI_SENDER}
+
+storage:
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    region: ${AWS_S3_REGION}
+    upload-url-expiration: 5m
+    read-url-expiration: 30m
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+
+  configuration:
+    map-underscore-to-camel-case: true
