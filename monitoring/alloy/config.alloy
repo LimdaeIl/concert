@@ -1,0 +1,26 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+local.file_match "concert_backend" {
+  path_targets = [
+    {
+      __path__    = "/var/log/concert/concert-backend.log",
+      job         = "concert-backend",
+      application = "concert-backend",
+      environment = "local",
+    },
+  ]
+}
+
+loki.source.file "concert_backend" {
+  targets    = local.file_match.concert_backend.targets
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
