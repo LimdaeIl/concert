@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+  <!-- ============================================================
+       Spring Boot 기본 Logback 설정
+       ============================================================ -->
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+
+  <!-- ============================================================
+       Log Path
+
+       application-dev.yaml:
+         app:
+           logging:
+             path: ./logs
+
+       application-prod.yaml:
+         app:
+           logging:
+             path: ../logs
+       ============================================================ -->
+  <springProperty
+    scope="context"
+    name="LOG_PATH"
+    source="app.logging.path"
+    defaultValue="./logs"
+  />
+
+
+  <!-- ============================================================
+       Local Console Pattern
+       ============================================================ -->
+  <property
+    name="LOCAL_LOG_PATTERN"
+    value="[%d{yyyy-MM-dd HH:mm:ss.SSS,Asia/Seoul}] %clr(%-5level) %clr(${PID:-}){magenta} %clr(---){faint} [%thread, trace:%X{traceId:-}, span:%X{spanId:-}] %boldWhite([%C.%M:%yellow(%L)]) : %cyan(%logger{20}) : %msg%n%wEx"
+  />
+
+
+  <!-- ============================================================
+       File / Production Pattern
+
+       Loki 수집 대상이므로 ANSI color 사용 안 함
+       ============================================================ -->
+  <property
+    name="FILE_LOG_PATTERN"
+    value="[%d{yyyy-MM-dd HH:mm:ss.SSS,Asia/Seoul}] %-5level ${PID:-} --- [%thread, trace:%X{traceId:-}, span:%X{spanId:-}] %logger{36} : %msg%n%wEx"
+  />
+
+
+  <!-- ============================================================
+       Common File Appenders
+       ============================================================ -->
+  <include resource="logback/app-file-appender.xml"/>
+  <include resource="logback/error-file-appender.xml"/>
+
+
+  <!-- ============================================================
+       DEV
+
+       - Console
+       - Application File
+       - WARN / ERROR File
+       - Hibernate SQL 확인
+       ============================================================ -->
+  <springProfile name="dev">
+
+    <appender
+      name="CONSOLE"
+      class="ch.qos.logback.core.ConsoleAppender"
+    >
+      <encoder>
+        <pattern>${LOCAL_LOG_PATTERN}</pattern>
+        <charset>UTF-8</charset>
+      </encoder>
+    </appender>
+
+
+    <logger
+      name="org.hibernate.SQL"
+      level="DEBUG"
+    />
+
+    <logger
+      name="org.hibernate.orm.jdbc.bind"
+      level="TRACE"
+    />
+
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="INFO_LOG"/>
+      <appender-ref ref="ERROR_LOG"/>
+    </root>
+
+  </springProfile>
+
+
+  <!-- ============================================================
+       PROD
+
+       - Console
+       - Application File
+       - WARN / ERROR File
+       - Hibernate SQL 최소화
+       ============================================================ -->
+  <springProfile name="prod">
+
+    <appender
+      name="CONSOLE"
+      class="ch.qos.logback.core.ConsoleAppender"
+    >
+      <encoder>
+        <pattern>${FILE_LOG_PATTERN}</pattern>
+        <charset>UTF-8</charset>
+      </encoder>
+    </appender>
+
+
+    <logger
+      name="org.hibernate.SQL"
+      level="WARN"
+    />
+
+    <logger
+      name="org.hibernate.orm.jdbc.bind"
+      level="WARN"
+    />
+
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="INFO_LOG"/>
+      <appender-ref ref="ERROR_LOG"/>
+    </root>
+
+  </springProfile>
+
+
+  <!-- ============================================================
+       dev / prod가 명시되지 않은 경우
+       ============================================================ -->
+  <springProfile name="!dev &amp; !prod">
+
+    <appender
+      name="CONSOLE"
+      class="ch.qos.logback.core.ConsoleAppender"
+    >
+      <encoder>
+        <pattern>${LOCAL_LOG_PATTERN}</pattern>
+        <charset>UTF-8</charset>
+      </encoder>
+    </appender>
+
+
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="INFO_LOG"/>
+      <appender-ref ref="ERROR_LOG"/>
+    </root>
+
+  </springProfile>
+
+</configuration>
