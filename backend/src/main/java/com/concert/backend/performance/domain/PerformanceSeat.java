@@ -172,10 +172,9 @@ public class PerformanceSeat extends BaseAuditEntity {
         switch (newStatus) {
             case AVAILABLE -> unblock();
             case BLOCKED -> block();
-            case HELD, RESERVED ->
-                    throw new PerformanceException(
-                            PerformanceErrorCode.INVALID_ADMIN_SEAT_STATUS
-                    );
+            case HELD, RESERVED -> throw new PerformanceException(
+                    PerformanceErrorCode.INVALID_ADMIN_SEAT_STATUS
+            );
         }
     }
 

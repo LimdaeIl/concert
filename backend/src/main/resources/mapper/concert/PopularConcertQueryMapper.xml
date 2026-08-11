@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.concert.backend.concert.query.PopularConcertQueryMapper">
+
+  <select
+    id="findPopularConcerts"
+    resultType="com.concert.backend.concert.query.PopularConcertQueryRow"
+  >
+    SELECT
+    c.id AS concertId,
+    c.title AS title,
+    c.subtitle AS subtitle,
+    c.category AS category,
+    c.age_rating AS ageRating,
+    c.poster_url AS posterUrl,
+    COUNT(rs.id) AS completedReservationSeatCount
+
+    FROM v1_concerts c
+
+    INNER JOIN v1_performances p
+    ON p.concert_id = c.id
+
+    INNER JOIN v1_reservations r
+    ON r.performance_id = p.id
+    AND r.status = 'COMPLETED'
+
+    INNER JOIN v1_reservation_seats rs
+    ON rs.reservation_id = r.id
+
+    GROUP BY
+    c.id,
+    c.title,
+    c.subtitle,
+    c.category,
+    c.age_rating,
+    c.poster_url
+
+    ORDER BY
+    completedReservationSeatCount DESC,
+    c.id DESC
+
+    LIMIT #{limit}
+  </select>
+
+</mapper>

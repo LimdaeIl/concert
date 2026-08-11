@@ -70,11 +70,9 @@ public class CreateReservationService {
                 command.performanceSeatIds()
         );
 
-        List<PerformanceSeat> performanceSeats =
-                performanceSeatRepository
-                        .findAllById(
-                                command.performanceSeatIds()
-                        );
+//        List<PerformanceSeat> performanceSeats = performanceSeatRepository.findAllById(command.performanceSeatIds());
+        List<PerformanceSeat> performanceSeats = performanceSeatRepository.findAllByIdForUpdate(command.performanceSeatIds()                 );
+
 
         if (performanceSeats.size()
                 != command.performanceSeatIds().size()) {

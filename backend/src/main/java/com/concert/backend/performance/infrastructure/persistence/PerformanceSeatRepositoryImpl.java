@@ -25,12 +25,8 @@ public class PerformanceSeatRepositoryImpl implements PerformanceSeatRepository 
     }
 
     @Override
-    public Optional<PerformanceSeat> findById(
-            Long performanceSeatId
-    ) {
-        return jpaPerformanceSeatRepository.findById(
-                performanceSeatId
-        );
+    public Optional<PerformanceSeat> findById(Long performanceSeatId) {
+        return jpaPerformanceSeatRepository.findById(performanceSeatId);
     }
 
     @Override
@@ -58,5 +54,10 @@ public class PerformanceSeatRepositoryImpl implements PerformanceSeatRepository 
     @Override
     public List<PerformanceSeat> findAllById(Collection<Long> performanceSeatIds) {
         return jpaPerformanceSeatRepository.findAllById(performanceSeatIds);
+    }
+
+    @Override
+    public List<PerformanceSeat> findAllByIdForUpdate(Collection<Long> performanceSeatIds) {
+        return jpaPerformanceSeatRepository.findAllByIdForUpdate(performanceSeatIds);
     }
 }

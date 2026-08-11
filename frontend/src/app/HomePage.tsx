@@ -6,9 +6,12 @@ import {
   CalendarDays,
   ChevronRight,
   Clock3,
+  Crown,
+  Flame,
   Search,
   Sparkles,
   Ticket,
+  TrendingUp,
   X,
 } from 'lucide-react';
 
@@ -24,6 +27,7 @@ import {
 
 import {
   getConcerts,
+  getPopularConcerts,
 } from '@/features/concert/api/concertApi';
 
 import ConcertCard
@@ -34,6 +38,7 @@ import ConcertPoster
 
 import type {
   Concert,
+  PopularConcert,
 } from '@/features/concert/types/concert';
 
 import {
@@ -83,6 +88,14 @@ export default function HomePage() {
       );
 
   const [
+    popularConcerts,
+    setPopularConcerts,
+  ] =
+      useState<PopularConcert[]>(
+          [],
+      );
+
+  const [
     upcomingPerformances,
     setUpcomingPerformances,
   ] =
@@ -107,22 +120,82 @@ export default function HomePage() {
 
     async function loadHome() {
       try {
-        const concertResponse =
-            await getConcerts();
+        /*
+         * ============================================================
+         * 공개 공연 / 인기 공연은 서로 독립적으로 조회한다.
+         * ============================================================
+         *
+         * 인기 공연 데이터가 아직 없어도
+         * 공개 공연 홈 자체는 정상적으로 표시되어야 한다.
+         */
+        const [
+          concertResult,
+          popularResult,
+        ] =
+            await Promise.allSettled([
+              getConcerts(),
+              getPopularConcerts(),
+            ]);
 
         if (!active) {
           return;
         }
 
-        const concertList =
-            concertResponse.concerts ??
-            [];
+        /*
+         * 공개 공연 목록.
+         *
+         * 홈 화면의 기본 데이터이므로
+         * 실패하면 사용자에게 오류를 표시한다.
+         */
+        let concertList: Concert[] = [];
 
-        setConcerts(
-            concertList,
-        );
+        if (
+            concertResult.status ===
+            'fulfilled'
+        ) {
+          concertList =
+              concertResult.value
+                  .concerts ??
+              [];
+
+          setConcerts(
+              concertList,
+          );
+        } else {
+          setErrorMessage(
+              '공연 정보를 불러오지 못했습니다.',
+          );
+        }
 
         /*
+         * 인기 공연.
+         *
+         * 현재는 COMPLETED 예약 데이터가 없을 수 있기 때문에
+         * 빈 배열은 정상 상태다.
+         *
+         * API 자체가 실패하더라도
+         * 홈 전체 실패로 처리하지 않는다.
+         */
+        if (
+            popularResult.status ===
+            'fulfilled'
+        ) {
+          setPopularConcerts(
+              popularResult.value
+                  .concerts ??
+              [],
+          );
+        } else {
+          setPopularConcerts(
+              [],
+          );
+        }
+
+        /*
+         * ============================================================
+         * 가까운 공연 회차 구성
+         * ============================================================
+         *
          * 현재 홈 전용 공연 일정 API가 없으므로
          * 공개 공연 일부의 회차를 조회해서
          * 가까운 일정을 구성한다.
@@ -154,7 +227,7 @@ export default function HomePage() {
                         );
                       } catch {
                         /*
-                         * 개별 공연의 회차 조회 실패는
+                         * 개별 공연 회차 조회 실패는
                          * 홈 전체 실패로 처리하지 않는다.
                          */
                         return [];
@@ -236,13 +309,36 @@ export default function HomePage() {
   }, []);
 
   /*
-   * 현재 추천/인기 랭킹 API는 없기 때문에
-   * 공개 공연 순서를 그대로 이용한다.
+   * ============================================================
+   * Featured Concert
+   * ============================================================
+   *
+   * 1순위:
+   * 인기 공연 1위
+   *
+   * fallback:
+   * 인기 공연 데이터가 아직 없다면
+   * 기존 공개 공연 첫 번째 항목을 사용한다.
    */
-  const featuredConcert =
-      concerts[0] ??
+  const featuredPopularConcert =
+      popularConcerts[0] ??
       null;
 
+  const featuredConcert =
+      featuredPopularConcert
+          ? toConcert(
+              featuredPopularConcert,
+          )
+          : concerts[0] ??
+          null;
+
+  /*
+   * ============================================================
+   * 일반 공연 목록
+   * ============================================================
+   *
+   * Hero에 표시된 공연을 중복해서 보여주지 않는다.
+   */
   const displayConcerts =
       useMemo(
           () =>
@@ -418,10 +514,7 @@ export default function HomePage() {
                           className="absolute inset-0 size-full object-cover transition duration-500 group-hover:scale-[1.03]"
                       />
 
-                      {/*
-                       * 포스터 위 텍스트 가독성 확보.
-                       */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/35 to-slate-900/5"/>
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-900/5"/>
                     </>
                 ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-700 via-indigo-600 to-violet-500"/>
@@ -430,11 +523,21 @@ export default function HomePage() {
                 <div className="absolute inset-x-0 bottom-0 p-5">
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur">
-                      <Sparkles
-                          size={11}
-                      />
-
-                      추천 공연
+                      {featuredPopularConcert ? (
+                          <>
+                            <Crown
+                                size={11}
+                            />
+                            인기 1위
+                          </>
+                      ) : (
+                          <>
+                            <Sparkles
+                                size={11}
+                            />
+                            추천 공연
+                          </>
+                      )}
                     </span>
 
                     <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold text-white/90 backdrop-blur">
@@ -461,6 +564,21 @@ export default function HomePage() {
                       </p>
                   )}
 
+                  {featuredPopularConcert && (
+                      <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-white/80">
+                        <TrendingUp
+                            size={14}
+                        />
+
+                        예매 완료 좌석{' '}
+                        {
+                          featuredPopularConcert
+                              .completedReservationSeatCount
+                        }
+                        석
+                      </div>
+                  )}
+
                   <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-white">
                     공연 보기
 
@@ -473,6 +591,128 @@ export default function HomePage() {
               </button>
             </section>
         )}
+
+        {/*
+         * =====================================================
+         * Popular Concerts
+         * =====================================================
+         *
+         * 현재 COMPLETED 예약 데이터가 없으면
+         * 빈 상태 UI를 표시한다.
+         */}
+        <section className="mt-10">
+          <div className="flex items-end justify-between px-5">
+            <div>
+              <div className="flex items-center gap-2">
+                <Flame
+                    size={18}
+                    className="text-orange-500"
+                />
+
+                <h2 className="text-lg font-bold text-slate-950">
+                  지금 인기 있는 공연
+                </h2>
+              </div>
+
+              <p className="mt-1 text-xs text-slate-400">
+                예매 완료 좌석 수를 기준으로 집계해요
+              </p>
+            </div>
+          </div>
+
+          {popularConcerts.length ===
+          0 ? (
+              <div className="px-5 pt-4">
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-5 py-7 text-center">
+                  <TrendingUp
+                      size={27}
+                      className="mx-auto text-slate-300"
+                  />
+
+                  <p className="mt-3 text-sm font-semibold text-slate-600">
+                    아직 인기 공연 데이터가 없습니다.
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-slate-400">
+                    예매가 완료되면
+                    <br/>
+                    인기 공연 순위가 이곳에 표시됩니다.
+                  </p>
+                </div>
+              </div>
+          ) : (
+              <div className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {popularConcerts.map(
+                    (
+                        concert,
+                    ) => (
+                        <button
+                            key={
+                              concert.concertId
+                            }
+                            type="button"
+                            onClick={() =>
+                                navigate(
+                                    `/concerts/${concert.concertId}`,
+                                )
+                            }
+                            className="group w-[150px] shrink-0 snap-start text-left"
+                        >
+                          <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-slate-100">
+                            <ConcertPoster
+                                src={
+                                  concert.posterUrl
+                                }
+                                alt={`${concert.title} 포스터`}
+                                className="size-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                            />
+
+                            <div className="absolute left-2 top-2 flex size-8 items-center justify-center rounded-xl bg-slate-950/85 text-sm font-black text-white shadow-sm backdrop-blur">
+                              {
+                                concert.rank
+                              }
+                            </div>
+
+                            {concert.rank === 1 && (
+                                <div className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-xl bg-white/90 text-amber-500 shadow-sm backdrop-blur">
+                                  <Crown
+                                      size={17}
+                                  />
+                                </div>
+                            )}
+                          </div>
+
+                          <p className="mt-3 text-[10px] font-bold text-indigo-600">
+                            {
+                                CATEGORY_LABELS[
+                                    concert.category
+                                    ] ??
+                                concert.category
+                            }
+                          </p>
+
+                          <h3 className="mt-1 line-clamp-2 text-sm font-bold leading-5 text-slate-900">
+                            {
+                              concert.title
+                            }
+                          </h3>
+
+                          <div className="mt-2 flex items-center gap-1 text-[11px] font-medium text-slate-400">
+                            <Ticket
+                                size={12}
+                            />
+
+                            {
+                              concert.completedReservationSeatCount
+                            }
+                            석 예매
+                          </div>
+                        </button>
+                    ),
+                )}
+              </div>
+          )}
+        </section>
 
         {/*
          * =====================================================
@@ -528,10 +768,6 @@ export default function HomePage() {
               </div>
           ) : (
               <div className="mt-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {/*
-                 * featured 제외 목록이 비어 있으면
-                 * featured 자체도 카드 목록에 표시한다.
-                 */}
                 {(displayConcerts.length >
                     0
                         ? displayConcerts
@@ -634,9 +870,6 @@ export default function HomePage() {
                             }
                             className="group flex w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 text-left transition hover:border-indigo-200 hover:shadow-sm"
                         >
-                          {/*
-                           * Poster
-                           */}
                           <div className="h-[118px] w-[86px] shrink-0 overflow-hidden rounded-xl bg-slate-100">
                             <ConcertPoster
                                 src={
@@ -647,9 +880,6 @@ export default function HomePage() {
                             />
                           </div>
 
-                          {/*
-                           * Information
-                           */}
                           <div className="min-w-0 flex-1 py-0.5 pl-4">
                             <div className="flex min-w-0 items-center gap-2">
                               <span className="shrink-0 rounded-full bg-indigo-50 px-2 py-1 text-[10px] font-bold text-indigo-600">
@@ -750,10 +980,53 @@ export default function HomePage() {
 
 /*
  * ============================================================
+ * PopularConcert → Concert
+ * ============================================================
+ *
+ * 기존 Hero 컴포넌트가 Concert 형태를 사용하므로
+ * 인기 공연 DTO를 화면 표시용 Concert로 변환한다.
+ *
+ * 인기 API에는 description / runningTime / status가 없으므로
+ * 홈 Hero에서 사용하지 않는 값은 기본값을 넣는다.
+ */
+function toConcert(
+    concert: PopularConcert,
+): Concert {
+  return {
+    concertId:
+    concert.concertId,
+
+    title:
+    concert.title,
+
+    subtitle:
+    concert.subtitle,
+
+    description:
+        '',
+
+    category:
+    concert.category,
+
+    runningTime:
+        0,
+
+    ageRating:
+    concert.ageRating,
+
+    posterUrl:
+    concert.posterUrl,
+
+    status:
+        'PUBLISHED',
+  };
+}
+
+/*
+ * ============================================================
  * Loading Skeleton
  * ============================================================
  */
-
 function HomeSkeleton() {
   return (
       <div className="animate-pulse pb-10">
@@ -769,6 +1042,38 @@ function HomeSkeleton() {
 
         <section className="mt-7 px-5">
           <div className="aspect-[16/10] rounded-[24px] bg-slate-200"/>
+        </section>
+
+        <section className="mt-10 px-5">
+          <div className="h-5 w-40 rounded bg-slate-200"/>
+
+          <div className="mt-2 h-3 w-52 rounded bg-slate-100"/>
+
+          <div className="mt-4 flex gap-3 overflow-hidden">
+            {Array.from({
+              length: 3,
+            }).map(
+                (
+                    _,
+                    index,
+                ) => (
+                    <div
+                        key={
+                          index
+                        }
+                        className="w-[150px] shrink-0"
+                    >
+                      <div className="aspect-[3/4] rounded-2xl bg-slate-200"/>
+
+                      <div className="mt-3 h-3 w-14 rounded bg-slate-200"/>
+
+                      <div className="mt-2 h-4 rounded bg-slate-200"/>
+
+                      <div className="mt-2 h-3 w-2/3 rounded bg-slate-100"/>
+                    </div>
+                ),
+            )}
+          </div>
         </section>
 
         <section className="mt-10 px-5">
@@ -849,7 +1154,6 @@ function HomeSkeleton() {
  * Helpers
  * ============================================================
  */
-
 function getPerformanceStatusLabel(
     status: string,
 ): string {
