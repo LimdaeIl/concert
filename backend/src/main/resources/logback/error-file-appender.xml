@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<included>
+
+  <!-- ============================================================
+       WARN / ERROR Log
+       WARN 이상 로그를 별도 파일에도 저장한다.
+       파일 예:  concert-backend-error-20260811.log
+       같은 날짜에 재시작되어도 append된다.
+       ============================================================ -->
+  <appender name="ERROR_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <append>true</append>
+    <!-- WARN + ERROR -->
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>WARN</level>
+    </filter>
+    <encoder>
+      <pattern>${FILE_LOG_PATTERN}</pattern>
+      <charset>UTF-8</charset>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_PATH}/concert-backend-error-%d{yyyyMMdd,Asia/Seoul}.log</fileNamePattern>
+
+      <!-- 최근 14일 보관 -->
+      <maxHistory>14</maxHistory>
+      <!-- WARN / ERROR 로그 최대 용량 -->
+      <totalSizeCap>1GB</totalSizeCap>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
+    </rollingPolicy>
+  </appender>
+</included>
