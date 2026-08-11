@@ -6,13 +6,18 @@ on:
       - main
     paths:
       - "backend/**"
-      - "deploy.yml"
+      - "monitoring/**"
+      - "docker-compose.prod.yml"
+      - ".github/workflows/deploy.yml"
 
   workflow_dispatch:
 
 concurrency:
   group: backend-production
   cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   deploy:
@@ -30,6 +35,10 @@ jobs:
 
           ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
 
+      # ---------------------------------------
+      # EC2 source update
+      # ---------------------------------------
+
       - name: Update source on EC2
         shell: bash
         run: |
@@ -46,21 +55,90 @@ jobs:
 
           EOF
 
-      - name: Create production env
+      # ---------------------------------------
+      # Spring production environment
+      # ---------------------------------------
+
+      - name: Create backend production env
         shell: bash
         run: |
-          printf '%s' "${{ secrets.PROD_ENV }}" > .env
-          chmod 600 .env
+          printf '%s' "${{ secrets.PROD_ENV }}" > backend.env
+          chmod 600 backend.env
 
-      - name: Upload production env
+      - name: Upload backend production env
         shell: bash
         run: |
           scp \
             -i ~/.ssh/ec2_key \
-            .env \
+            backend.env \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/concert/backend/.env"
 
-      - name: Build and restart backend
+      # ---------------------------------------
+      # Docker production environment
+      # ---------------------------------------
+
+      - name: Create Docker production env
+        shell: bash
+        run: |
+          printf '%s' "${{ secrets.PROD_COMPOSE_ENV }}" > compose.env
+          chmod 600 compose.env
+
+      - name: Upload Docker production env
+        shell: bash
+        run: |
+          scp \
+            -i ~/.ssh/ec2_key \
+            compose.env \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/concert/.env.prod.compose"
+
+      # ---------------------------------------
+      # Docker infrastructure
+      # ---------------------------------------
+
+      - name: Deploy production infrastructure
+        shell: bash
+        run: |
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          cd /home/ubuntu/app/concert
+
+          chmod 600 .env.prod.compose
+
+          echo "===== Validate Docker Compose ====="
+          docker compose \
+            --env-file .env.prod.compose \
+            -f docker-compose.prod.yml \
+            config --quiet
+
+          echo "===== Pull Docker Images ====="
+          docker compose \
+            --env-file .env.prod.compose \
+            -f docker-compose.prod.yml \
+            pull
+
+          echo "===== Start Infrastructure ====="
+          docker compose \
+            --env-file .env.prod.compose \
+            -f docker-compose.prod.yml \
+            up -d
+
+          echo "===== Docker Status ====="
+          docker compose \
+            --env-file .env.prod.compose \
+            -f docker-compose.prod.yml \
+            ps
+
+          EOF
+
+      # ---------------------------------------
+      # Backend build
+      # ---------------------------------------
+
+      - name: Build backend
         shell: bash
         run: |
           ssh \
@@ -85,8 +163,10 @@ jobs:
           echo "===== Java ====="
           java -version
 
-          echo "===== Build ====="
+          echo "===== Gradle Build ====="
+
           chmod +x gradlew
+
           ./gradlew clean bootJar -x test
 
           JAR_FILE=$(find build/libs \
@@ -94,6 +174,7 @@ jobs:
             -type f \
             -name '*.jar' \
             ! -name '*-plain.jar' \
+            ! -name 'backend.jar' \
             | head -n 1)
 
           if [ -z "$JAR_FILE" ]; then
@@ -101,46 +182,75 @@ jobs:
             exit 1
           fi
 
-          echo "===== Stop existing application ====="
-          if [ -f app.pid ]; then
-            OLD_PID=$(cat app.pid)
+          cp "$JAR_FILE" build/libs/backend.jar
 
-            if kill -0 "$OLD_PID" 2>/dev/null; then
-              kill "$OLD_PID"
+          echo "Built:"
+          ls -lh build/libs/backend.jar
 
-              for i in {1..15}; do
-                if ! kill -0 "$OLD_PID" 2>/dev/null; then
-                  break
-                fi
-                sleep 1
-              done
+          EOF
 
-              if kill -0 "$OLD_PID" 2>/dev/null; then
-                kill -9 "$OLD_PID"
-              fi
+      # ---------------------------------------
+      # Backend restart
+      # ---------------------------------------
+
+      - name: Restart backend
+        shell: bash
+        run: |
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          echo "===== Restart Backend ====="
+
+          sudo systemctl restart concert-backend
+
+          sleep 5
+
+          sudo systemctl is-active --quiet concert-backend
+
+          echo "===== Backend Status ====="
+          sudo systemctl --no-pager --full status concert-backend
+
+          EOF
+
+      # ---------------------------------------
+      # Health check
+      # ---------------------------------------
+
+      - name: Health check
+        shell: bash
+        run: |
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          echo "===== Health Check ====="
+
+          for i in {1..30}; do
+            if curl \
+              --fail \
+              --silent \
+              http://127.0.0.1:8080/actuator/health \
+              > /dev/null; then
+
+              echo "Backend is healthy"
+              exit 0
             fi
 
-            rm -f app.pid
-          fi
+            sleep 2
+          done
 
-          echo "===== Start application ====="
-          nohup java -jar "$JAR_FILE" \
-            --spring.profiles.active=prod \
-            > app.log 2>&1 &
+          echo "Backend health check failed"
 
-          NEW_PID=$!
-          echo "$NEW_PID" > app.pid
+          sudo journalctl \
+            -u concert-backend \
+            -n 200 \
+            --no-pager
 
-          sleep 10
-
-          if ! kill -0 "$NEW_PID" 2>/dev/null; then
-            echo "Application failed"
-            tail -n 200 app.log
-            exit 1
-          fi
-
-          echo "===== Deployment success ====="
-          ps -fp "$NEW_PID"
-          tail -n 50 app.log
+          exit 1
 
           EOF
