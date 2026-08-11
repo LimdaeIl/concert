@@ -25,19 +25,62 @@ jobs:
     timeout-minutes: 20
 
     steps:
+      # SSH
       - name: Configure SSH
         shell: bash
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
+          set -euo pipefail
+
+          if [ -z "$EC2_SSH_KEY" ]; then
+            echo "EC2_SSH_KEY secret is empty"
+            exit 1
+          fi
+
+          if [ -z "$EC2_HOST" ]; then
+            echo "EC2_HOST secret is empty"
+            exit 1
+          fi
+
           mkdir -p ~/.ssh
 
-          printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key
+          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/ec2_key
           chmod 600 ~/.ssh/ec2_key
 
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
-      # ---------------------------------------
-      # EC2 source update
-      # ---------------------------------------
+
+      # Validate deployment secrets
+
+      - name: Validate deployment secrets
+        shell: bash
+        env:
+          EC2_USER: ${{ secrets.EC2_USER }}
+          PROD_ENV: ${{ secrets.PROD_ENV }}
+          PROD_COMPOSE_ENV: ${{ secrets.PROD_COMPOSE_ENV }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$EC2_USER" ]; then
+            echo "EC2_USER secret is empty"
+            exit 1
+          fi
+
+          if [ -z "$PROD_ENV" ]; then
+            echo "PROD_ENV secret is empty"
+            exit 1
+          fi
+
+          if [ -z "$PROD_COMPOSE_ENV" ]; then
+            echo "PROD_COMPOSE_ENV secret is empty"
+            exit 1
+          fi
+
+          echo "Deployment secrets validated"
+
+      # Update source
 
       - name: Update source on EC2
         shell: bash
@@ -50,50 +93,200 @@ jobs:
 
           cd /home/ubuntu/app/concert
 
+          echo "===== Update Source ====="
+
           git fetch origin
           git reset --hard origin/main
 
+          echo "===== Current Commit ====="
+          git log -1 --oneline
+
           EOF
 
-      # ---------------------------------------
-      # Spring production environment
-      # ---------------------------------------
+      # Spring Boot production environment
+      # PROD_ENV -> backend/.env
 
       - name: Create backend production env
         shell: bash
+        env:
+          PROD_ENV: ${{ secrets.PROD_ENV }}
         run: |
-          printf '%s' "${{ secrets.PROD_ENV }}" > backend.env
+          set -euo pipefail
+
+          if [ -z "$PROD_ENV" ]; then
+            echo "PROD_ENV secret is empty"
+            exit 1
+          fi
+
+          printf '%s' "$PROD_ENV" > backend.env
           chmod 600 backend.env
+
+          if [ ! -s backend.env ]; then
+            echo "backend.env is empty"
+            exit 1
+          fi
+
+          echo "Backend production env created"
+
 
       - name: Upload backend production env
         shell: bash
         run: |
+          set -euo pipefail
+
           scp \
             -i ~/.ssh/ec2_key \
             backend.env \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/concert/backend/.env"
 
-      # ---------------------------------------
-      # Docker production environment
-      # ---------------------------------------
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          chmod 600 /home/ubuntu/app/concert/backend/.env
+
+          if [ ! -s /home/ubuntu/app/concert/backend/.env ]; then
+            echo "backend/.env is empty"
+            exit 1
+          fi
+
+          echo "Backend env uploaded"
+
+          EOF
+
+      # Docker Compose production environment
+      # PROD_COMPOSE_ENV -> .env.prod.compose
 
       - name: Create Docker production env
         shell: bash
+        env:
+          PROD_COMPOSE_ENV: ${{ secrets.PROD_COMPOSE_ENV }}
         run: |
-          printf '%s' "${{ secrets.PROD_COMPOSE_ENV }}" > compose.env
+          set -euo pipefail
+
+          if [ -z "$PROD_COMPOSE_ENV" ]; then
+            echo "PROD_COMPOSE_ENV secret is empty"
+            exit 1
+          fi
+
+          printf '%s' "$PROD_COMPOSE_ENV" > compose.env
           chmod 600 compose.env
+
+          if [ ! -s compose.env ]; then
+            echo "compose.env is empty"
+            exit 1
+          fi
+
+          echo "Docker production env created"
+
 
       - name: Upload Docker production env
         shell: bash
         run: |
+          set -euo pipefail
+
           scp \
             -i ~/.ssh/ec2_key \
             compose.env \
             "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/concert/.env.prod.compose"
 
-      # ---------------------------------------
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          chmod 600 /home/ubuntu/app/concert/.env.prod.compose
+
+          if [ ! -s /home/ubuntu/app/concert/.env.prod.compose ]; then
+            echo ".env.prod.compose is empty"
+            exit 1
+          fi
+
+          echo "Docker env uploaded"
+
+          EOF
+
+
+      # Required directories
+
+      - name: Prepare production directories
+        shell: bash
+        run: |
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          cd /home/ubuntu/app/concert
+
+          echo "===== Prepare Directories ====="
+
+          mkdir -p logs
+
+          chmod 755 logs
+
+          EOF
+
+
       # Docker infrastructure
-      # ---------------------------------------
+      #
+      # Redis
+      # Prometheus
+      # Loki
+      # Alloy
+      # Grafana
+
+      - name: Validate Docker Compose
+        shell: bash
+        run: |
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          cd /home/ubuntu/app/concert
+
+          echo "===== Docker ====="
+          docker --version
+          docker compose version
+
+          echo "===== Validate Docker Compose ====="
+
+          docker compose \
+            --env-file .env.prod.compose \
+            -f docker-compose.prod.yml \
+            config --quiet
+
+          echo "Docker Compose configuration is valid"
+
+          EOF
+
+
+      - name: Pull production Docker images
+        shell: bash
+        run: |
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          cd /home/ubuntu/app/concert
+
+          echo "===== Pull Docker Images ====="
+
+          docker compose \
+            --env-file .env.prod.compose \
+            -f docker-compose.prod.yml \
+            pull
+
+          EOF
+
 
       - name: Deploy production infrastructure
         shell: bash
@@ -106,27 +299,15 @@ jobs:
 
           cd /home/ubuntu/app/concert
 
-          chmod 600 .env.prod.compose
-
-          echo "===== Validate Docker Compose ====="
-          docker compose \
-            --env-file .env.prod.compose \
-            -f docker-compose.prod.yml \
-            config --quiet
-
-          echo "===== Pull Docker Images ====="
-          docker compose \
-            --env-file .env.prod.compose \
-            -f docker-compose.prod.yml \
-            pull
-
           echo "===== Start Infrastructure ====="
+
           docker compose \
             --env-file .env.prod.compose \
             -f docker-compose.prod.yml \
             up -d
 
           echo "===== Docker Status ====="
+
           docker compose \
             --env-file .env.prod.compose \
             -f docker-compose.prod.yml \
@@ -134,9 +315,9 @@ jobs:
 
           EOF
 
-      # ---------------------------------------
+
       # Backend build
-      # ---------------------------------------
+
 
       - name: Build backend
         shell: bash
@@ -149,16 +330,14 @@ jobs:
 
           cd /home/ubuntu/app/concert/backend
 
-          if [ ! -f .env ]; then
-            echo ".env file not found"
+          echo "===== Validate Backend Environment ====="
+
+          if [ ! -s .env ]; then
+            echo "backend/.env file not found or empty"
             exit 1
           fi
 
           chmod 600 .env
-
-          set -a
-          source .env
-          set +a
 
           echo "===== Java ====="
           java -version
@@ -169,6 +348,8 @@ jobs:
 
           ./gradlew clean bootJar -x test
 
+          echo "===== Find Boot Jar ====="
+
           JAR_FILE=$(find build/libs \
             -maxdepth 1 \
             -type f \
@@ -178,20 +359,22 @@ jobs:
             | head -n 1)
 
           if [ -z "$JAR_FILE" ]; then
-            echo "Jar file not found"
+            echo "Boot Jar file not found"
             exit 1
           fi
 
+          echo "Boot Jar: $JAR_FILE"
+
           cp "$JAR_FILE" build/libs/backend.jar
 
-          echo "Built:"
+          echo "===== Deployment Jar ====="
+
           ls -lh build/libs/backend.jar
 
           EOF
 
-      # ---------------------------------------
-      # Backend restart
-      # ---------------------------------------
+
+      # Restart Spring Boot
 
       - name: Restart backend
         shell: bash
@@ -206,18 +389,39 @@ jobs:
 
           sudo systemctl restart concert-backend
 
+          echo "Waiting for backend process..."
+
           sleep 5
 
-          sudo systemctl is-active --quiet concert-backend
+          if ! sudo systemctl is-active --quiet concert-backend; then
+            echo "concert-backend service failed to start"
+
+            sudo systemctl \
+              --no-pager \
+              --full \
+              status concert-backend || true
+
+            echo "===== Recent Backend Logs ====="
+
+            sudo journalctl \
+              -u concert-backend \
+              -n 200 \
+              --no-pager
+
+            exit 1
+          fi
 
           echo "===== Backend Status ====="
-          sudo systemctl --no-pager --full status concert-backend
+
+          sudo systemctl \
+            --no-pager \
+            --full \
+            status concert-backend
 
           EOF
 
-      # ---------------------------------------
-      # Health check
-      # ---------------------------------------
+
+      # Spring Boot health check
 
       - name: Health check
         shell: bash
@@ -228,12 +432,14 @@ jobs:
 
           set -euo pipefail
 
-          echo "===== Health Check ====="
+          echo "===== Backend Health Check ====="
 
-          for i in {1..30}; do
+          for i in $(seq 1 30); do
+
             if curl \
               --fail \
               --silent \
+              --show-error \
               http://127.0.0.1:8080/actuator/health \
               > /dev/null; then
 
@@ -241,16 +447,89 @@ jobs:
               exit 0
             fi
 
+            echo "Waiting for backend... ($i/30)"
+
             sleep 2
           done
 
           echo "Backend health check failed"
+
+          echo "===== Backend Service ====="
+
+          sudo systemctl \
+            --no-pager \
+            --full \
+            status concert-backend || true
+
+          echo "===== Recent Backend Logs ====="
 
           sudo journalctl \
             -u concert-backend \
             -n 200 \
             --no-pager
 
+          echo "===== Docker Status ====="
+
+          cd /home/ubuntu/app/concert
+
+          docker compose \
+            --env-file .env.prod.compose \
+            -f docker-compose.prod.yml \
+            ps || true
+
           exit 1
 
           EOF
+
+
+      # Deployment result
+
+      - name: Deployment summary
+        shell: bash
+        run: |
+          ssh \
+            -i ~/.ssh/ec2_key \
+            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
+
+          set -euo pipefail
+
+          cd /home/ubuntu/app/concert
+
+          echo "=========================================="
+          echo "       Backend Deployment Successful"
+          echo "=========================================="
+
+          echo
+          echo "===== Backend ====="
+          sudo systemctl is-active concert-backend
+
+          echo
+          echo "===== Docker Infrastructure ====="
+
+          docker compose \
+            --env-file .env.prod.compose \
+            -f docker-compose.prod.yml \
+            ps
+
+          echo
+          echo "===== Application Logs ====="
+
+          ls -lh logs || true
+
+          echo
+          echo "===== Commit ====="
+
+          git log -1 --oneline
+
+          EOF
+
+
+      # Runner cleanup
+
+      - name: Cleanup temporary files
+        if: always()
+        shell: bash
+        run: |
+          rm -f backend.env
+          rm -f compose.env
+          rm -f ~/.ssh/ec2_key
