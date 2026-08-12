@@ -145,16 +145,16 @@ const DENSITY_CONFIG:
     > = {
   COMPACT: {
     seatClass:
-        'h-7 min-w-7 px-1 text-[9px] rounded-[5px]',
+        'h-5 min-w-5 px-0.5 text-[7px] rounded-[3px]',
 
     seatGapClass:
-        'gap-1',
+        'gap-[3px]',
 
     aisleClass:
-        'ml-4',
+        'ml-2.5',
 
     rowGapClass:
-        'space-y-1',
+        'space-y-0.5',
   },
 
   NORMAL: {
@@ -2551,7 +2551,7 @@ function SeatRow({
                       )
                   }
                   className={[
-                    'flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-[11px] font-black transition',
+                    'flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-[10px] font-black transition',
 
                     allSelected
                         ? 'bg-indigo-600 text-white'
@@ -2699,7 +2699,7 @@ function RowBadge({
   rowName: string;
 }) {
   return (
-      <span className="flex h-8 min-w-8 items-center justify-center rounded-lg bg-slate-100 px-2 text-[11px] font-black text-slate-500 ring-1 ring-slate-200/60">
+      <span className="flex h-7 min-w-7 items-center justify-center rounded-md bg-slate-100 px-1.5 text-[10px] font-black text-slate-500 ring-1 ring-slate-200/60">
         {rowName}
       </span>
   );
