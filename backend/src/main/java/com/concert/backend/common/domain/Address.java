@@ -15,7 +15,7 @@ public class Address {
 
     private static final String WITHDRAWN_ROAD_ADDRESS = "WITHDRAWN";
 
-    @Column(name = "road_address", nullable = false, length = 255)
+    @Column(name = "road_address", length = 255)
     private String roadAddress;
 
     @Column(name = "jibun_address", length = 255)

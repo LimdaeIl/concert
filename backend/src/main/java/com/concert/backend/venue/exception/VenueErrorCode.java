@@ -15,7 +15,8 @@ public enum VenueErrorCode implements ErrorCode {
     VENUE_PHONE_REQUIRED(HttpStatus.BAD_REQUEST, "공연장 전화번호는 필수입니다."),
     VENUE_ADDRESS_REQUIRED(HttpStatus.BAD_REQUEST, "공연장 주소는 필수입니다."),
     VENUE_STATUS_REQUIRED(HttpStatus.BAD_REQUEST, "공연장 상태는 필수입니다."),
-    SAME_VENUE_STATUS(HttpStatus.BAD_REQUEST, "현재 공연장 상태와 동일합니다.");
+    SAME_VENUE_STATUS(HttpStatus.BAD_REQUEST, "현재 공연장 상태와 동일합니다."),
+    VENUE_COORDINATES_REQUIRED(HttpStatus.BAD_REQUEST, "공연장 좌표는 필수입니다.");
 
     private final HttpStatus status;
     private final String message;

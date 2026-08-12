@@ -85,14 +85,20 @@ public class Member extends BaseTimeEntity {
     )
     private final List<MemberSocialAccount> socialAccounts = new ArrayList<>();
 
-    private Member(String email, String password, String name, String phone, Address address) {
-        this.email = Objects.requireNonNull(email);
+    private Member(
+            String email,
+            String password,
+            String name,
+            String phone,
+            Address address
+    ) {
+        this.email = requireEmail(email);
         this.password = password;
-        this.name = Objects.requireNonNull(name);
-        this.phone = Objects.requireNonNull(phone);
+        this.name = requireName(name);
+        this.phone = requirePhone(phone);
         this.role = MemberRole.MEMBER;
         this.status = MemberStatus.ACTIVE;
-        this.address = Objects.requireNonNull(address);
+        this.address = requireAddress(address);
     }
 
     public static Member createLocal(
@@ -102,7 +108,13 @@ public class Member extends BaseTimeEntity {
             String phone,
             Address address
     ) {
-        return new Member(email, Objects.requireNonNull(encodedPassword), name, phone, address);
+        return new Member(
+                email,
+                Objects.requireNonNull(encodedPassword),
+                name,
+                phone,
+                address
+        );
     }
 
     public static Member createSocial(
@@ -111,7 +123,13 @@ public class Member extends BaseTimeEntity {
             String phone,
             Address address
     ) {
-        return new Member(email, null, name, phone, address);
+        return new Member(
+                email,
+                null,
+                name,
+                phone,
+                address
+        );
     }
 
     public void addSocialAccount(
@@ -170,11 +188,7 @@ public class Member extends BaseTimeEntity {
         this.address = Address.anonymized();
 
         /*
-         * 프로필 이미지 연결 제거.
-         *
-         * 실제 S3 Object 삭제는
-         * DeleteMeService에서 기존 key를 먼저 확보한 뒤
-         * AFTER_COMMIT 이벤트로 처리한다.
+         * 프로필 이미지 연결 제거
          */
         this.profileImageKey = null;
 
@@ -189,42 +203,33 @@ public class Member extends BaseTimeEntity {
         return status == MemberStatus.WITHDRAWN;
     }
 
-    private String createWithdrawnEmail(Long memberId) {
-        return "withdrawn_" + memberId + "@deleted.local";
-    }
-
-    private String createWithdrawnPhone(Long memberId) {
-        /*
-         * phone 컬럼 길이는 11이다.
-         * 9 + 10자리 zero-padding 형식으로 회원별 고유값을 만든다.
-         */
-        if (memberId > 9_999_999_999L) {
-            throw new IllegalStateException(
-                    "탈퇴 회원 전화번호 익명화 범위를 초과했습니다."
+    public void updateProfile(
+            String name,
+            Address address
+    ) {
+        if (status != MemberStatus.ACTIVE) {
+            throw new MemberException(
+                    MemberErrorCode.MEMBER_NOT_ACTIVE
             );
         }
 
-        return "9" + String.format("%010d", memberId);
-    }
+        String requiredName = requireName(name);
+        Address requiredAddress = requireAddress(address);
 
-    public void updateProfile(String name, Address address) {
-        if (status != MemberStatus.ACTIVE) {
-            throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE);
-        }
-
-        if (name == null || name.isBlank()) {
-            throw new MemberException(MemberErrorCode.NAME_REQUIRED);
-        }
-
-        boolean nameChanged = !this.name.equals(name);
-        boolean addressChanged = !Objects.equals(this.address, address);
+        boolean nameChanged = !this.name.equals(requiredName);
+        boolean addressChanged = !Objects.equals(
+                this.address,
+                requiredAddress
+        );
 
         if (!nameChanged && !addressChanged) {
-            throw new MemberException(MemberErrorCode.NO_PROFILE_CHANGES);
+            throw new MemberException(
+                    MemberErrorCode.NO_PROFILE_CHANGES
+            );
         }
 
-        this.name = name;
-        this.address = Objects.requireNonNull(address);
+        this.name = requiredName;
+        this.address = requiredAddress;
     }
 
     public boolean hasPassword() {
@@ -233,11 +238,15 @@ public class Member extends BaseTimeEntity {
 
     public void changePassword(String encodedPassword) {
         if (!isSignInAllowed()) {
-            throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE);
+            throw new MemberException(
+                    MemberErrorCode.MEMBER_NOT_ACTIVE
+            );
         }
 
         if (!hasPassword()) {
-            throw new MemberException(MemberErrorCode.PASSWORD_CHANGE_NOT_AVAILABLE);
+            throw new MemberException(
+                    MemberErrorCode.PASSWORD_CHANGE_NOT_AVAILABLE
+            );
         }
 
         this.password = Objects.requireNonNull(encodedPassword);
@@ -250,61 +259,115 @@ public class Member extends BaseTimeEntity {
             );
         }
 
-        if (newEmail == null || newEmail.isBlank()) {
-            throw new MemberException(
-                    MemberErrorCode.EMAIL_REQUIRED
-            );
-        }
+        String requiredEmail = requireEmail(newEmail);
 
-        if (email.equalsIgnoreCase(newEmail)) {
+        if (email.equalsIgnoreCase(requiredEmail)) {
             throw new MemberException(
                     MemberErrorCode.SAME_AS_CURRENT_EMAIL
             );
         }
 
-        this.email = newEmail;
+        this.email = requiredEmail;
     }
 
     public void changePhone(String phone) {
         if (!isSignInAllowed()) {
-            throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE);
+            throw new MemberException(
+                    MemberErrorCode.MEMBER_NOT_ACTIVE
+            );
         }
 
-        if (phone == null || phone.isBlank()) {
-            throw new MemberException(MemberErrorCode.PHONE_REQUIRED);
+        String requiredPhone = requirePhone(phone);
+
+        if (this.phone.equals(requiredPhone)) {
+            throw new MemberException(
+                    MemberErrorCode.SAME_AS_CURRENT_PHONE
+            );
         }
 
-        if (this.phone.equals(phone)) {
-            throw new MemberException(MemberErrorCode.SAME_AS_CURRENT_PHONE);
-        }
-
-        this.phone = phone;
+        this.phone = requiredPhone;
     }
 
     public void updateProfileImage(
             String profileImageKey
     ) {
         if (!isSignInAllowed()) {
-            throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE
+            throw new MemberException(
+                    MemberErrorCode.MEMBER_NOT_ACTIVE
             );
         }
 
         if (profileImageKey == null
                 || profileImageKey.isBlank()) {
-            throw new MemberException(MemberErrorCode.PROFILE_IMAGE_KEY_REQUIRED);
+            throw new MemberException(
+                    MemberErrorCode.PROFILE_IMAGE_KEY_REQUIRED
+            );
         }
 
         this.profileImageKey = profileImageKey.trim();
     }
 
-
     public void removeProfileImage() {
         if (!isSignInAllowed()) {
-            throw new MemberException(MemberErrorCode.MEMBER_NOT_ACTIVE);
+            throw new MemberException(
+                    MemberErrorCode.MEMBER_NOT_ACTIVE
+            );
         }
 
         this.profileImageKey = null;
     }
 
-}
+    private static String requireEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new MemberException(
+                    MemberErrorCode.EMAIL_REQUIRED
+            );
+        }
 
+        return email.trim();
+    }
+
+    private static String requireName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new MemberException(
+                    MemberErrorCode.NAME_REQUIRED
+            );
+        }
+
+        return name.trim();
+    }
+
+    private static String requirePhone(String phone) {
+        if (phone == null || phone.isBlank()) {
+            throw new MemberException(
+                    MemberErrorCode.PHONE_REQUIRED
+            );
+        }
+
+        return phone.trim();
+    }
+
+    private static Address requireAddress(Address address) {
+        if (address == null) {
+            throw new MemberException(
+                    MemberErrorCode.ADDRESS_REQUIRED
+            );
+        }
+
+        return address;
+    }
+
+    private String createWithdrawnEmail(Long memberId) {
+        return "withdrawn_" + memberId + "@deleted.local";
+    }
+
+    private String createWithdrawnPhone(Long memberId) {
+        if (memberId > 9_999_999_999L) {
+            throw new IllegalStateException(
+                    "탈퇴 회원 전화번호 익명화 범위를 초과했습니다."
+            );
+        }
+
+        return "9" + String.format("%010d", memberId);
+    }
+}
