@@ -4,6 +4,8 @@ import com.concert.backend.common.domain.Address;
 import com.concert.backend.common.domain.BaseAuditEntity;
 import com.concert.backend.venue.exception.VenueErrorCode;
 import com.concert.backend.venue.exception.VenueException;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -50,6 +52,55 @@ public class Venue extends BaseAuditEntity {
     private VenueStatus status;
 
     @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(
+                    name = "roadAddress",
+                    column = @Column(
+                            name = "road_address",
+                            nullable = false,
+                            length = 255
+                    )
+            ),
+            @AttributeOverride(
+                    name = "jibunAddress",
+                    column = @Column(
+                            name = "jibun_address",
+                            length = 255
+                    )
+            ),
+            @AttributeOverride(
+                    name = "detailAddress",
+                    column = @Column(
+                            name = "detail_address",
+                            length = 255
+                    )
+            ),
+            @AttributeOverride(
+                    name = "zipCode",
+                    column = @Column(
+                            name = "zip_code",
+                            length = 10
+                    )
+            ),
+            @AttributeOverride(
+                    name = "latitude",
+                    column = @Column(
+                            name = "latitude",
+                            nullable = false,
+                            precision = 10,
+                            scale = 7
+                    )
+            ),
+            @AttributeOverride(
+                    name = "longitude",
+                    column = @Column(
+                            name = "longitude",
+                            nullable = false,
+                            precision = 10,
+                            scale = 7
+                    )
+            )
+    })
     private Address address;
 
     private Venue(
@@ -129,6 +180,20 @@ public class Venue extends BaseAuditEntity {
         if (address == null) {
             throw new VenueException(
                     VenueErrorCode.VENUE_ADDRESS_REQUIRED
+            );
+        }
+
+        if (address.getRoadAddress() == null
+                || address.getRoadAddress().isBlank()) {
+            throw new VenueException(
+                    VenueErrorCode.VENUE_ADDRESS_REQUIRED
+            );
+        }
+
+        if (address.getLatitude() == null
+                || address.getLongitude() == null) {
+            throw new VenueException(
+                    VenueErrorCode.VENUE_COORDINATES_REQUIRED
             );
         }
 

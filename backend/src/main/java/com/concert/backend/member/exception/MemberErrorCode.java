@@ -31,7 +31,8 @@ public enum MemberErrorCode implements ErrorCode {
     PHONE_REQUIRED(HttpStatus.BAD_REQUEST, "휴대전화번호는 필수값입니다."),
     PROFILE_IMAGE_KEY_REQUIRED(HttpStatus.BAD_REQUEST, "프로필 이미지 키는 필수값입니다."),
     INVALID_PROFILE_IMAGE_KEY(HttpStatus.BAD_REQUEST, "올바르지 않은 프로필 이미지 경로입니다."),
-    PROFILE_IMAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "업로드된 프로필 이미지를 찾을 수 없습니다.");
+    PROFILE_IMAGE_NOT_FOUND(HttpStatus.BAD_REQUEST, "업로드된 프로필 이미지를 찾을 수 없습니다."),
+    ADDRESS_REQUIRED(HttpStatus.BAD_REQUEST, "주소는 필수값입니다.");
 
     private final HttpStatus status;
     private final String message;
