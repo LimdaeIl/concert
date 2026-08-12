@@ -509,6 +509,7 @@ sketch
 *.html
 !frontend/index.html
 !frontend/src/index.css
+!backend/src/main/resources/templates/mail/email-verification.html
 *.js
 *.jsp
 *.php
