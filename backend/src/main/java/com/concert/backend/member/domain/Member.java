@@ -363,9 +363,7 @@ public class Member extends BaseTimeEntity {
 
     private String createWithdrawnPhone(Long memberId) {
         if (memberId > 9_999_999_999L) {
-            throw new IllegalStateException(
-                    "탈퇴 회원 전화번호 익명화 범위를 초과했습니다."
-            );
+            throw new IllegalStateException("탈퇴 회원 전화번호 익명화 범위를 초과했습니다.");
         }
 
         return "9" + String.format("%010d", memberId);

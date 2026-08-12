@@ -190,13 +190,6 @@ public class Venue extends BaseAuditEntity {
             );
         }
 
-        if (address.getLatitude() == null
-                || address.getLongitude() == null) {
-            throw new VenueException(
-                    VenueErrorCode.VENUE_COORDINATES_REQUIRED
-            );
-        }
-
         return address;
     }
 }
