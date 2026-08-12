@@ -17,17 +17,9 @@ public class UpdatePerformanceStatusService {
     private final PerformanceRepository performanceRepository;
 
     @Transactional
-    public PerformanceResult updateStatus(
-            Long performanceId,
-            UpdatePerformanceStatusCommand command
-    ) {
-        Performance performance = performanceRepository
-                .findById(performanceId)
-                .orElseThrow(() ->
-                        new PerformanceException(
-                                PerformanceErrorCode.PERFORMANCE_NOT_FOUND
-                        )
-                );
+    public PerformanceResult updateStatus(Long performanceId, UpdatePerformanceStatusCommand command) {
+        Performance performance = performanceRepository.findById(performanceId)
+                        .orElseThrow(() -> new PerformanceException(PerformanceErrorCode.PERFORMANCE_NOT_FOUND));
 
         performance.changeStatus(command.status());
 

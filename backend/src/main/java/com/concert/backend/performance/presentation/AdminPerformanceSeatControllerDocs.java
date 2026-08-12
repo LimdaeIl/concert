@@ -6,6 +6,7 @@ import com.concert.backend.performance.presentation.request.BulkCreatePerformanc
 import com.concert.backend.performance.presentation.request.BulkDeletePerformanceSeatRequest;
 import com.concert.backend.performance.presentation.request.UpdatePerformanceSeatRequest;
 import com.concert.backend.performance.presentation.request.UpdatePerformanceSeatStatusRequest;
+import com.concert.backend.performance.presentation.response.GetAdminPerformanceSeatCandidateMapResponse;
 import com.concert.backend.performance.presentation.response.GetAdminPerformanceSeatCandidatesResponse;
 import com.concert.backend.performance.presentation.response.GetAdminPerformanceSeatsResponse;
 import com.concert.backend.performance.presentation.response.GetPerformanceSeatsResponse;
@@ -321,6 +322,54 @@ public interface AdminPerformanceSeatControllerDocs {
             @Valid
             @RequestBody
             BulkDeletePerformanceSeatRequest request
+    );
+
+    @Operation(
+            summary = "관리자 공연 판매 좌석 후보 배치도 조회",
+            description = """
+                관리자가 특정 공연 회차에
+                새롭게 등록할 수 있는 물리 좌석 전체를
+                배치도용으로 조회합니다.
+
+                공연 회차가 사용하는 공연홀에 속하고,
+                ACTIVE 상태이며,
+                아직 해당 회차의 판매 좌석으로
+                등록되지 않은 물리 좌석만 반환합니다.
+
+                페이지네이션 없이 전체 후보 좌석을 반환하며,
+                판매 좌석 배치도 선택 UI에서 사용합니다.
+
+                SCHEDULED 상태의 공연 회차에서만
+                조회할 수 있습니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "공연 판매 좌석 후보 배치도 조회 성공"
+    )
+    @ApiResponse(
+            responseCode = "403",
+            description = "관리자 권한 없음"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "공연 회차를 찾을 수 없음"
+    )
+    @ApiResponse(
+            responseCode = "409",
+            description = "판매 좌석을 구성할 수 없는 공연 회차 상태"
+    )
+    ResponseEntity<GetAdminPerformanceSeatCandidateMapResponse>
+    getCandidateSeatMap(
+            @Parameter(
+                    description = "공연 회차 ID",
+                    example = "1"
+            )
+            @PathVariable
+            Long performanceId
     );
 
 }

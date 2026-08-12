@@ -4,6 +4,7 @@ import com.concert.backend.performance.application.result.AdminPerformanceResult
 import java.time.LocalDateTime;
 
 public record AdminPerformanceResponse(
+
         Long performanceId,
         Long concertId,
         Long venueHallId,
@@ -19,7 +20,9 @@ public record AdminPerformanceResponse(
 
         Integer maxTicketsPerMember,
 
-        String status
+        String status,
+
+        long performanceSeatCount
 ) {
 
     public static AdminPerformanceResponse from(
@@ -41,7 +44,9 @@ public record AdminPerformanceResponse(
 
                 result.maxTicketsPerMember(),
 
-                result.status().name()
+                result.status().name(),
+
+                result.performanceSeatCount()
         );
     }
 }

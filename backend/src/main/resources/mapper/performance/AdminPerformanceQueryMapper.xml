@@ -5,6 +5,12 @@
 
 <mapper namespace="com.concert.backend.performance.query.AdminPerformanceQueryMapper">
 
+  <!--
+      ============================================================
+      Search Conditions
+      ============================================================
+  -->
+
   <sql id="searchConditions">
 
     WHERE p.concert_id = #{condition.concertId}
@@ -23,6 +29,31 @@
 
   </sql>
 
+
+  <!--
+      ============================================================
+      Admin Performance Page
+      ============================================================
+
+      한 회차당 하나의 row를 반환한다.
+
+      PerformanceSeat을 LEFT JOIN하고 COUNT하여
+      판매 좌석 수까지 동일한 SQL에서 조회한다.
+
+      따라서 application layer에서
+
+      performanceIds
+          -> countByPerformanceId(...)
+          -> countByPerformanceId(...)
+          -> ...
+
+      같은 N+1 query가 발생하지 않는다.
+
+      LEFT JOIN인 이유:
+      판매 좌석이 아직 0개인 SCHEDULED 회차도
+      관리자 목록에 반드시 표시되어야 하기 때문이다.
+      ============================================================
+  -->
 
   <select
     id="findAll"
@@ -45,7 +76,9 @@
 
     p.max_tickets_per_member AS maxTicketsPerMember,
 
-    p.status AS status
+    p.status AS status,
+
+    COUNT(ps.id) AS performanceSeatCount
 
     FROM v1_performances p
 
@@ -55,7 +88,28 @@
     INNER JOIN v1_venues v
     ON v.id = vh.venue_id
 
+    LEFT JOIN v1_performance_seats ps
+    ON ps.performance_id = p.id
+
     <include refid="searchConditions"/>
+
+    GROUP BY
+    p.id,
+    p.concert_id,
+    p.venue_hall_id,
+
+    v.name,
+    vh.name,
+
+    p.starts_at,
+    p.ends_at,
+
+    p.reservation_opens_at,
+    p.reservation_closes_at,
+
+    p.max_tickets_per_member,
+
+    p.status
 
     ORDER BY
     p.starts_at DESC,
@@ -66,6 +120,23 @@
 
   </select>
 
+
+  <!--
+      ============================================================
+      Count
+      ============================================================
+
+      pagination을 위한 회차 개수이다.
+
+      여기서는 performance_seats를 JOIN하지 않는다.
+
+      만약 JOIN하면 하나의 Performance가 좌석 개수만큼
+      증가하기 때문에 COUNT(*)가 잘못된다.
+
+      회차 자체의 개수만 세면 되므로
+      v1_performances만 조회하는 것이 가장 저렴하다.
+      ============================================================
+  -->
 
   <select
     id="count"

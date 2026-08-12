@@ -15,6 +15,12 @@ export type PerformanceSeatStatus =
     | 'RESERVED'
     | 'BLOCKED';
 
+/*
+ * ============================================================
+ * Admin Performance Seat
+ * ============================================================
+ */
+
 export interface AdminPerformanceSeat {
   performanceSeatId: number;
   performanceId: number;
@@ -34,6 +40,12 @@ export interface AdminPerformanceSeat {
   heldBy: number | null;
   heldUntil: string | null;
 }
+
+/*
+ * ============================================================
+ * Performance Seat List
+ * ============================================================
+ */
 
 export interface GetAdminPerformanceSeatsResponse {
   seats: AdminPerformanceSeat[];
@@ -58,6 +70,15 @@ export interface GetAdminPerformanceSeatsParams {
   seatType?: SeatType;
   status?: PerformanceSeatStatus;
 }
+
+/*
+ * ============================================================
+ * 기존 Candidate List
+ *
+ * 검색 / 필터 / pagination 용 API.
+ * 기존 endpoint를 유지한다.
+ * ============================================================
+ */
 
 export interface AdminPerformanceSeatCandidate {
   seatId: number;
@@ -95,6 +116,44 @@ export interface GetAdminPerformanceSeatCandidatesParams {
   seatType?: SeatType;
 }
 
+/*
+ * ============================================================
+ * Candidate Seat Map
+ *
+ * 판매 좌석 추가 배치도 전용.
+ * pagination 없이 전체 후보 좌석을 내려받는다.
+ * ============================================================
+ */
+
+export interface AdminPerformanceSeatCandidateMapSeat {
+  seatId: number;
+  venueHallId: number;
+
+  sectionName: string;
+  floor: number;
+  rowName: string;
+  seatNumber: string;
+
+  seatType: SeatType;
+}
+
+export interface GetAdminPerformanceSeatCandidateMapResponse {
+  performanceId: number;
+  venueHallId: number;
+
+  performanceStatus: string;
+
+  candidateSeatCount: number;
+
+  seats: AdminPerformanceSeatCandidateMapSeat[];
+}
+
+/*
+ * ============================================================
+ * Create
+ * ============================================================
+ */
+
 export interface CreatePerformanceSeatItem {
   seatId: number;
   grade: SeatGrade;
@@ -104,6 +163,12 @@ export interface CreatePerformanceSeatItem {
 export interface BulkCreatePerformanceSeatsRequest {
   seats: CreatePerformanceSeatItem[];
 }
+
+/*
+ * ============================================================
+ * Update
+ * ============================================================
+ */
 
 export interface UpdatePerformanceSeatRequest {
   grade: SeatGrade;

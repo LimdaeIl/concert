@@ -4,6 +4,7 @@ import {
 
 import type {
   BulkCreatePerformanceSeatsRequest,
+  GetAdminPerformanceSeatCandidateMapResponse,
   GetAdminPerformanceSeatCandidatesParams,
   GetAdminPerformanceSeatCandidatesResponse,
   GetAdminPerformanceSeatsParams,
@@ -11,6 +12,12 @@ import type {
   UpdatePerformanceSeatRequest,
   UpdatePerformanceSeatStatusRequest,
 } from '../types/adminPerformanceSeat';
+
+/*
+ * ============================================================
+ * Performance Seat List
+ * ============================================================
+ */
 
 export async function getAdminPerformanceSeats(
     performanceId: number,
@@ -53,6 +60,14 @@ export async function getAdminPerformanceSeats(
   return data;
 }
 
+/*
+ * ============================================================
+ * 기존 Candidate List
+ *
+ * 검색 / pagination 용.
+ * ============================================================
+ */
+
 export async function getAdminPerformanceSeatCandidates(
     performanceId: number,
     params: GetAdminPerformanceSeatCandidatesParams,
@@ -86,6 +101,31 @@ export async function getAdminPerformanceSeatCandidates(
   return data;
 }
 
+/*
+ * ============================================================
+ * Candidate Seat Map
+ *
+ * 배치도 전용 전체 조회.
+ * ============================================================
+ */
+
+export async function getAdminPerformanceSeatCandidateMap(
+    performanceId: number,
+): Promise<GetAdminPerformanceSeatCandidateMapResponse> {
+  const { data } =
+      await apiClient.get<GetAdminPerformanceSeatCandidateMapResponse>(
+          `/api/v1/admin/performances/${performanceId}/candidate-seat-map`,
+      );
+
+  return data;
+}
+
+/*
+ * ============================================================
+ * Create
+ * ============================================================
+ */
+
 export async function bulkCreatePerformanceSeats(
     performanceId: number,
     request: BulkCreatePerformanceSeatsRequest,
@@ -96,6 +136,12 @@ export async function bulkCreatePerformanceSeats(
   );
 }
 
+/*
+ * ============================================================
+ * Update
+ * ============================================================
+ */
+
 export async function updatePerformanceSeat(
     performanceSeatId: number,
     request: UpdatePerformanceSeatRequest,
@@ -105,6 +151,12 @@ export async function updatePerformanceSeat(
       request,
   );
 }
+
+/*
+ * ============================================================
+ * Administrative Status
+ * ============================================================
+ */
 
 export async function updatePerformanceSeatStatus(
     performanceSeatId: number,

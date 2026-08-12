@@ -30,4 +30,8 @@ public interface PerformanceSeatRepository {
     void deleteAll(Collection<PerformanceSeat> performanceSeats);
 
     boolean existsBySeatIdIn(Collection<Long> seatIds);
+
+    long countByPerformanceId(Long performanceId);
+
+
 }

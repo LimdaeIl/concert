@@ -5,6 +5,7 @@ import com.concert.backend.performance.query.AdminPerformanceQueryRow;
 import java.time.LocalDateTime;
 
 public record AdminPerformanceResult(
+
         Long performanceId,
         Long concertId,
         Long venueHallId,
@@ -20,7 +21,9 @@ public record AdminPerformanceResult(
 
         Integer maxTicketsPerMember,
 
-        PerformanceStatus status
+        PerformanceStatus status,
+
+        long performanceSeatCount
 ) {
 
     public static AdminPerformanceResult from(
@@ -42,7 +45,9 @@ public record AdminPerformanceResult(
 
                 row.maxTicketsPerMember(),
 
-                row.status()
+                row.status(),
+
+                row.performanceSeatCount()
         );
     }
 }

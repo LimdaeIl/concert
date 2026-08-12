@@ -54,4 +54,6 @@ public interface JpaPerformanceSeatRepository
     );
 
     boolean existsBySeat_IdIn(Collection<Long> seatIds);
+
+    long countByPerformance_Id(Long performanceId);
 }

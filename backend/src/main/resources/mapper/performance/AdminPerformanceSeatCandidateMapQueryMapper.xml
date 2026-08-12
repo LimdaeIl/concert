@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.concert.backend.performance.query.AdminPerformanceSeatCandidateMapQueryMapper">
+
+  <select
+    id="findAll"
+    resultType="com.concert.backend.performance.query.AdminPerformanceSeatCandidateMapQueryRow"
+  >
+
+    SELECT
+    s.id AS seatId,
+    s.venue_hall_id AS venueHallId,
+
+    s.section_name AS sectionName,
+    s.floor AS floor,
+    s.row_name AS rowName,
+    s.seat_number AS seatNumber,
+
+    s.seat_type AS seatType
+
+    FROM v1_seats s
+
+    LEFT JOIN v1_performance_seats ps
+    ON ps.seat_id = s.id
+    AND ps.performance_id = #{performanceId}
+
+    WHERE s.venue_hall_id = #{venueHallId}
+
+    AND s.status = 'ACTIVE'
+    AND ps.id IS NULL
+
+    ORDER BY
+    s.floor ASC,
+    s.section_name ASC,
+    s.row_name ASC,
+    s.id ASC
+
+  </select>
+
+</mapper>

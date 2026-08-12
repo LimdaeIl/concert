@@ -6,6 +6,8 @@ import com.concert.backend.concert.exception.ConcertException;
 import com.concert.backend.performance.application.result.AdminPerformancePageResult;
 import com.concert.backend.performance.application.result.AdminPerformanceResult;
 import com.concert.backend.performance.domain.PerformanceStatus;
+import com.concert.backend.performance.exception.PerformanceErrorCode;
+import com.concert.backend.performance.exception.PerformanceException;
 import com.concert.backend.performance.query.AdminPerformanceQueryMapper;
 import com.concert.backend.performance.query.AdminPerformanceQueryRow;
 import com.concert.backend.performance.query.AdminPerformanceSearchCondition;
@@ -55,6 +57,12 @@ public class GetAdminPerformancesService {
                         offset
                 );
 
+        /*
+         * 페이지 메타데이터 계산용.
+         *
+         * PerformanceSeat과 JOIN하지 않는다.
+         * 회차 개수만 세면 되므로 기존 쿼리를 유지한다.
+         */
         long totalElements =
                 adminPerformanceQueryMapper
                         .count(
@@ -70,6 +78,19 @@ public class GetAdminPerformancesService {
                     List.of();
 
         } else {
+
+            /*
+             * findAll SQL 한 번에서:
+             *
+             * - 회차
+             * - 공연장
+             * - 공연홀
+             * - 판매 좌석 수
+             *
+             * 를 전부 조회한다.
+             *
+             * 회차별 count repository 호출 없음.
+             */
             List<AdminPerformanceQueryRow> rows =
                     adminPerformanceQueryMapper
                             .findAll(
@@ -118,14 +139,24 @@ public class GetAdminPerformancesService {
             LocalDateTime from,
             LocalDateTime to
     ) {
+        /*
+         * 한쪽 조건만 입력하는 검색은 허용.
+         *
+         * from만 존재:
+         *   from 이후 검색
+         *
+         * to만 존재:
+         *   to 이전 검색
+         */
         if (from == null
                 || to == null) {
             return;
         }
 
         if (to.isBefore(from)) {
-            throw new IllegalArgumentException(
-                    "조회 종료일시는 시작일시보다 빠를 수 없습니다."
+            throw new PerformanceException(
+                    PerformanceErrorCode
+                            .INVALID_ADMIN_PERFORMANCE_SEARCH_PERIOD
             );
         }
     }

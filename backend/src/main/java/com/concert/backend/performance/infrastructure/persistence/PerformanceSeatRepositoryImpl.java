@@ -75,4 +75,14 @@ public class PerformanceSeatRepositoryImpl implements PerformanceSeatRepository 
                         seatIds
                 );
     }
+
+    @Override
+    public long countByPerformanceId(
+            Long performanceId
+    ) {
+        return jpaPerformanceSeatRepository
+                .countByPerformance_Id(
+                        performanceId
+                );
+    }
 }

@@ -177,6 +177,18 @@ public enum PerformanceErrorCode implements ErrorCode {
     ), RESERVED_SEAT_CANNOT_BE_DELETED(
             HttpStatus.CONFLICT,
             "예약 완료된 좌석은 삭제할 수 없습니다."
+    ),
+    PERFORMANCE_SEATS_REQUIRED_BEFORE_OPEN(
+            HttpStatus.CONFLICT,
+        "판매 좌석을 구성한 후 예매를 시작할 수 있습니다."
+    ),
+    INVALID_ADMIN_PERFORMANCE_SEARCH_PERIOD(
+            HttpStatus.BAD_REQUEST,
+            "공연 회차 조회 종료일시는 시작일시보다 빠를 수 없습니다."
+    ),
+    PERFORMANCE_SEAT_CONFIGURATION_NOT_ALLOWED(
+            HttpStatus.CONFLICT,
+            "예매 시작 전 상태에서만 판매 좌석을 구성할 수 있습니다."
     );
 
     private final HttpStatus status;

@@ -172,7 +172,26 @@ public class Performance extends BaseAuditEntity {
             );
         }
 
+        validateOpenable(
+                newStatus
+        );
+
         this.status = newStatus;
+    }
+
+    private void validateOpenable(
+            PerformanceStatus newStatus
+    ) {
+        if (newStatus != PerformanceStatus.OPEN) {
+            return;
+        }
+
+        if (seats.isEmpty()) {
+            throw new PerformanceException(
+                    PerformanceErrorCode
+                            .PERFORMANCE_SEATS_REQUIRED_BEFORE_OPEN
+            );
+        }
     }
 
     private boolean canChangeStatusTo(

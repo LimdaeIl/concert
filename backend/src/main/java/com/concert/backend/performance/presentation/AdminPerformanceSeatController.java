@@ -2,10 +2,12 @@ package com.concert.backend.performance.presentation;
 
 import com.concert.backend.performance.application.BulkCreatePerformanceSeatService;
 import com.concert.backend.performance.application.BulkDeletePerformanceSeatService;
+import com.concert.backend.performance.application.GetAdminPerformanceSeatCandidateMapService;
 import com.concert.backend.performance.application.GetAdminPerformanceSeatCandidatesService;
 import com.concert.backend.performance.application.GetAdminPerformanceSeatsService;
 import com.concert.backend.performance.application.UpdatePerformanceSeatService;
 import com.concert.backend.performance.application.UpdatePerformanceSeatStatusService;
+import com.concert.backend.performance.application.result.AdminPerformanceSeatCandidateMapResult;
 import com.concert.backend.performance.application.result.AdminPerformanceSeatCandidatePageResult;
 import com.concert.backend.performance.application.result.AdminPerformanceSeatPageResult;
 import com.concert.backend.performance.application.result.PerformanceSeatResult;
@@ -15,6 +17,7 @@ import com.concert.backend.performance.presentation.request.BulkCreatePerformanc
 import com.concert.backend.performance.presentation.request.BulkDeletePerformanceSeatRequest;
 import com.concert.backend.performance.presentation.request.UpdatePerformanceSeatRequest;
 import com.concert.backend.performance.presentation.request.UpdatePerformanceSeatStatusRequest;
+import com.concert.backend.performance.presentation.response.GetAdminPerformanceSeatCandidateMapResponse;
 import com.concert.backend.performance.presentation.response.GetAdminPerformanceSeatCandidatesResponse;
 import com.concert.backend.performance.presentation.response.GetAdminPerformanceSeatsResponse;
 import com.concert.backend.performance.presentation.response.GetPerformanceSeatsResponse;
@@ -59,6 +62,9 @@ public class AdminPerformanceSeatController
 
     private final BulkDeletePerformanceSeatService
             bulkDeletePerformanceSeatService;
+
+    private final GetAdminPerformanceSeatCandidateMapService
+            getAdminPerformanceSeatCandidateMapService;
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
@@ -236,6 +242,30 @@ public class AdminPerformanceSeatController
         bulkDeletePerformanceSeatService.delete(performanceId, request.performanceSeatIds());
 
         return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping(
+            "/api/v1/admin/performances/{performanceId}/candidate-seat-map"
+    )
+    public ResponseEntity<GetAdminPerformanceSeatCandidateMapResponse>
+    getCandidateSeatMap(
+            @PathVariable
+            Long performanceId
+    ) {
+        AdminPerformanceSeatCandidateMapResult result =
+                getAdminPerformanceSeatCandidateMapService
+                        .getCandidateMap(
+                                performanceId
+                        );
+
+        return ResponseEntity.ok(
+                GetAdminPerformanceSeatCandidateMapResponse
+                        .from(
+                                result
+                        )
+        );
     }
 
 }
