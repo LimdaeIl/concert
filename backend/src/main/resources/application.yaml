@@ -173,12 +173,12 @@ app:
     api-secret: ${SOLAPI_API_SECRET}
     sender: ${SOLAPI_SENDER}
 
-storage:
-  s3:
-    bucket: ${AWS_S3_BUCKET}
-    region: ${AWS_S3_REGION}
-    upload-url-expiration: 5m
-    read-url-expiration: 30m
+  storage:
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+      region: ${AWS_S3_REGION}
+      upload-url-expiration: 5m
+      read-url-expiration: 30m
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml

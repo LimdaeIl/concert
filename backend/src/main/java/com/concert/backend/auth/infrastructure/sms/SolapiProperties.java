@@ -2,7 +2,7 @@ package com.concert.backend.auth.infrastructure.sms;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties(prefix = "solapi")
+@ConfigurationProperties(prefix = "app.solapi")
 public record SolapiProperties(
         String apiKey,
         String apiSecret,
