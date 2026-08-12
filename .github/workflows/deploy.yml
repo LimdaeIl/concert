@@ -25,10 +25,6 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      # ============================================================
-      # SSH
-      # ============================================================
-
       - name: Configure SSH
         shell: bash
         env:
@@ -50,10 +46,6 @@ jobs:
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
 
-      # ============================================================
-      # Validate deployment secrets
-      # ============================================================
-
       - name: Validate deployment secrets
         shell: bash
         env:
@@ -65,12 +57,6 @@ jobs:
           : "${PROD_ENV:?PROD_ENV secret is required}"
           : "${PROD_COMPOSE_ENV:?PROD_COMPOSE_ENV secret is required}"
 
-          echo "Deployment secrets validated"
-
-
-      # ============================================================
-      # Update source
-      # ============================================================
 
       - name: Update source on EC2
         shell: bash
@@ -83,20 +69,13 @@ jobs:
 
           cd /home/ubuntu/app/concert
 
-          echo "===== Update Source ====="
-
           git fetch origin
           git reset --hard origin/main
 
-          echo "===== Current Commit ====="
           git log -1 --oneline
 
           EOF
 
-
-      # ============================================================
-      # Create local temporary env files
-      # ============================================================
 
       - name: Create production env files
         shell: bash
@@ -114,12 +93,6 @@ jobs:
           test -s backend.env
           test -s compose.env
 
-          echo "Production env files created"
-
-
-      # ============================================================
-      # Upload env files
-      # ============================================================
 
       - name: Upload production env files
         shell: bash
@@ -148,33 +121,8 @@ jobs:
           test -s /home/ubuntu/app/concert/backend/.env
           test -s /home/ubuntu/app/concert/.env.prod.compose
 
-          echo "Production env files uploaded"
-
           EOF
 
-
-      # ============================================================
-      # Prepare directories
-      # ============================================================
-
-      - name: Prepare production directories
-        shell: bash
-        run: |
-          ssh \
-            -i ~/.ssh/ec2_key \
-            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
-
-          set -euo pipefail
-
-          mkdir -p /home/ubuntu/app/concert/logs
-          chmod 755 /home/ubuntu/app/concert/logs
-
-          EOF
-
-
-      # ============================================================
-      # Docker infrastructure
-      # ============================================================
 
       - name: Deploy Docker infrastructure
         shell: bash
@@ -187,28 +135,23 @@ jobs:
 
           cd /home/ubuntu/app/concert
 
-          echo "===== Validate Docker Compose ====="
+          mkdir -p logs
+          chmod 755 logs
 
           docker compose \
             --env-file .env.prod.compose \
             -f docker-compose.prod.yml \
             config --quiet
 
-          echo "===== Pull Docker Images ====="
-
           docker compose \
             --env-file .env.prod.compose \
             -f docker-compose.prod.yml \
             pull
 
-          echo "===== Start Docker Infrastructure ====="
-
           docker compose \
             --env-file .env.prod.compose \
             -f docker-compose.prod.yml \
             up -d
-
-          echo "===== Docker Status ====="
 
           docker compose \
             --env-file .env.prod.compose \
@@ -217,10 +160,6 @@ jobs:
 
           EOF
 
-
-      # ============================================================
-      # Backend build
-      # ============================================================
 
       - name: Build backend
         shell: bash
@@ -233,20 +172,11 @@ jobs:
 
           cd /home/ubuntu/app/concert/backend
 
-          echo "===== Validate Backend Environment ====="
-
           test -s .env
-
-          echo "===== Java ====="
-          java -version
-
-          echo "===== Gradle Build ====="
 
           chmod +x gradlew
 
           ./gradlew clean bootJar -x test
-
-          echo "===== Resolve Boot Jar ====="
 
           JAR_FILE=$(find build/libs \
             -maxdepth 1 \
@@ -263,15 +193,10 @@ jobs:
 
           cp "$JAR_FILE" build/libs/backend.jar
 
-          echo "===== Deployment Jar ====="
           ls -lh build/libs/backend.jar
 
           EOF
 
-
-      # ============================================================
-      # Restart backend
-      # ============================================================
 
       - name: Restart backend
         shell: bash
@@ -282,18 +207,10 @@ jobs:
 
           set -euo pipefail
 
-          echo "===== Restart Backend ====="
-
           sudo systemctl restart concert-backend
-
-          echo "Backend restart requested"
 
           EOF
 
-
-      # ============================================================
-      # Backend readiness check
-      # ============================================================
 
       - name: Check backend readiness
         shell: bash
@@ -306,7 +223,7 @@ jobs:
 
           echo "===== Backend Readiness Check ====="
 
-          if curl \
+          curl \
             --fail \
             --silent \
             --show-error \
@@ -314,95 +231,12 @@ jobs:
             --retry-delay 3 \
             --retry-connrefused \
             http://127.0.0.1:8080/actuator/health \
-            > /dev/null; then
+            > /dev/null
 
-            echo "Backend is healthy"
-
-          else
-            echo "Backend readiness check failed"
-
-            echo "===== Backend Service ====="
-            sudo systemctl \
-              --no-pager \
-              --full \
-              status concert-backend || true
-
-            echo "===== Recent Backend Logs ====="
-            sudo journalctl \
-              -u concert-backend \
-              -n 200 \
-              --no-pager || true
-
-            echo "===== Docker Status ====="
-            cd /home/ubuntu/app/concert
-
-            docker compose \
-              --env-file .env.prod.compose \
-              -f docker-compose.prod.yml \
-              ps || true
-
-            exit 1
-          fi
+          echo "Backend is healthy"
 
           EOF
 
-
-      # ============================================================
-      # Final verification
-      # ============================================================
-
-      - name: Verify deployment
-        shell: bash
-        run: |
-          ssh \
-            -i ~/.ssh/ec2_key \
-            "${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}" << 'EOF'
-
-          set -euo pipefail
-
-          cd /home/ubuntu/app/concert
-
-          echo "=========================================="
-          echo "       Deployment Successful"
-          echo "=========================================="
-
-          echo
-          echo "===== Backend ====="
-          sudo systemctl is-active --quiet concert-backend
-          echo "concert-backend: active"
-
-          echo
-          echo "===== Health ====="
-          curl \
-            --fail \
-            --silent \
-            http://127.0.0.1:8080/actuator/health
-
-          echo
-          echo
-          echo "===== Docker ====="
-
-          docker compose \
-            --env-file .env.prod.compose \
-            -f docker-compose.prod.yml \
-            ps
-
-          echo
-          echo "===== Logs ====="
-
-          ls -lh logs || true
-
-          echo
-          echo "===== Commit ====="
-
-          git log -1 --oneline
-
-          EOF
-
-
-      # ============================================================
-      # Cleanup
-      # ============================================================
 
       - name: Cleanup temporary files
         if: always()
@@ -411,4 +245,3 @@ jobs:
           rm -f backend.env
           rm -f compose.env
           rm -f ~/.ssh/ec2_key
-          
