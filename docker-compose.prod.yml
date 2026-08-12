@@ -6,6 +6,8 @@ services:
 
     environment:
       TZ: "${TZ:-Asia/Seoul}"
+      REDIS_USERNAME: "${REDIS_USERNAME:?REDIS_USERNAME is required}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD:?REDIS_PASSWORD is required}"
 
     command:
       [
@@ -30,15 +32,12 @@ services:
       test:
         [
           "CMD-SHELL",
-          "redis-cli --user \"$${REDIS_USERNAME}\" --pass \"$${REDIS_PASSWORD}\" ping | grep PONG"
+          "redis-cli --user \"$${REDIS_USERNAME}\" --pass \"$${REDIS_PASSWORD}\" ping | grep -q PONG"
         ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
-
-    networks:
-      - concert-network
 
 
   prometheus:
