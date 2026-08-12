@@ -60,4 +60,19 @@ public class PerformanceSeatRepositoryImpl implements PerformanceSeatRepository 
     public List<PerformanceSeat> findAllByIdForUpdate(Collection<Long> performanceSeatIds) {
         return jpaPerformanceSeatRepository.findAllByIdForUpdate(performanceSeatIds);
     }
+
+    @Override
+    public void deleteAll(Collection<PerformanceSeat> performanceSeats) {
+        jpaPerformanceSeatRepository.deleteAll(performanceSeats);
+    }
+
+    @Override
+    public boolean existsBySeatIdIn(
+            Collection<Long> seatIds
+    ) {
+        return jpaPerformanceSeatRepository
+                .existsBySeat_IdIn(
+                        seatIds
+                );
+    }
 }

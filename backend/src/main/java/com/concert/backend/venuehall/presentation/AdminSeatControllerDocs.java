@@ -4,6 +4,7 @@ import com.concert.backend.common.response.ErrorResponse;
 import com.concert.backend.venuehall.domain.SeatStatus;
 import com.concert.backend.venuehall.domain.SeatType;
 import com.concert.backend.venuehall.presentation.request.BulkCreateSeatRequest;
+import com.concert.backend.venuehall.presentation.request.BulkDeleteSeatRequest;
 import com.concert.backend.venuehall.presentation.request.BulkUpdateSeatRequest;
 import com.concert.backend.venuehall.presentation.request.UpdateSeatRequest;
 import com.concert.backend.venuehall.presentation.request.UpdateSeatStatusRequest;
@@ -395,5 +396,151 @@ public interface AdminSeatControllerDocs {
             @Valid
             @RequestBody
             BulkUpdateSeatRequest request
+    );
+
+    @Operation(
+            summary = "좌석 일괄 삭제",
+            description = """
+                관리자가 특정 공연홀에 등록된
+                여러 좌석을 한 번에 물리 삭제합니다.
+
+                요청된 모든 좌석은 동일한 공연홀에
+                속해야 합니다.
+
+                공연 회차 좌석으로 한 번이라도 사용된
+                좌석은 삭제할 수 없습니다.
+
+                삭제할 수 없는 좌석이 하나라도 포함된 경우
+                전체 삭제 요청이 실패합니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "좌석 일괄 삭제 성공"
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = """
+                잘못된 요청 또는
+                중복된 좌석 ID가 포함됨
+                """
+    )
+    @ApiResponse(
+            responseCode = "403",
+            description = "관리자 권한 없음"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = """
+                공연홀 또는 좌석을 찾을 수 없음
+                """
+    )
+    @ApiResponse(
+            responseCode = "409",
+            description = """
+                공연 회차에서 이미 사용 중인
+                좌석이 포함되어 있음
+                """
+    )
+    ResponseEntity<Void> bulkDelete(
+            @Parameter(
+                    description = "공연홀 ID",
+                    example = "1"
+            )
+            @PathVariable
+            Long venueHallId,
+
+            @Valid
+            @RequestBody
+            BulkDeleteSeatRequest request
+    );
+
+    @Operation(
+            summary = "관리자 좌석 배치도 조회",
+            description = """
+                관리자가 특정 공연홀의 전체 좌석 배치를
+                페이지네이션 없이 조회합니다.
+
+                좌석 배치도 편집 화면에서 사용하며
+                층, 좌석 유형, 좌석 상태 필터와
+                구역명, 열, 좌석번호 검색을 지원합니다.
+
+                좌석 수와 관계없이 검색 조건에 해당하는
+                모든 좌석을 반환합니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "좌석 배치도 조회 성공",
+            content = @Content(
+                    schema = @Schema(
+                            implementation =
+                                    GetSeatsResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "403",
+            description = "관리자 권한 없음",
+            content = @Content(
+                    mediaType =
+                            "application/problem+json",
+                    schema = @Schema(
+                            implementation =
+                                    ErrorResponse.class
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "공연홀을 찾을 수 없음",
+            content = @Content(
+                    mediaType =
+                            "application/problem+json",
+                    schema = @Schema(
+                            implementation =
+                                    ErrorResponse.class
+                    )
+            )
+    )
+    ResponseEntity<GetSeatsResponse> getSeatMap(
+            @Parameter(
+                    description = "공연홀 ID",
+                    example = "1"
+            )
+            @PathVariable
+            Long venueHallId,
+
+            @Parameter(
+                    description = "구역명, 열, 좌석번호 검색어",
+                    example = "A"
+            )
+            @RequestParam(required = false)
+            String keyword,
+
+            @Parameter(
+                    description = "좌석 층",
+                    example = "1"
+            )
+            @RequestParam(required = false)
+            Short floor,
+
+            @Parameter(
+                    description = "좌석 유형"
+            )
+            @RequestParam(required = false)
+            SeatType seatType,
+
+            @Parameter(
+                    description = "좌석 상태"
+            )
+            @RequestParam(required = false)
+            SeatStatus status
     );
 }

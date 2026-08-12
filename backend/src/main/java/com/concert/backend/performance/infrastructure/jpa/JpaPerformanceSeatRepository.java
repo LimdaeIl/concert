@@ -52,4 +52,6 @@ public interface JpaPerformanceSeatRepository
             @Param("ids")
             Collection<Long> ids
     );
+
+    boolean existsBySeat_IdIn(Collection<Long> seatIds);
 }

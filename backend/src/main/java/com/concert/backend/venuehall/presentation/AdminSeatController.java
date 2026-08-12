@@ -1,7 +1,9 @@
 package com.concert.backend.venuehall.presentation;
 
 import com.concert.backend.venuehall.application.BulkCreateSeatService;
+import com.concert.backend.venuehall.application.BulkDeleteSeatService;
 import com.concert.backend.venuehall.application.BulkUpdateSeatService;
+import com.concert.backend.venuehall.application.GetAdminSeatMapService;
 import com.concert.backend.venuehall.application.GetAdminSeatsService;
 import com.concert.backend.venuehall.application.UpdateSeatService;
 import com.concert.backend.venuehall.application.UpdateSeatStatusService;
@@ -10,6 +12,7 @@ import com.concert.backend.venuehall.application.result.SeatResult;
 import com.concert.backend.venuehall.domain.SeatStatus;
 import com.concert.backend.venuehall.domain.SeatType;
 import com.concert.backend.venuehall.presentation.request.BulkCreateSeatRequest;
+import com.concert.backend.venuehall.presentation.request.BulkDeleteSeatRequest;
 import com.concert.backend.venuehall.presentation.request.BulkUpdateSeatRequest;
 import com.concert.backend.venuehall.presentation.request.UpdateSeatRequest;
 import com.concert.backend.venuehall.presentation.request.UpdateSeatStatusRequest;
@@ -24,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +45,8 @@ public class AdminSeatController implements AdminSeatControllerDocs {
     private final UpdateSeatStatusService updateSeatStatusService;
     private final GetAdminSeatsService getAdminSeatsService;
     private final BulkUpdateSeatService bulkUpdateSeatService;
+    private final BulkDeleteSeatService bulkDeleteSeatService;
+    private final GetAdminSeatMapService getAdminSeatMapService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(
@@ -167,6 +173,58 @@ public class AdminSeatController implements AdminSeatControllerDocs {
                         request.seatType(),
                         request.status()
                 );
+
+        return ResponseEntity.ok(
+                GetSeatsResponse.from(
+                        results
+                )
+        );
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping(
+            "/api/v1/admin/halls/{venueHallId}/seats/bulk"
+    )
+    public ResponseEntity<Void> bulkDelete(
+            @PathVariable Long venueHallId,
+            @Valid @RequestBody BulkDeleteSeatRequest request
+    ) {
+        bulkDeleteSeatService.delete(venueHallId, request.seatIds());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping(
+            "/api/v1/admin/halls/{venueHallId}/seat-map"
+    )
+    public ResponseEntity<GetSeatsResponse> getSeatMap(
+            @PathVariable
+            Long venueHallId,
+
+            @RequestParam(required = false)
+            String keyword,
+
+            @RequestParam(required = false)
+            Short floor,
+
+            @RequestParam(required = false)
+            SeatType seatType,
+
+            @RequestParam(required = false)
+            SeatStatus status
+    ) {
+        List<SeatResult> results =
+                getAdminSeatMapService
+                        .getSeatMap(
+                                venueHallId,
+                                keyword,
+                                floor,
+                                seatType,
+                                status
+                        );
 
         return ResponseEntity.ok(
                 GetSeatsResponse.from(

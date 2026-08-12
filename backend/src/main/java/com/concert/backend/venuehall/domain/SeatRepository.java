@@ -43,4 +43,20 @@ public interface SeatRepository {
 
     List<Seat> findAllById(List<Long> seatIds);
 
+    List<Seat> findAllByIdForUpdate(
+            Collection<Long> seatIds
+    );
+
+    void deleteAll(
+            Collection<Seat> seats
+    );
+
+    List<Seat> findAllForAdminSeatMap(
+            Long venueHallId,
+            String keyword,
+            Short floor,
+            SeatType seatType,
+            SeatStatus status
+    );
+
 }

@@ -67,7 +67,17 @@ public enum SeatErrorCode implements ErrorCode {
     VENUE_HALL_CAPACITY_EXCEEDED(
             HttpStatus.BAD_REQUEST,
             "공연홀의 최대 수용 인원을 초과할 수 없습니다."
-    );
+    ),
+
+    DUPLICATE_SEAT_ID(
+            HttpStatus.BAD_REQUEST,
+            "중복된 좌석 ID가 포함되어 있습니다."
+    ),
+
+    SEAT_IN_USE_BY_PERFORMANCE(
+            HttpStatus.CONFLICT,
+            "공연 회차에 사용된 좌석은 삭제할 수 없습니다."
+    ),;
 
     private final HttpStatus status;
     private final String message;
