@@ -75,3 +75,18 @@ export interface BulkUpdateSeatRequest {
   seatType?: SeatType | null;
   status?: SeatStatus | null;
 }
+
+export interface BulkDeleteSeatsRequest {
+  seatIds: number[];
+}
+
+export interface GetAdminSeatMapParams {
+  keyword?: string;
+  floor?: number;
+  seatType?: SeatType;
+  status?: SeatStatus;
+}
+
+export interface GetAdminSeatMapResponse {
+  seats: AdminSeat[];
+}
