@@ -26,4 +26,8 @@ public interface PerformanceSeatRepository {
     List<PerformanceSeat> findAllByIdForUpdate(
             Collection<Long> performanceSeatIds
     );
+
+    void deleteAll(Collection<PerformanceSeat> performanceSeats);
+
+    boolean existsBySeatIdIn(Collection<Long> seatIds);
 }

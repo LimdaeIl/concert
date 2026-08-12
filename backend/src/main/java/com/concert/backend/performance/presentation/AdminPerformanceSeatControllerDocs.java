@@ -3,6 +3,7 @@ package com.concert.backend.performance.presentation;
 import com.concert.backend.performance.domain.PerformanceSeatStatus;
 import com.concert.backend.performance.domain.SeatGrade;
 import com.concert.backend.performance.presentation.request.BulkCreatePerformanceSeatRequest;
+import com.concert.backend.performance.presentation.request.BulkDeletePerformanceSeatRequest;
 import com.concert.backend.performance.presentation.request.UpdatePerformanceSeatRequest;
 import com.concert.backend.performance.presentation.request.UpdatePerformanceSeatStatusRequest;
 import com.concert.backend.performance.presentation.response.GetAdminPerformanceSeatCandidatesResponse;
@@ -258,6 +259,68 @@ public interface AdminPerformanceSeatControllerDocs {
             @Min(1)
             @Max(100)
             int size
+    );
+
+    @Operation(
+            summary = "공연 좌석 일괄 삭제",
+            description = """
+                관리자가 특정 공연 회차의
+                여러 공연 좌석을 한 번에 삭제합니다.
+
+                AVAILABLE 또는 BLOCKED 상태의
+                공연 좌석만 삭제할 수 있습니다.
+
+                HELD 또는 RESERVED 상태의 좌석이
+                하나라도 포함되어 있으면
+                전체 삭제 요청이 실패합니다.
+
+                모든 좌석은 요청 경로의
+                공연 회차에 속해야 합니다.
+                """,
+            security = @SecurityRequirement(
+                    name = "Bearer Authentication"
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "공연 좌석 일괄 삭제 성공"
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = """
+                잘못된 요청 또는
+                중복된 공연 좌석 ID가 포함됨
+                """
+    )
+    @ApiResponse(
+            responseCode = "403",
+            description = "관리자 권한 없음"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = """
+                공연을 찾을 수 없거나
+                공연 좌석을 찾을 수 없음
+                """
+    )
+    @ApiResponse(
+            responseCode = "409",
+            description = """
+                선점 중이거나 예약된
+                공연 좌석이 포함되어 있음
+                """
+    )
+    ResponseEntity<Void> bulkDelete(
+            @Parameter(
+                    description = "공연 회차 ID",
+                    example = "1"
+            )
+            @PathVariable
+            Long performanceId,
+
+            @Valid
+            @RequestBody
+            BulkDeletePerformanceSeatRequest request
     );
 
 }

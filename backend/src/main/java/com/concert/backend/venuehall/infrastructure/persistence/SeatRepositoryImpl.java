@@ -3,7 +3,9 @@ package com.concert.backend.venuehall.infrastructure.persistence;
 import com.concert.backend.venuehall.domain.Seat;
 import com.concert.backend.venuehall.domain.SeatRepository;
 import com.concert.backend.venuehall.domain.SeatStatus;
+import com.concert.backend.venuehall.domain.SeatType;
 import com.concert.backend.venuehall.infrastructure.jpa.JpaSeatRepository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -101,6 +103,34 @@ public class SeatRepositoryImpl implements SeatRepository {
     @Override
     public List<Seat> findAllById(List<Long> seatIds) {
         return jpaSeatRepository.findAllById(seatIds);
+    }
+
+    @Override
+    public List<Seat> findAllByIdForUpdate(Collection<Long> seatIds) {
+        return jpaSeatRepository.findAllByIdForUpdate(seatIds);
+    }
+
+    @Override
+    public void deleteAll(Collection<Seat> seats) {
+        jpaSeatRepository.deleteAll(seats);
+    }
+
+    @Override
+    public List<Seat> findAllForAdminSeatMap(
+            Long venueHallId,
+            String keyword,
+            Short floor,
+            SeatType seatType,
+            SeatStatus status
+    ) {
+        return jpaSeatRepository
+                .findAllForAdminSeatMap(
+                        venueHallId,
+                        keyword,
+                        floor,
+                        seatType,
+                        status
+                );
     }
 
 }

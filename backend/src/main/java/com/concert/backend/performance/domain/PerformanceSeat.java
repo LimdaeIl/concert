@@ -364,4 +364,18 @@ public class PerformanceSeat extends BaseAuditEntity {
         this.heldBy = null;
         this.heldUntil = null;
     }
+
+    public void validateDeletable() {
+        if (isHeld()) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.HELD_SEAT_CANNOT_BE_DELETED
+            );
+        }
+
+        if (isReserved()) {
+            throw new PerformanceException(
+                    PerformanceErrorCode.RESERVED_SEAT_CANNOT_BE_DELETED
+            );
+        }
+    }
 }

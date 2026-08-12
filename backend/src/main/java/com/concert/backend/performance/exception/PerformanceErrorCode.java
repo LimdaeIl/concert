@@ -171,6 +171,12 @@ public enum PerformanceErrorCode implements ErrorCode {
     RESERVED_SEAT_CANNOT_BE_UPDATED(
             HttpStatus.CONFLICT,
             "예약 완료된 좌석은 수정할 수 없습니다."
+    ), HELD_SEAT_CANNOT_BE_DELETED(
+            HttpStatus.CONFLICT,
+            "선점 중인 좌석은 삭제할 수 없습니다."
+    ), RESERVED_SEAT_CANNOT_BE_DELETED(
+            HttpStatus.CONFLICT,
+            "예약 완료된 좌석은 삭제할 수 없습니다."
     );
 
     private final HttpStatus status;

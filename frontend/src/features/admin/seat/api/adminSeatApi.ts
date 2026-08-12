@@ -9,6 +9,15 @@ import type {
   BulkUpdateSeatRequest
 } from '../types/adminSeat';
 
+import type {
+  BulkDeleteSeatsRequest,
+} from '../types/adminSeat';
+
+import type {
+  GetAdminSeatMapParams,
+  GetAdminSeatMapResponse,
+} from '../types/adminSeat';
+
 export async function bulkUpdateSeats(
     venueHallId: number,
     request: BulkUpdateSeatRequest,
@@ -86,3 +95,29 @@ export async function updateSeatStatus(
   );
 }
 
+export async function bulkDeleteSeats(
+    venueHallId: number,
+    request: BulkDeleteSeatsRequest,
+): Promise<void> {
+  await apiClient.delete(
+      `/api/v1/admin/halls/${venueHallId}/seats/bulk`,
+      {
+        data: request,
+      },
+  );
+}
+
+export async function getAdminSeatMap(
+    venueHallId: number,
+    params: GetAdminSeatMapParams,
+): Promise<GetAdminSeatMapResponse> {
+  const response =
+      await apiClient.get<GetAdminSeatMapResponse>(
+          `/api/v1/admin/halls/${venueHallId}/seat-map`,
+          {
+            params,
+          },
+      );
+
+  return response.data;
+}

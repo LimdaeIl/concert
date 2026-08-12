@@ -1,6 +1,7 @@
 package com.concert.backend.performance.presentation;
 
 import com.concert.backend.performance.application.BulkCreatePerformanceSeatService;
+import com.concert.backend.performance.application.BulkDeletePerformanceSeatService;
 import com.concert.backend.performance.application.GetAdminPerformanceSeatCandidatesService;
 import com.concert.backend.performance.application.GetAdminPerformanceSeatsService;
 import com.concert.backend.performance.application.UpdatePerformanceSeatService;
@@ -11,6 +12,7 @@ import com.concert.backend.performance.application.result.PerformanceSeatResult;
 import com.concert.backend.performance.domain.PerformanceSeatStatus;
 import com.concert.backend.performance.domain.SeatGrade;
 import com.concert.backend.performance.presentation.request.BulkCreatePerformanceSeatRequest;
+import com.concert.backend.performance.presentation.request.BulkDeletePerformanceSeatRequest;
 import com.concert.backend.performance.presentation.request.UpdatePerformanceSeatRequest;
 import com.concert.backend.performance.presentation.request.UpdatePerformanceSeatStatusRequest;
 import com.concert.backend.performance.presentation.response.GetAdminPerformanceSeatCandidatesResponse;
@@ -26,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -53,6 +56,9 @@ public class AdminPerformanceSeatController
 
     private final GetAdminPerformanceSeatCandidatesService
             getAdminPerformanceSeatCandidatesService;
+
+    private final BulkDeletePerformanceSeatService
+            bulkDeletePerformanceSeatService;
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
@@ -220,4 +226,16 @@ public class AdminPerformanceSeatController
                 )
         );
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/api/v1/admin/performances/{performanceId}/seats/bulk")
+    public ResponseEntity<Void> bulkDelete(
+            @PathVariable Long performanceId,
+            @Valid @RequestBody BulkDeletePerformanceSeatRequest request
+    ) {
+        bulkDeletePerformanceSeatService.delete(performanceId, request.performanceSeatIds());
+
+        return ResponseEntity.noContent().build();
+    }
+
 }
