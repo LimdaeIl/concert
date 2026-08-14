@@ -33,6 +33,7 @@
 
 ## ERD
 <img width="2541" height="1152" alt="teset" src="https://github.com/user-attachments/assets/ce8e8cad-72dd-4803-b7b9-a83b01131c2f" />
+
 - [dbdiagram으로 테이블 ERD 살펴보기](https://dbdiagram.io/d/optional94-com-6a7ea121c6a866c9076763d3)
 
 # 핵심 기술적 도전 및 문제 해결 (Key Technical Challenges)
