@@ -5,7 +5,7 @@
 단순 CRUD 중심의 프로젝트가 아니라 실제 티켓 예매 서비스에서 발생할 수 있는 **좌석 선점, 동시 예매, 결제 대기, 예약 취소 및 좌석 상태 변경** 등의 비즈니스 흐름을 깊이 있게 고려하여 설계했습니다.
 프론트엔드와 백엔드를 모두 직접 구현하여 사용자 화면부터 API, 데이터베이스까지 전체 서비스 흐름을 구성했습니다.
 
-## 🔗 Quick Links & Test Accounts
+## Quick Links & Test Accounts
 
 - **사용자 화면**: [https://optional94.com](https://optional94.com/)
 - **관리자 화면**: https://optional94.com/admin *(관리자 계정 로그인 필요)*
@@ -20,23 +20,23 @@
 | **MEMBER** | `member2@test.com` | `Test1234!`  | 동시성 예매 테스트용 사용자 2 |
 
 
-# 서비스 시연 및 핵심 기능
-## 사용자 화면
+## 서비스 시연 및 핵심 기능
+### 사용자 화면
 <img width="400" height="400" alt="low-gif" src="https://github.com/user-attachments/assets/e124629c-dda3-4f01-be5d-730629ef1383" />
 
-## 관리자 화면
+### 관리자 화면
 <img width="600" height="400" alt="admin" src="https://github.com/user-attachments/assets/3d177c50-303a-45ca-a01e-379fedffc31e" />
 
-# 시스템 아키텍처 & ERD
-## 시스템 아키텍처
+## 시스템 아키텍처 & ERD
+### 시스템 아키텍처
 <img width="1012" height="770" alt="image" src="https://github.com/user-attachments/assets/ff43e4ae-f437-4b0b-8f84-6efe3c7fa4c8" />
 
-## ERD
+### ERD
 <img width="2541" height="1152" alt="teset" src="https://github.com/user-attachments/assets/ce8e8cad-72dd-4803-b7b9-a83b01131c2f" />
 
 - [dbdiagram으로 테이블 ERD 살펴보기](https://dbdiagram.io/d/optional94-com-6a7ea121c6a866c9076763d3)
 
-# 핵심 기술적 도전 및 문제 해결 (Key Technical Challenges)
+## 핵심 기술적 도전 및 문제 해결 (Key Technical Challenges)
 
 | #    | Technical Challenge                         | 핵심                             |
 | ---- | ------------------------------------------- | -------------------------------- |
@@ -49,8 +49,7 @@
 - [핵심 기술적 도전 및 문제 해결 살펴보기(Canva)](https://canva.link/dphzjaggabezpkh)
 
 
-
-# 성과 및 회고 (Performance & Retrospective)
+## 성과 및 회고 (Performance & Retrospective)
 - 단순 CRUD 구현을 넘어 좌석 선점 → 예약 → 결제 → 만료/취소로 이어지는 실제 티켓 예매의 핵심 비즈니스 흐름을 설계하고 구현했습니다.
 - 동시 예매 상황에서 발생하는 Race Condition을 재현하고 비관적 락을 적용하여 좌석 중복 예약을 방지하고 데이터 정합성을 보장했습니다.
 - JPA와 MyBatis의 역할을 분리하여 도메인 변경 로직과 복잡한 조회 로직을 각각의 목적에 맞게 구성했습니다.
