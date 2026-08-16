@@ -10,6 +10,10 @@
 - **사용자 화면**: [https://optional94.com](https://optional94.com/)
 - **관리자 화면**: https://optional94.com/admin *(관리자 계정 로그인 필요)*
 - **API 명세서**: [Swagger UI 바로가기](https://api.optional94.com/swagger-ui/index.html)
+- **ERD 명세서**: [ERD 바로가기(dbdiagram)](https://dbdiagram.io/d/optional94-com-6a7ea121c6a866c9076763d3)
+- **기술 도전 및 문제 해결**: [핵심 기술적 도전 및 문제 해결 살펴보기(Canva)](https://canva.link/dphzjaggabezpkh)
+
+
 
 ### 테스트 계정
 
@@ -36,7 +40,7 @@
 ### ERD
 <img width="2541" height="1152" alt="teset" src="https://github.com/user-attachments/assets/ce8e8cad-72dd-4803-b7b9-a83b01131c2f" />
 
-- [dbdiagram으로 테이블 ERD 살펴보기](https://dbdiagram.io/d/optional94-com-6a7ea121c6a866c9076763d3)
+- [ERD 살펴보기(dbdiagram)](https://dbdiagram.io/d/optional94-com-6a7ea121c6a866c9076763d3)
 
 ## 핵심 기술적 도전 및 문제 해결 (Key Technical Challenges)
 
