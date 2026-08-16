@@ -22,9 +22,11 @@
 
 ## 서비스 시연 및 핵심 기능
 ### 사용자 화면
+- 공연을 구매하는 과정
 <img width="600" height="600" alt="low-gif" src="https://github.com/user-attachments/assets/e124629c-dda3-4f01-be5d-730629ef1383" />
 
 ### 관리자 화면
+- 관리자 화면을 통해 공연 관리
 <img width="600" height="400" alt="admin" src="https://github.com/user-attachments/assets/3d177c50-303a-45ca-a01e-379fedffc31e" />
 
 ## 시스템 아키텍처 & ERD
