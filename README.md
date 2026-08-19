@@ -99,7 +99,7 @@
 
 ## 시스템 아키텍처 & ERD
 ### 시스템 아키텍처
-<img width="1012" height="770" alt="image" src="https://github.com/user-attachments/assets/ff43e4ae-f437-4b0b-8f84-6efe3c7fa4c8" />
+<img width="763" height="1092" alt="system-architecture drawio" src="https://github.com/user-attachments/assets/010a4a45-069a-4b2b-b628-b8a896743f97" />
 
 - Cloudflare를 통해 도메인 및 외부 요청을 관리합니다.
 - Nginx를 Reverse Proxy로 구성하여 Frontend와 Backend 요청을 분리합니다.
