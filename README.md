@@ -8,13 +8,13 @@
 ---
 
 ## 빠른 이동 & 테스트 계정
+2026-08-20 기준. 배포 종료
 
 - **사용자 화면**: [https://optional94.com](https://optional94.com/)
 - **관리자 화면**: https://optional94.com/admin *(관리자 계정 로그인 필요)*
 - **API 명세서**: [Swagger UI 바로가기](https://api.optional94.com/swagger-ui/index.html)
 - **ERD 명세서🌟**: [ERD 바로가기(dbdiagram)](https://dbdiagram.io/d/optional94-com-6a7ea121c6a866c9076763d3)
 - **기술 도전 및 문제 해결🌟**: [핵심 기술적 도전 및 문제 해결 살펴보기(Canva)](https://canva.link/dphzjaggabezpkh)
-
 ---
 
 ### 테스트 계정
